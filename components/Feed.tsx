@@ -16,13 +16,52 @@ export default function Feed({ stories }: { stories: Story[] }) {
     [stories]
   );
   const [active, setActive] = useState("All");
+  const [query, setQuery] = useState("");
 
-  const filtered = active === "All" ? stories : stories.filter((s) => s.category === active);
+  const categoryFiltered = active === "All" ? stories : stories.filter((s) => s.category === active);
+  const filtered = query.trim()
+    ? categoryFiltered.filter((s) => {
+        const q = query.trim().toLowerCase();
+        return (
+          s.headline.toLowerCase().includes(q) ||
+          s.dek.toLowerCase().includes(q) ||
+          s.category.toLowerCase().includes(q)
+        );
+      })
+    : categoryFiltered;
+
   const treated = filtered.filter((s) => s.impactNodes?.length);
   const briefs = filtered.filter((s) => !s.impactNodes?.length);
 
   return (
     <>
+      <div className="px-4 pt-3.5 pb-1">
+        <div className="relative">
+          <svg viewBox="0 0 16 16" fill="none" className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: "var(--text-on-ink-dim)" }}>
+            <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3" />
+            <path d="M11.5 11.5L15 15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search stories..."
+            className="w-full rounded-full border pl-9 pr-9 py-2 text-sm outline-none"
+            style={{ background: "var(--ink-card)", borderColor: "var(--border)", color: "var(--text-on-ink)" }}
+          />
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-sm"
+              style={{ color: "var(--text-on-ink-dim)" }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
       <div
         className="flex gap-2 px-4 py-3 overflow-x-auto border-b sticky top-[57px] z-10 backdrop-blur"
         style={{ borderColor: "var(--border)", background: "rgba(10,17,42,0.92)" }}
@@ -115,7 +154,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
 
         {filtered.length === 0 && (
           <div className="mt-8 text-center text-sm" style={{ color: "var(--text-on-ink-dim)" }}>
-            Nothing in this category today.
+            {query ? `No stories match "${query}".` : "Nothing in this category today."}
           </div>
         )}
 

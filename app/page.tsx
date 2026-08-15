@@ -1,8 +1,12 @@
 import NavDrawer from "@/components/NavDrawer";
 import Feed from "@/components/Feed";
-import { stories } from "@/lib/stories";
+import { getAllStories } from "@/lib/stories";
 
-export default function FeedPage() {
+export const revalidate = 60; // re-fetch from Supabase at most once a minute
+
+export default async function FeedPage() {
+  const stories = await getAllStories();
+
   return (
     <>
       <NavDrawer />
