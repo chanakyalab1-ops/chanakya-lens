@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #101B3F;
+  --ink-soft: #182A5C;
+  --ink-card: #152252;
+  --paper: #EEF2F6;
+  --text-on-ink: #EEF2F6;
+  --text-on-ink-dim: #8E9DC0;
+  --text-body: #AEBBDD;
+  --brand: #5FA8B5;
+  --brand-soft: #7EC0CC;
+  --direct: #D68A4E;
+  --likely: #C9A94E;
+  --possible: #5FA88A;
+  --developing: #D9694A;
+  --settled: #7E8AAA;
+  --border: #22326B;
+  --radius: 2px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  background: var(--ink);
+  color: var(--text-on-ink);
+  font-family: var(--font-plex-sans), sans-serif;
+  line-height: 1.55;
+  margin: 0;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.font-display { font-family: var(--font-barlow), sans-serif; }
+.font-mono { font-family: var(--font-plex-mono), monospace; }
