@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import NavDrawer from "@/components/NavDrawer";
-import { stories, ConfidenceLevel } from "@/lib/stories";
+import { getStoryBySlug, ConfidenceLevel } from "@/lib/stories";
 
 const tagColor: Record<ConfidenceLevel, string> = {
   direct: "var(--direct)",
@@ -14,13 +14,11 @@ const tagLabel: Record<ConfidenceLevel, string> = {
   possible: "Possible",
 };
 
-export function generateStaticParams() {
-  return stories.map((s) => ({ slug: s.slug }));
-}
+export const revalidate = 60;
 
 export default async function StoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const story = stories.find((s) => s.slug === slug);
+  const story = await getStoryBySlug(slug);
   if (!story) return notFound();
 
   return (
@@ -50,7 +48,9 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         </div>
 
         <h1 className="font-display font-bold text-3xl leading-tight mb-4">{story.headline}</h1>
-        <p className="text-base mb-8" style={{ color: "var(--text-body)" }}>{story.dek}</p>
+        <p className="text-base mb-6" style={{ color: "var(--text-body)" }}>{story.dek}</p>
+
+        <p className="text-[0.95rem] leading-relaxed mb-8" style={{ color: "#C6D0E8" }}>{story.body}</p>
 
         {story.hasVideo && (
           <div
