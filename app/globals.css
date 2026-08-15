@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #101B3F;
-  --ink-soft: #182A5C;
-  --ink-card: #152252;
+  --ink: #0A112A;
+  --ink-soft: #131F47;
+  --ink-card: #101B40;
   --paper: #EEF2F6;
   --text-on-ink: #EEF2F6;
   --text-on-ink-dim: #8E9DC0;

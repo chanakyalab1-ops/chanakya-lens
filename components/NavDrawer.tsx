@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function NavDrawer() {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b px-5 py-4 backdrop-blur"
-        style={{ borderColor: "var(--border)", background: "rgba(16,27,63,0.92)" }}>
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b px-5 py-3.5 backdrop-blur"
+        style={{ borderColor: "var(--border)", background: "rgba(10,17,42,0.92)" }}>
         <button
           aria-label="Open menu"
           onClick={() => setOpen(true)}
@@ -20,8 +21,11 @@ export default function NavDrawer() {
           <span className="h-px w-[18px]" style={{ background: "var(--text-on-ink)" }} />
         </button>
 
-        <Link href="/" className="font-display text-xl font-extrabold uppercase tracking-wide">
-          Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
+        <Link href="/" className="flex items-center gap-2.5">
+          <Image src="/logo-mark.png" alt="Chanakya Lens" width={30} height={30} className="rounded-full" />
+          <span className="font-display text-xl font-extrabold uppercase tracking-wide">
+            Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
+          </span>
         </Link>
 
         <div className="h-7 w-7 rounded-full border flex items-center justify-center" style={{ borderColor: "var(--border)" }}>
