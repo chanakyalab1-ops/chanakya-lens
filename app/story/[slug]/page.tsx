@@ -24,7 +24,15 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
   return (
     <>
       <NavDrawer />
-      <article className="max-w-xl mx-auto px-5 pt-7 pb-16">
+      <article className="max-w-2xl mx-auto px-5 pt-7 pb-16">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide mb-5 hover:opacity-80"
+          style={{ color: "var(--text-on-ink-dim)" }}
+        >
+          ← Back to feed
+        </Link>
+
         <div className="flex items-center gap-2.5 mb-3.5 flex-wrap">
           <span className="font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
             {story.category}
@@ -133,7 +141,8 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             </div>
           </section>
         )}
-         {story.chanakyaAnalysis && (
+
+        {story.chanakyaAnalysis && (
           <section className="mt-9">
             <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
               Chanakya&apos;s Move
@@ -146,6 +155,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             </p>
           </section>
         )}
+
         <div className="flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.68rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
           <div className="flex gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--direct)" }} />
