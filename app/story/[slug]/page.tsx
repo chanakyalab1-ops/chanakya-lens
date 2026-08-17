@@ -104,6 +104,48 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </section>
         )}
 
+        {story.sources && story.sources.length > 0 && (
+          <section className="mt-9">
+            <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
+              Sources
+            </div>
+            <div className="text-[0.78rem] mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
+              Every claim here traces back to reporting you can read yourself.
+            </div>
+            <div className="space-y-2">
+              {story.sources.map((source, i) => (
+                <a
+                  key={i}
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between gap-3 p-3 rounded-sm border hover:opacity-80"
+                  style={{ borderColor: "var(--border)" }}
+                >
+                  <span className="text-[0.85rem] truncate" style={{ color: "var(--text-body)" }}>
+                    {source.title}
+                  </span>
+                  <span className="font-mono text-[0.62rem] uppercase tracking-wide shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>
+                    {source.sourceCountry ?? source.domain}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+         {story.chanakyaAnalysis && (
+          <section className="mt-9">
+            <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
+              Chanakya&apos;s Move
+            </div>
+            <div className="text-[0.78rem] mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
+              Whose move this was, what they&apos;re betting on, what could counter it.
+            </div>
+            <p className="text-[0.9rem] leading-relaxed" style={{ color: "#C6D0E8" }}>
+              {story.chanakyaAnalysis}
+            </p>
+          </section>
+        )}
         <div className="flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.68rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
           <div className="flex gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--direct)" }} />
