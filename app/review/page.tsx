@@ -21,7 +21,7 @@ export default async function ReviewPage() {
   const { data: drafts, error: draftsError } = await supabase
     .from('story_drafts')
     .select(
-      'slug, headline, dek, body, status, category, read_time, has_video, impact_nodes, chanakya_analysis, workflow_status, created_at, updated_at, articles',
+      'slug, headline, dek, body, status, category, read_time, has_video, impact_nodes, chanakya_analysis, off_lens, workflow_status, created_at, updated_at, articles',
     )
     .eq('workflow_status', 'in_review')
     .order('updated_at', { ascending: false });
