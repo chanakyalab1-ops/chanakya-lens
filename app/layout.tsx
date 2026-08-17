@@ -23,6 +23,9 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Chanakya Lens — stay ahead of the map",
   description: "Geopolitics traced to you. Small events, real chains, plausible impact — not forecasts.",
+  icons: {
+    icon: "/logo-mark.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
