@@ -156,6 +156,20 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </section>
         )}
 
+        {story.offLens && (
+          <section className="mt-9">
+            <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
+              Off-Lens
+            </div>
+            <div className="text-[0.78rem] mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
+              Who&apos;s covering this, from where, and where the framing actually diverges.
+            </div>
+            <p className="text-[0.9rem] leading-relaxed" style={{ color: "#C6D0E8" }}>
+              {story.offLens}
+            </p>
+          </section>
+        )}
+
         <div className="flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.68rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
           <div className="flex gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--direct)" }} />

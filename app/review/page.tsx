@@ -20,13 +20,30 @@ export default async function ReviewPage() {
 
   const { data: drafts, error: draftsError } = await supabase
     .from('story_drafts')
-    .select('slug, headline, status, category, workflow_status, created_at, updated_at, articles')
+    .select(
+      'slug, headline, dek, body, status, category, read_time, has_video, impact_nodes, chanakya_analysis, workflow_status, created_at, updated_at, articles',
+    )
     .eq('workflow_status', 'in_review')
     .order('updated_at', { ascending: false });
 
   if (draftsError) {
     throw new Error(`Failed to load drafts: ${draftsError.message}`);
   }
+
+  const draftCandidateIds = Array.from(
+    new Set(
+      (drafts ?? []).flatMap((d) =>
+        ((d.articles ?? []) as { candidate_id: string }[]).map((a) => a.candidate_id),
+      ),
+    ),
+  );
+
+  const { data: draftCandidateRows } = draftCandidateIds.length
+    ? await supabase
+        .from('story_candidates')
+        .select('id, url, title, source_country, domain, seen_date, tone, query_tag')
+        .in('id', draftCandidateIds)
+    : { data: [] };
 
   const suggestions = suggestClusters(candidates ?? []);
 
@@ -35,6 +52,7 @@ export default async function ReviewPage() {
       candidates={candidates ?? []}
       suggestions={suggestions}
       drafts={drafts ?? []}
+      draftCandidates={draftCandidateRows ?? []}
     />
   );
 }

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { supabaseServer } from '@/lib/supabase-server';
 import { slugify } from '@/lib/slug';
+import { generateStoryDraft } from '@/lib/anthropic-server';
 
 export type ArticleRole = 'primary' | 'local' | 'international' | 'source';
 export type Confidence = 'direct' | 'likely' | 'possible';
@@ -24,6 +25,8 @@ export type CreateDraftInput = {
   statusTag: StatusTag;
   articles: { candidateId: string; role: ArticleRole }[];
   impactNodes: ImpactNode[];
+  chanakyaAnalysis: string;
+  offLens: string;
 };
 
 export async function createDraft(input: CreateDraftInput) {
@@ -61,6 +64,8 @@ export async function createDraft(input: CreateDraftInput) {
     impact_nodes: input.impactNodes,
     articles: input.articles.map((a) => ({ candidate_id: a.candidateId, role: a.role })),
     workflow_status: 'in_review',
+    chanakya_analysis: input.chanakyaAnalysis.trim() || null,
+    off_lens: input.offLens.trim() || null,
   });
 
   if (draftError) {
@@ -80,6 +85,37 @@ export async function createDraft(input: CreateDraftInput) {
 
   revalidatePath('/review');
   return slug;
+}
+
+export async function updateDraft(slug: string, input: CreateDraftInput) {
+  const supabase = supabaseServer();
+
+  if (!input.headline.trim() || !input.body.trim()) {
+    throw new Error('Headline and body are required.');
+  }
+
+  const { error } = await supabase
+    .from('story_drafts')
+    .update({
+      category: input.category || null,
+      status: input.statusTag,
+      headline: input.headline.trim(),
+      dek: input.dek.trim() || null,
+      body: input.body.trim(),
+      read_time: input.readTime.trim() || null,
+      has_video: input.hasVideo,
+      impact_nodes: input.impactNodes,
+      articles: input.articles.map((a) => ({ candidate_id: a.candidateId, role: a.role })),
+      chanakya_analysis: input.chanakyaAnalysis.trim() || null,
+      off_lens: input.offLens.trim() || null,
+    })
+    .eq('slug', slug);
+
+  if (error) {
+    throw new Error(`Failed to update draft: ${error.message}`);
+  }
+
+  revalidatePath('/review');
 }
 
 export async function dismissCandidates(candidateIds: string[]) {
@@ -102,7 +138,7 @@ export async function publishDraft(slug: string) {
   const { data: draft, error: fetchError } = await supabase
     .from('story_drafts')
     .select(
-      'slug, category, status, headline, dek, body, read_time, has_video, impact_nodes, articles',
+      'slug, category, status, headline, dek, body, read_time, has_video, impact_nodes, articles, chanakya_analysis, off_lens',
     )
     .eq('slug', slug)
     .single();
@@ -148,6 +184,8 @@ export async function publishDraft(slug: string) {
     read_time: draft.read_time ?? '3 min',
     has_video: draft.has_video,
     impact_nodes: draft.impact_nodes,
+    chanakya_analysis: draft.chanakya_analysis,
+    off_lens: draft.off_lens,
     sources,
   });
 
@@ -188,4 +226,82 @@ export async function rejectDraft(slug: string) {
   }
 
   revalidatePath('/review');
+}
+
+export async function generateDraft(candidateIds: string[]) {
+  const supabase = supabaseServer();
+
+  if (candidateIds.length === 0) {
+    throw new Error('Select at least one candidate.');
+  }
+
+  const { data: candidateRows, error: candidatesError } = await supabase
+    .from('story_candidates')
+    .select('id, title, domain, source_country, url')
+    .in('id', candidateIds);
+
+  if (candidatesError || !candidateRows || candidateRows.length === 0) {
+    throw new Error(`Failed to load candidates: ${candidatesError?.message}`);
+  }
+
+  const generated = await generateStoryDraft({
+    articles: candidateRows.map((c) => ({
+      title: c.title,
+      domain: c.domain,
+      sourceCountry: c.source_country,
+      url: c.url,
+    })),
+  });
+
+  const baseSlug = slugify(generated.headline);
+  if (!baseSlug) throw new Error('Generated headline was empty.');
+
+  let slug = baseSlug;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const [{ data: storyHit }, { data: draftHit }] = await Promise.all([
+      supabase.from('stories').select('slug').eq('slug', slug).maybeSingle(),
+      supabase.from('story_drafts').select('slug').eq('slug', slug).maybeSingle(),
+    ]);
+    if (!storyHit && !draftHit) break;
+    slug = `${baseSlug}-${attempt + 2}`;
+  }
+
+  const { error: draftError } = await supabase.from('story_drafts').insert({
+    slug,
+    category: generated.category || null,
+    status: generated.statusTag,
+    headline: generated.headline.trim(),
+    dek: generated.dek?.trim() || null,
+    body: generated.body.trim(),
+    read_time: generated.readTime?.trim() || '3 min',
+    has_video: false,
+    impact_nodes: generated.impactNodes ?? [],
+    articles: candidateRows.map((c, i) => ({
+      candidate_id: c.id,
+      role: i === 0 ? 'primary' : 'source',
+    })),
+    chanakya_analysis: generated.chanakyaAnalysis,
+    off_lens: null,
+    workflow_status: 'in_review',
+  });
+
+  if (draftError) {
+    throw new Error(`Failed to save generated draft: ${draftError.message}`);
+  }
+
+  const { error: candidateError } = await supabase
+    .from('story_candidates')
+    .update({ status: 'approved', story_slug: slug, reviewed_at: new Date().toISOString() })
+    .in('id', candidateIds);
+  if (candidateError) {
+    throw new Error(`Failed to update candidate status: ${candidateError.message}`);
+  }
+
+  revalidatePath('/review');
+  return slug;
+}
+
+export async function triggerAutoGenerateBatch(limit: number) {
+  const { autoGenerateBatch } = await import('@/lib/auto-generate');
+  return autoGenerateBatch(limit);
 }

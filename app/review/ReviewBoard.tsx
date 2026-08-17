@@ -6,8 +6,11 @@ import type { ClusterSuggestion } from '@/lib/clustering';
 import {
   createDraft,
   dismissCandidates,
+  generateDraft,
   publishDraft,
   rejectDraft,
+  triggerAutoGenerateBatch,
+  updateDraft,
   type ArticleRole,
   type Confidence,
   type ImpactNode,
@@ -28,8 +31,15 @@ type Candidate = {
 type Draft = {
   slug: string;
   headline: string;
+  dek: string | null;
+  body: string | null;
   status: 'developing' | 'settled' | null;
   category: string | null;
+  read_time: string | null;
+  has_video: boolean | null;
+  impact_nodes: ImpactNode[] | null;
+  chanakya_analysis: string | null;
+  off_lens: string | null;
   workflow_status: string;
   created_at: string;
   updated_at: string;
@@ -70,20 +80,27 @@ export function ReviewBoard({
   candidates,
   suggestions,
   drafts,
+  draftCandidates,
 }: {
   candidates: Candidate[];
   suggestions: ClusterSuggestion[];
   drafts: Draft[];
+  draftCandidates: Candidate[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editorOpen, setEditorOpen] = useState(false);
+  const [editingDraft, setEditingDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const candidateById = useMemo(
     () => new Map(candidates.map((c) => [c.id, c])),
     [candidates],
+  );
+  const draftCandidateById = useMemo(
+    () => new Map(draftCandidates.map((c) => [c.id, c])),
+    [draftCandidates],
   );
 
   const clusteredIds = useMemo(
@@ -123,6 +140,19 @@ export function ReviewBoard({
     });
   }
 
+  function handleGenerate(ids: string[]) {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await generateDraft(ids);
+        clearSelection();
+        router.refresh();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to generate draft.');
+      }
+    });
+  }
+
   function handlePublish(slug: string) {
     setError(null);
     startTransition(async () => {
@@ -147,9 +177,20 @@ export function ReviewBoard({
     });
   }
 
+  function openEditor(draft: Draft) {
+    setEditingDraft(draft);
+    setEditorOpen(true);
+  }
+
   const selectedCandidates = [...selected]
     .map((id) => candidateById.get(id))
     .filter((c): c is Candidate => Boolean(c));
+
+  const editingDraftCandidates = editingDraft
+    ? (editingDraft.articles ?? [])
+        .map((a) => draftCandidateById.get(a.candidate_id))
+        .filter((c): c is Candidate => Boolean(c))
+    : [];
 
   return (
     <div className="min-h-screen bg-[#0B1220] text-[#EDE7DA]">
@@ -161,33 +202,67 @@ export function ReviewBoard({
             {drafts.length} drafts in review
           </p>
         </div>
-        {selected.size > 0 && (
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-xs text-[#8A93A6]">
-              {selected.size} selected
-            </span>
-            <button
-              onClick={() => handleDismiss([...selected])}
-              disabled={isPending}
-              className="text-sm px-3 py-1.5 rounded border border-white/15 hover:bg-white/5 disabled:opacity-40"
-            >
-              Dismiss
-            </button>
-            <button
-              onClick={() => setEditorOpen(true)}
-              disabled={isPending}
-              className="text-sm px-3 py-1.5 rounded bg-[#C97B4A] text-[#0B1220] font-medium hover:bg-[#D98857] disabled:opacity-40"
-            >
-              Build story from {selected.size}
-            </button>
-            <button
-              onClick={clearSelection}
-              className="text-sm text-[#8A93A6] hover:text-[#EDE7DA]"
-            >
-              Clear
-            </button>
-          </div>
-        )}
+
+        <div className="flex items-center gap-3">
+          {selected.size > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs text-[#8A93A6]">
+                {selected.size} selected
+              </span>
+              <button
+                onClick={() => handleDismiss([...selected])}
+                disabled={isPending}
+                className="text-sm px-3 py-1.5 rounded border border-white/15 hover:bg-white/5 disabled:opacity-40"
+              >
+                Dismiss
+              </button>
+              <button
+                onClick={() => {
+                  setEditingDraft(null);
+                  setEditorOpen(true);
+                }}
+                disabled={isPending}
+                className="text-sm px-3 py-1.5 rounded bg-[#C97B4A] text-[#0B1220] font-medium hover:bg-[#D98857] disabled:opacity-40"
+              >
+                Build story from {selected.size}
+              </button>
+              <button
+                onClick={() => handleGenerate([...selected])}
+                disabled={isPending}
+                className="text-sm px-3 py-1.5 rounded bg-[#6FA98A] text-[#0B1220] font-medium hover:bg-[#7EB899] disabled:opacity-40"
+              >
+                {isPending ? 'Generating…' : 'Generate draft'}
+              </button>
+              <button
+                onClick={clearSelection}
+                className="text-sm text-[#8A93A6] hover:text-[#EDE7DA]"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={() => {
+              setError(null);
+              startTransition(async () => {
+                try {
+                  const result = await triggerAutoGenerateBatch(5);
+                  router.refresh();
+                  if (result.failed.length > 0) {
+                    setError(`${result.succeeded.length} drafted, ${result.failed.length} failed.`);
+                  }
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : 'Failed to run batch generate.');
+                }
+              });
+            }}
+            disabled={isPending}
+            className="text-sm px-3 py-1.5 rounded border border-[#6FA98A]/40 text-[#6FA98A] hover:bg-[#6FA98A]/10 disabled:opacity-40"
+          >
+            {isPending ? 'Working…' : 'Generate batch now'}
+          </button>
+        </div>
       </header>
 
       {error && (
@@ -219,6 +294,13 @@ export function ReviewBoard({
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditor(d)}
+                      disabled={isPending}
+                      className="text-sm px-3 py-1.5 rounded border border-white/15 hover:bg-white/5 disabled:opacity-40"
+                    >
+                      Edit
+                    </button>
                     <button
                       onClick={() => handleReject(d.slug)}
                       disabled={isPending}
@@ -308,10 +390,34 @@ export function ReviewBoard({
 
       {editorOpen && (
         <StoryEditor
-          candidates={selectedCandidates}
-          onClose={() => setEditorOpen(false)}
+          candidates={editingDraft ? editingDraftCandidates : selectedCandidates}
+          existingSlug={editingDraft?.slug ?? null}
+          initial={
+            editingDraft
+              ? {
+                  headline: editingDraft.headline,
+                  dek: editingDraft.dek ?? '',
+                  body: editingDraft.body ?? '',
+                  category: editingDraft.category ?? CATEGORIES[0],
+                  readTime: editingDraft.read_time ?? '',
+                  hasVideo: editingDraft.has_video ?? false,
+                  statusTag: editingDraft.status,
+                  impactNodes: editingDraft.impact_nodes ?? [],
+                  chanakyaAnalysis: editingDraft.chanakya_analysis ?? '',
+                  offLens: editingDraft.off_lens ?? '',
+                  roles: Object.fromEntries(
+                    editingDraft.articles.map((a) => [a.candidate_id, a.role]),
+                  ),
+                }
+              : null
+          }
+          onClose={() => {
+            setEditorOpen(false);
+            setEditingDraft(null);
+          }}
           onSaved={() => {
             setEditorOpen(false);
+            setEditingDraft(null);
             clearSelection();
             router.refresh();
           }}
@@ -364,28 +470,47 @@ function CandidateRow({
   );
 }
 
+type EditorInitial = {
+  headline: string;
+  dek: string;
+  body: string;
+  category: string;
+  readTime: string;
+  hasVideo: boolean;
+  statusTag: StatusTag;
+  impactNodes: ImpactNode[];
+  chanakyaAnalysis: string;
+  offLens: string;
+  roles: Record<string, ArticleRole>;
+};
+
 function StoryEditor({
   candidates,
+  existingSlug,
+  initial,
   onClose,
   onSaved,
 }: {
   candidates: Candidate[];
+  existingSlug: string | null;
+  initial: EditorInitial | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [headline, setHeadline] = useState('');
-  const [dek, setDek] = useState('');
-  const [body, setBody] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
-  const [readTime, setReadTime] = useState('');
-  const [hasVideo, setHasVideo] = useState(false);
-  const [statusTag, setStatusTag] = useState<StatusTag>(null);
-  const [roles, setRoles] = useState<Record<string, ArticleRole>>(() =>
-    Object.fromEntries(
-      candidates.map((c, i) => [c.id, i === 0 ? 'primary' : 'source']),
-    ),
+  const [headline, setHeadline] = useState(initial?.headline ?? '');
+  const [dek, setDek] = useState(initial?.dek ?? '');
+  const [body, setBody] = useState(initial?.body ?? '');
+  const [category, setCategory] = useState(initial?.category ?? CATEGORIES[0]);
+  const [readTime, setReadTime] = useState(initial?.readTime ?? '');
+  const [hasVideo, setHasVideo] = useState(initial?.hasVideo ?? false);
+  const [statusTag, setStatusTag] = useState<StatusTag>(initial?.statusTag ?? null);
+  const [roles, setRoles] = useState<Record<string, ArticleRole>>(
+    initial?.roles ??
+      Object.fromEntries(candidates.map((c, i) => [c.id, i === 0 ? 'primary' : 'source'])),
   );
-  const [impactNodes, setImpactNodes] = useState<ImpactNode[]>([]);
+  const [impactNodes, setImpactNodes] = useState<ImpactNode[]>(initial?.impactNodes ?? []);
+  const [chanakyaAnalysis, setChanakyaAnalysis] = useState(initial?.chanakyaAnalysis ?? '');
+  const [offLens, setOffLens] = useState(initial?.offLens ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -403,7 +528,7 @@ function StoryEditor({
     setError(null);
     setSaving(true);
     try {
-      await createDraft({
+      const payload = {
         headline,
         dek,
         body,
@@ -415,10 +540,17 @@ function StoryEditor({
           candidateId: c.id,
           role: roles[c.id] ?? 'source',
         })),
+        chanakyaAnalysis,
+        offLens,
         impactNodes: impactNodes.filter(
           (n) => n.audience.trim().length > 0 && n.mechanism.trim().length > 0,
         ),
-      });
+      };
+      if (existingSlug) {
+        await updateDraft(existingSlug, payload);
+      } else {
+        await createDraft(payload);
+      }
       onSaved();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save draft.');
@@ -431,7 +563,7 @@ function StoryEditor({
     <div className="fixed inset-0 bg-black/60 flex justify-end z-20">
       <div className="w-full max-w-2xl h-full bg-[#0F1826] border-l border-white/10 overflow-y-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-serif text-xl">New story draft</h2>
+          <h2 className="font-serif text-xl">{existingSlug ? 'Edit draft' : 'New story draft'}</h2>
           <button onClick={onClose} className="text-[#8A93A6] hover:text-[#EDE7DA]">
             ✕
           </button>
@@ -634,6 +766,32 @@ function StoryEditor({
           </div>
         </div>
 
+        <div>
+          <label className="font-mono text-xs uppercase tracking-wider text-[#8A93A6]">
+            Chanakya&apos;s Move (optional — whose move this was, what they&apos;re betting on)
+          </label>
+          <textarea
+            value={chanakyaAnalysis}
+            onChange={(e) => setChanakyaAnalysis(e.target.value)}
+            rows={4}
+            className="mt-1 w-full bg-white/[0.03] border border-white/10 rounded px-3 py-2 text-sm"
+            placeholder="Strategic read — the section that earns the Chanakya name"
+          />
+        </div>
+
+        <div>
+          <label className="font-mono text-xs uppercase tracking-wider text-[#8A93A6]">
+            Off-Lens (optional — who&apos;s covering this, from where, and where framing diverges)
+          </label>
+          <textarea
+            value={offLens}
+            onChange={(e) => setOffLens(e.target.value)}
+            rows={4}
+            className="mt-1 w-full bg-white/[0.03] border border-white/10 rounded px-3 py-2 text-sm"
+            placeholder="Geographic coverage gap + framing divergence"
+          />
+        </div>
+
         <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
           <button
             onClick={onClose}
@@ -646,7 +804,7 @@ function StoryEditor({
             disabled={saving || !headline.trim() || !body.trim()}
             className="text-sm px-4 py-2 rounded bg-[#C97B4A] text-[#0B1220] font-medium hover:bg-[#D98857] disabled:opacity-40"
           >
-            {saving ? 'Saving…' : 'Save draft'}
+            {saving ? 'Saving…' : existingSlug ? 'Save changes' : 'Save draft'}
           </button>
         </div>
       </div>

@@ -30,6 +30,7 @@ export type Story = {
   impactNodes?: ImpactNode[]; // empty/null = plain brief
   sources?: Source[];
   chanakyaAnalysis?: string;
+  offLens?: string;
 };
 
 // Supabase rows use snake_case; map to the camelCase Story type used across the UI
@@ -45,6 +46,7 @@ type StoryRow = {
   impact_nodes: ImpactNode[] | null;
   sources: { url: string; title: string; domain: string; source_country: string | null; role: ArticleRole }[] | null;
   chanakya_analysis: string | null;
+  off_lens: string | null;
 };
 
 function mapRow(row: StoryRow): Story {
@@ -61,7 +63,8 @@ function mapRow(row: StoryRow): Story {
     sources: row.sources && row.sources.length > 0
       ? row.sources.map((s) => ({ url: s.url, title: s.title, domain: s.domain, sourceCountry: s.source_country, role: s.role }))
       : undefined,
-      chanakyaAnalysis: row.chanakya_analysis ?? undefined,
+    chanakyaAnalysis: row.chanakya_analysis ?? undefined,
+    offLens: row.off_lens ?? undefined,
   };
 }
 
