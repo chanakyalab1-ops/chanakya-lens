@@ -10,6 +10,12 @@ const dotColor: Record<string, string> = {
   possible: "var(--possible)",
 };
 
+const dotLabel: Record<string, string> = {
+  direct: "Direct — a concrete, near-certain mechanism",
+  likely: "Likely — a plausible mechanism, real but less certain",
+  possible: "Possible — a speculative but reasonable connection",
+};
+
 export default function Feed({ stories }: { stories: Story[] }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
@@ -119,7 +125,12 @@ export default function Feed({ stories }: { stories: Story[] }) {
                 <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if —</span>
                 <div className="flex gap-1">
                   {story.impactNodes!.map((n, i) => (
-                    <span key={i} className="h-1.5 w-1.5 rounded-full" style={{ background: dotColor[n.confidence] }} />
+                    <span
+                      key={i}
+                      title={dotLabel[n.confidence]}
+                      className="h-1.5 w-1.5 rounded-full cursor-help"
+                      style={{ background: dotColor[n.confidence] }}
+                    />
                   ))}
                 </div>
                 <span className="ml-auto font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>{story.readTime}</span>
