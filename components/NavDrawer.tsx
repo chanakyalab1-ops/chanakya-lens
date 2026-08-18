@@ -34,6 +34,12 @@ export default function NavDrawer() {
             <path d="M8 4v4l2.5 2.5" stroke="var(--text-on-ink)" strokeWidth="1" strokeLinecap="round" />
           </svg>
         </div>
+               <Link href="/account" className="h-7 w-7 rounded-full border flex items-center justify-center ml-2" style={{ borderColor: "var(--border)" }}>
+          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 opacity-60">
+            <circle cx="8" cy="6" r="3" stroke="var(--text-on-ink)" strokeWidth="1" />
+            <path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="var(--text-on-ink)" strokeWidth="1" strokeLinecap="round" />
+          </svg>
+        </Link> 
       </header>
 
       {/* Scrim */}
