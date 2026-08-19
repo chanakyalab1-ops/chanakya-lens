@@ -30,13 +30,13 @@ export async function fetchGdeltCandidates(): Promise<
 > {
   const results: Array<GdeltArticle & { queryTag: string }> = [];
 
-  for (const query of QUERIES) {
+    for (const query of QUERIES) {
     const params = new URLSearchParams({
       query,
       mode: "artlist",
       format: "json",
       maxrecords: "20",
-      timespan: "6h", // only recent articles — matches the "every few hours" cron cadence
+      timespan: "24h",
       sort: "datedesc",
     });
 
@@ -55,6 +55,8 @@ export async function fetchGdeltCandidates(): Promise<
     } catch (err) {
       console.error(`GDELT fetch failed for query "${query}":`, err);
     }
+
+    await new Promise((resolve) => setTimeout(resolve, 5500));
   }
 
   return results;
