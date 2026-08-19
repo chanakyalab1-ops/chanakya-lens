@@ -93,7 +93,7 @@ async function fetchOneQuery(
   return null;
 }
 
-export async function fetchgdeltCandidates(): Promise<Array<GdeltArticle & { queryTag: string}>> {
+export async function fetchGdeltCandidates(): Promise<Array<GdeltArticle & { queryTag: string}>> {
   const results: Array<GdeltArticle & { queryTag: string }> = [];
 
   for (const query of QUERIES) {
