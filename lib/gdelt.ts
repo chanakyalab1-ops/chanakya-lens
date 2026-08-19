@@ -35,9 +35,7 @@ const QUERIES = [
 
 const GDELT_ENDPOINT = "https://api.gdeltproject.org/api/v2/doc/doc";
 
-export async function fetchGdeltCandidates(): Promise
-  Array<GdeltArticle & { queryTag: string }>
-> {
+export async function fetchGdeltCandidates(): Promise<Array<GdeltArticle & { queryTag: string }>> {
   const results: Array<GdeltArticle & { queryTag: string }> = [];
 
   for (const query of QUERIES) {
