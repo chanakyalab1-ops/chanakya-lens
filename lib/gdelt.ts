@@ -16,52 +16,76 @@ export type GdeltArticle = {
 // geopolitical / bilateral / cross-border only — no domestic-only politics.
 //
 // NOTE on theme: operators — GDELT's `theme:` filter uses fixed codes from
-// its GKG taxonomy (not free text). Codes like "MILITARY", "BLOCKADE",
-// "SANCTIONS", "TRADE_DISPUTE" have NOT been verified against GDELT's
-// actual codebook. Using an invalid code risks the same silent-failure
-// bug as the old "tariff sourcecountry" query. Verify real codes at
+// its GKG taxonomy (not free text). Verify real codes at
 // http://data.gdeltproject.org/api/v2/guides/LOOKUP-GKGTHEMES.TXT
 // before adding any theme: queries back in.
+//
+// TEMPORARILY REDUCED to 4 core queries while debugging persistent 429s.
+// Restore the other 4 (chokepoints, minerals, subsea infra, EEZ) once
+// confirmed stable — see git history / prior version of this file.
 const QUERIES = [
   'tariff (import OR bilateral OR retaliation) -"sales tax" -"property tax"',
   "export controls sanctions",
   "border conflict OR skirmish",
-  '("Strait of Hormuz" OR "Malacca" OR "Bab el-Mandeb" OR "Suez Canal" OR "Taiwan Strait") (blockade OR naval OR transit OR interception)',
-  '("critical minerals" OR "rare earths" OR "semiconductor export" OR "lithium reserves" OR "uranium enrichment")',
-  '("subsea cable" OR "undersea pipeline" OR "cross-border pipeline" OR "Nord Stream" OR "grid interconnection") (sabotage OR cut OR agreement OR transit)',
   '("joint military exercise" OR "naval drills" OR "arms sale" OR "defense pact" OR "bilateral security")',
-  '("EEZ violation" OR "airspace intrusion" OR "ADIZ" OR "disputed waters" OR "territorial claim")',
 ];
 
 const GDELT_ENDPOINT = "https://api.gdeltproject.org/api/v2/doc/doc";
 
-export async function fetchGdeltCandidates(): Promise<Array<GdeltArticle & { queryTag: string }>> {
-  const results: Array<GdeltArticle & { queryTag: string }> = [];
+// Base delay between queries under normal conditions.
+const BASE_DELAY_MS = 5500;
+// Delay after hitting a 429 — much longer, to actually respect the
+// rate limit window instead of hammering it again in a few seconds.
+const RATE_LIMIT_BACKOFF_MS = 45000;
+// How many times to retry a single query after a 429 before giving up on it.
+const MAX_RETRIES_PER_QUERY = 2;
 
-  for (const query of QUERIES) {
-    const params = new URLSearchParams({
-      query: `${query} sourcelang:eng`,
-      mode: "artlist",
-      format: "json",
-      maxrecords: "20",
-      timespan: "24h",
-      sort: "datedesc",
-    });
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
+async function fetchOneQuery(
+  query: string
+): Promise<{ articles: GdeltArticle[]; queryTag: string } | null> {
+  const params = new URLSearchParams({
+    query: `${query} sourcelang:eng`,
+    mode: "artlist",
+    format: "json",
+    maxrecords: "20",
+    timespan: "24h",
+    sort: "datedesc",
+  });
+
+  for (let attempt = 0; attempt <= MAX_RETRIES_PER_QUERY; attempt++) {
     try {
       const res = await fetch(`${GDELT_ENDPOINT}?${params.toString()}`, {
         headers: { "User-Agent": "ChanakyaLens/1.0" },
       });
 
+      if (res.status === 429) {
+        if (attempt < MAX_RETRIES_PER_QUERY) {
+          console.warn(
+            `GDELT 429 for query "${query}" — backing off ${RATE_LIMIT_BACKOFF_MS}ms before retry ${
+              attempt + 1
+            }/${MAX_RETRIES_PER_QUERY}`
+          );
+          await sleep(RATE_LIMIT_BACKOFF_MS);
+          continue;
+        } else {
+          console.error(
+            `GDELT still 429 for query "${query}" after ${MAX_RETRIES_PER_QUERY} retries — giving up on this query`
+          );
+          return null;
+        }
+      }
+
       if (!res.ok) {
         console.error(`GDELT HTTP ${res.status} for query "${query}"`);
-        await new Promise((resolve) => setTimeout(resolve, 5500));
-        continue;
+        return null;
       }
 
       // Read as text first — GDELT sometimes returns a plain-text/HTML
-      // error page instead of JSON (e.g. on malformed queries or
-      // rate-limit throttling), and calling res.json() directly on
+      // error page instead of JSON, and calling res.json() directly on
       // that throws an opaque SyntaxError with no useful info.
       const text = await res.text();
 
@@ -72,21 +96,17 @@ export async function fetchGdeltCandidates(): Promise<Array<GdeltArticle & { que
         console.error(
           `GDELT non-JSON response for query "${query}": ${text.slice(0, 200)}`
         );
-        await new Promise((resolve) => setTimeout(resolve, 5500));
-        continue;
+        return null;
       }
 
-      const articles: GdeltArticle[] = data?.articles ?? [];
-
-      for (const a of articles) {
-        results.push({ ...a, queryTag: query });
-      }
+      return { articles: data?.articles ?? [], queryTag: query };
     } catch (err) {
       console.error(`GDELT fetch failed for query "${query}":`, err);
+      return null;
     }
-
-    await new Promise((resolve) => setTimeout(resolve, 5500));
   }
 
-  return results;
+  return null;
 }
+
+export async function fetchGdeltCandidates():
