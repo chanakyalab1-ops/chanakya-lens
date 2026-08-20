@@ -9,37 +9,39 @@ export default function NavDrawer() {
 
   return (
     <>
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b px-5 py-3.5 backdrop-blur"
+      <header className="sticky top-0 z-20 grid grid-cols-[1fr_auto_1fr] items-center border-b px-5 py-4 backdrop-blur"
         style={{ borderColor: "var(--border)", background: "rgba(10,17,42,0.92)" }}>
         <button
           aria-label="Open menu"
           onClick={() => setOpen(true)}
-          className="flex flex-col gap-1 p-1.5"
+          className="flex flex-col gap-1 p-1.5 justify-self-start"
         >
           <span className="h-px w-[18px]" style={{ background: "var(--text-on-ink)" }} />
           <span className="h-px w-[12px]" style={{ background: "var(--text-on-ink)" }} />
           <span className="h-px w-[18px]" style={{ background: "var(--text-on-ink)" }} />
         </button>
 
-        <Link href="/" className="flex items-center gap-2.5">
-          <Image src="/logo-mark.png" alt="Chanakya Lens" width={30} height={30} className="rounded-full" />
-          <span className="font-display text-xl font-extrabold uppercase tracking-wide">
+        <Link href="/" className="flex items-center gap-3 justify-self-center">
+          <Image src="/logo-mark.png" alt="Chanakya Lens" width={44} height={44} className="rounded-full" />
+          <span className="font-display text-2xl font-extrabold uppercase tracking-wide">
             Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
           </span>
         </Link>
 
-        <div className="h-7 w-7 rounded-full border flex items-center justify-center" style={{ borderColor: "var(--border)" }}>
-          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 opacity-60">
-            <circle cx="8" cy="8" r="7" stroke="var(--text-on-ink)" strokeWidth="1" />
-            <path d="M8 4v4l2.5 2.5" stroke="var(--text-on-ink)" strokeWidth="1" strokeLinecap="round" />
-          </svg>
+        <div className="flex items-center gap-2 justify-self-end">
+          <div className="h-9 w-9 rounded-full border flex items-center justify-center" style={{ borderColor: "var(--border)" }}>
+            <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4 opacity-80">
+              <circle cx="8" cy="8" r="7" stroke="var(--text-on-ink)" strokeWidth="1.2" />
+              <path d="M8 4v4l2.5 2.5" stroke="var(--text-on-ink)" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+          </div>
+          <Link href="/account" className="h-9 w-9 rounded-full border flex items-center justify-center" style={{ borderColor: "var(--border)" }}>
+            <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4 opacity-80">
+              <circle cx="8" cy="6" r="3" stroke="var(--text-on-ink)" strokeWidth="1.2" />
+              <path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="var(--text-on-ink)" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+          </Link>
         </div>
-               <Link href="/account" className="h-7 w-7 rounded-full border flex items-center justify-center ml-2" style={{ borderColor: "var(--border)" }}>
-          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 opacity-60">
-            <circle cx="8" cy="6" r="3" stroke="var(--text-on-ink)" strokeWidth="1" />
-            <path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="var(--text-on-ink)" strokeWidth="1" strokeLinecap="round" />
-          </svg>
-        </Link> 
       </header>
 
       {/* Scrim */}
@@ -84,7 +86,11 @@ export default function NavDrawer() {
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>About</div>
         <Link href="/how-we-rate" className="px-5 py-2.5 text-sm hover:bg-white/5">How we rate this</Link>
         <Link href="/about" className="px-5 py-2.5 text-sm hover:bg-white/5">Our approach</Link>
+
+        <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>Off-Lens</div>
+        <Link href="/off-lens" className="px-5 py-2.5 text-sm hover:bg-white/5">What is Off-Lens</Link>
       </nav>
+
     </>
   );
 }
