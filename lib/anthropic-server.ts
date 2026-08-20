@@ -52,11 +52,11 @@ CRITICAL EDITORIAL RULES:
 - Default toward UNDER-claiming confidence, not over-claiming. If you're unsure whether something is "direct" or "likely," choose the lower one. Plausible-sounding overreach is the exact failure mode this system exists to prevent.
 - CRITICAL: Never characterize the current state, severity, or status of a situation (e.g. "no military movements have occurred," "tensions have not escalated," "the situation remains calm") unless your search results directly confirm it. If you're not sure, omit the claim entirely rather than guess.
 - Do not invent specific facts, numbers, or quotes that your searches didn't actually surface.
+- Never include citation markup like <cite>, [1], (source), or any other reference tags in your output text. Write clean prose only — headline, dek, body, and all other fields must contain no citation syntax whatsoever, even though your research process involves searching and citing sources internally.
 - category must be exactly one of: ${CATEGORIES.join(', ')}
 - readTime should be a realistic estimate like "3 min" or "5 min" based on body length.
 
-After you finish researching, respond with ONLY a raw JSON object as your final message — no markdown fences, no preamble, no explanation, matching this exact shape:
-
+After you finish researching, your FINAL message must contain NOTHING except the raw JSON object — not one word of narration before or after it, not even a sentence like "Here is the draft." Output the JSON object and nothing else, matching this exact shape:
 {
   "headline": string,
   "dek": string,
@@ -125,13 +125,34 @@ export async function generateStoryDraft(input: {
     throw new Error('No text content in Anthropic response. Full response: ' + JSON.stringify(data).slice(0, 500));
   }
 
-  let parsed: GeneratedDraft;
+   let parsed: GeneratedDraft;
   try {
-    const cleaned = textBlock.text.replace(/```json|```/g, '').trim();
-    parsed = JSON.parse(cleaned);
+    const withoutFences = textBlock.text.replace(/```json|```/g, '').trim();
+    const firstBrace = withoutFences.indexOf('{');
+    const lastBrace = withoutFences.lastIndexOf('}');
+
+    if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
+      throw new Error('No JSON object found in response text.');
+    }
+
+    const jsonOnly = withoutFences.slice(firstBrace, lastBrace + 1);
+    parsed = JSON.parse(jsonOnly);
   } catch {
     throw new Error('Failed to parse generated draft as JSON. Raw output: ' + textBlock.text.slice(0, 300));
   }
+
+  // Defensive cleanup: strip any citation markup that slipped through
+  // despite the prompt instruction, so it never reaches published content.
+  const stripCitations = (text: string) => text.replace(/<\/?cite[^>]*>/g, '').trim();
+  parsed.headline = stripCitations(parsed.headline);
+  parsed.dek = stripCitations(parsed.dek);
+  parsed.body = stripCitations(parsed.body);
+  if (parsed.chanakyaAnalysis) parsed.chanakyaAnalysis = stripCitations(parsed.chanakyaAnalysis);
+  parsed.impactNodes = parsed.impactNodes.map((n) => ({
+    ...n,
+    audience: stripCitations(n.audience),
+    mechanism: stripCitations(n.mechanism),
+  }));
 
   return parsed;
 }
