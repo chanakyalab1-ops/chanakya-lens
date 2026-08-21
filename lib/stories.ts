@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+﻿import { supabase } from "./supabase";
 
 export type ConfidenceLevel = "direct" | "likely" | "possible";
 
@@ -31,6 +31,7 @@ export type Story = {
   sources?: Source[];
   chanakyaAnalysis?: string;
   offLens?: string;
+  publishedAt: string; // ISO timestamp from stories.created_at
 };
 
 // Supabase rows use snake_case; map to the camelCase Story type used across the UI
@@ -47,6 +48,7 @@ type StoryRow = {
   sources: { url: string; title: string; domain: string; source_country: string | null; role: ArticleRole }[] | null;
   chanakya_analysis: string | null;
   off_lens: string | null;
+  created_at: string;
 };
 
 function mapRow(row: StoryRow): Story {
@@ -65,6 +67,7 @@ function mapRow(row: StoryRow): Story {
       : undefined,
     chanakyaAnalysis: row.chanakya_analysis ?? undefined,
     offLens: row.off_lens ?? undefined,
+    publishedAt: row.created_at,
   };
 }
 
