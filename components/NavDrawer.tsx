@@ -94,4 +94,12 @@ export default function NavDrawer() {
 
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>About</div>
         <Link href="/how-we-rate" className="px-5 py-2.5 text-sm hover:bg-white/5">How we rate this</Link>
-        <Link href="/about"
+        <Link href="/about" className="px-5 py-2.5 text-sm hover:bg-white/5">Our approach</Link>
+
+        <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>Off-Lens</div>
+        <Link href="/off-lens" className="px-5 py-2.5 text-sm hover:bg-white/5">What is Off-Lens</Link>
+      </nav>
+
+    </>
+  );
+}
