@@ -15,8 +15,8 @@ export default async function FeedPage() {
         <div className="font-mono text-[0.64rem] uppercase tracking-widest mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
           Today&apos;s signal
         </div>
-        <div className="font-display text-lg font-semibold max-w-md mx-auto" style={{ color: "var(--text-body)" }}>
-          Small events, traced to where they actually reach you.
+                <div className="font-display text-lg font-semibold max-w-md mx-auto" style={{ color: "var(--text-body)" }}>
+          Global moves. Local math.
         </div>
       </div>
 
