@@ -14,6 +14,16 @@ export async function GET(req: NextRequest) {
   // Simple shared-secret check so this endpoint can't be triggered by anyone
   // who finds the URL — only Vercel Cron (with the secret) or you, manually.
   const authHeader = req.headers.get("authorization");
+  const userAgent = req.headers.get("user-agent");
+
+  // TEMP DIAGNOSTIC — remove once cron auth issue is resolved.
+  console.log("INGEST AUTH DEBUG:", {
+    receivedAuthHeader: authHeader,
+    expectedAuthHeader: `Bearer ${process.env.CRON_SECRET}`,
+    cronSecretIsSet: !!process.env.CRON_SECRET,
+    userAgent,
+  });
+
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
