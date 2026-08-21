@@ -67,14 +67,23 @@ export default function NavDrawer() {
 
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>Read</div>
         <Link href="/" className="px-5 py-2.5 text-sm hover:bg-white/5">Latest stories</Link>
-        <Link href="/videos" className="px-5 py-2.5 text-sm hover:bg-white/5">Video briefs</Link>
-        <Link href="/regions" className="px-5 py-2.5 text-sm hover:bg-white/5 flex justify-between">
-          Browse by region <span className="font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>soon</span>
-        </Link>
+        <Link href="/regions" className="px-5 py-2.5 text-sm hover:bg-white/5">Browse by region</Link>
 
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>Follow</div>
-        <a href="https://instagram.com" target="_blank" className="px-5 py-2.5 text-sm hover:bg-white/5 flex items-center justify-between">
-          Latest posts
+        <a href="https://www.instagram.com/chanakya.lab/" target="_blank" rel="noreferrer" className="px-5 py-2.5 text-sm hover:bg-white/5 flex items-center justify-between">
+          Instagram
+          <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5 opacity-50">
+            <path d="M2 10 10 2M10 2H4M10 2v6" stroke="var(--text-on-ink-dim)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </a>
+        <a href="https://www.youtube.com/@Chanakya_lab" target="_blank" rel="noreferrer" className="px-5 py-2.5 text-sm hover:bg-white/5 flex items-center justify-between">
+          YouTube
+          <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5 opacity-50">
+            <path d="M2 10 10 2M10 2H4M10 2v6" stroke="var(--text-on-ink-dim)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </a>
+        <a href="https://www.facebook.com/share/1HntT8Xo6x/" target="_blank" rel="noreferrer" className="px-5 py-2.5 text-sm hover:bg-white/5 flex items-center justify-between">
+          Facebook
           <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5 opacity-50">
             <path d="M2 10 10 2M10 2H4M10 2v6" stroke="var(--text-on-ink-dim)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -85,12 +94,4 @@ export default function NavDrawer() {
 
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>About</div>
         <Link href="/how-we-rate" className="px-5 py-2.5 text-sm hover:bg-white/5">How we rate this</Link>
-        <Link href="/about" className="px-5 py-2.5 text-sm hover:bg-white/5">Our approach</Link>
-
-        <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>Off-Lens</div>
-        <Link href="/off-lens" className="px-5 py-2.5 text-sm hover:bg-white/5">What is Off-Lens</Link>
-      </nav>
-
-    </>
-  );
-}
+        <Link href="/about"
