@@ -48,7 +48,7 @@ async function fetchOneQuery(
   for (let attempt = 0; attempt <= MAX_RETRIES_PER_QUERY; attempt++) {
     try {
       const res = await fetch(`${GDELT_ENDPOINT}?${params.toString()}`, {
-        headers: { "User-Agent": "ChanakyaLens/1.0" },
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
       });
 
       if (res.status === 429) {
