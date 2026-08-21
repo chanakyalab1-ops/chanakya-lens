@@ -1,8 +1,8 @@
-{
+﻿{
   "crons": [
     {
       "path": "/api/ingest",
-      "schedule": "55 0 * * *"
+      "schedule": "0 12 * * *"
     },
     {
       "path": "/api/auto-generate",
