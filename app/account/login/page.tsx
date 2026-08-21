@@ -23,7 +23,7 @@ export default function AccountLoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/account`,
+        redirectTo: window.location.origin + '/auth/callback',
       },
     });
 
@@ -31,8 +31,6 @@ export default function AccountLoginPage() {
       setError(error.message);
       setGoogleLoading(false);
     }
-    // On success, Supabase redirects the browser to Google — no further
-    // action needed here; the page navigates away.
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -99,7 +97,7 @@ export default function AccountLoginPage() {
               <path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.16.28-1.7V4.97H.94A9 9 0 0 0 0 9c0 1.45.35 2.83.94 4.03l3.01-2.33z" />
               <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .94 4.97l3.01 2.33C4.66 5.17 6.65 3.58 9 3.58z" />
             </svg>
-            {googleLoading ? 'Working…' : 'Continue with Google'}
+            {googleLoading ? 'Working...' : 'Continue with Google'}
           </button>
 
           <div className="flex items-center gap-3">
@@ -144,7 +142,7 @@ export default function AccountLoginPage() {
               className="w-full py-2 rounded-sm font-medium disabled:opacity-40"
               style={{ background: 'var(--brand-soft)', color: 'var(--ink)' }}
             >
-              {loading ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+              {loading ? 'Working...' : mode === 'signin' ? 'Sign in' : 'Create account'}
             </button>
           </form>
 
