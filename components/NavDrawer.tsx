@@ -28,7 +28,7 @@ export default function NavDrawer() {
           </span>
         </Link>
 
-                <div className="flex items-center justify-self-end">
+        <div className="flex items-center justify-self-end">
           <Link href="/account" className="h-9 w-9 rounded-full border flex items-center justify-center" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
             <svg viewBox="0 0 16 16" className="h-4 w-4">
               <circle cx="8" cy="6" r="3" fill="var(--text-on-ink)" />
@@ -55,7 +55,7 @@ export default function NavDrawer() {
             Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
           </div>
           <button onClick={() => setOpen(false)} aria-label="Close menu" style={{ color: "var(--text-on-ink-dim)" }}>
-            ✕
+            X
           </button>
         </div>
 
@@ -89,6 +89,7 @@ export default function NavDrawer() {
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>About</div>
         <Link href="/how-we-rate" className="px-5 py-2.5 text-sm hover:bg-white/5">How we rate this</Link>
         <Link href="/about" className="px-5 py-2.5 text-sm hover:bg-white/5">Our approach</Link>
+        <Link href="/feedback" className="px-5 py-2.5 text-sm hover:bg-white/5">Feedback</Link>
 
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>Off-Lens</div>
         <Link href="/off-lens" className="px-5 py-2.5 text-sm hover:bg-white/5">What is Off-Lens</Link>
