@@ -1,4 +1,4 @@
-'use server';
+﻿'use server';
 
 import { revalidatePath } from 'next/cache';
 import { supabaseServer } from '@/lib/supabase-server';
@@ -281,7 +281,7 @@ export async function generateDraft(candidateIds: string[]) {
       role: i === 0 ? 'primary' : 'source',
     })),
     chanakya_analysis: generated.chanakyaAnalysis,
-    off_lens: null,
+    off_lens: generated.offLens,
     workflow_status: 'in_review',
   });
 
@@ -363,3 +363,4 @@ export async function unpublishStory(slug: string) {
   revalidatePath('/review/manage');
   revalidatePath('/');
 }
+
