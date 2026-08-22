@@ -305,3 +305,61 @@ export async function triggerAutoGenerateBatch(limit: number) {
   const { autoGenerateBatch } = await import('@/lib/auto-generate');
   return autoGenerateBatch(limit);
 }
+export type UpdatePublishedStoryInput = {
+  headline: string;
+  dek: string;
+  body: string;
+  category: string;
+  readTime: string;
+  hasVideo: boolean;
+  statusTag: StatusTag;
+  impactNodes: ImpactNode[];
+  chanakyaAnalysis: string;
+  offLens: string;
+};
+
+export async function updatePublishedStory(slug: string, input: UpdatePublishedStoryInput) {
+  const supabase = supabaseServer();
+
+  if (!input.headline.trim() || !input.body.trim()) {
+    throw new Error('Headline and body are required.');
+  }
+
+  const { error } = await supabase
+    .from('stories')
+    .update({
+      headline: input.headline.trim(),
+      dek: input.dek.trim() || input.headline.trim(),
+      body: input.body.trim(),
+      category: input.category || null,
+      status: input.statusTag,
+      read_time: input.readTime.trim() || '3 min',
+      has_video: input.hasVideo,
+      impact_nodes: input.impactNodes,
+      chanakya_analysis: input.chanakyaAnalysis.trim() || null,
+      off_lens: input.offLens.trim() || null,
+    })
+    .eq('slug', slug);
+
+  if (error) {
+    throw new Error(`Failed to update story: ${error.message}`);
+  }
+
+  revalidatePath('/review/manage');
+  revalidatePath(`/story/${slug}`);
+  revalidatePath('/');
+}
+
+// Removes a story from the live site entirely. Does not touch its source
+// candidates or the original draft record, if either still exist.
+export async function unpublishStory(slug: string) {
+  const supabase = supabaseServer();
+
+  const { error } = await supabase.from('stories').delete().eq('slug', slug);
+  if (error) {
+    throw new Error(`Failed to unpublish: ${error.message}`);
+  }
+
+  revalidatePath('/review/manage');
+  revalidatePath('/');
+}
