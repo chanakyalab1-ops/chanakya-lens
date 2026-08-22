@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
@@ -33,6 +33,17 @@ function OffLensTeaser() {
         Learn more →
       </div>
     </Link>
+  );
+}
+
+function OffLensBadge() {
+  return (
+    <span
+      className="font-mono text-[0.58rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1"
+      style={{ color: "var(--brand-soft)", borderColor: "rgba(95,168,181,0.5)", background: "rgba(95,168,181,0.08)" }}
+    >
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} /> Off-Lens
+    </span>
   );
 }
 
@@ -136,6 +147,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
                       <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} /> Developing
                     </span>
                   )}
+                  {story.offLens && <OffLensBadge />}
                   {story.hasVideo && (
                     <span className="ml-auto h-5 w-5 rounded-full flex items-center justify-center" style={{ background: "rgba(95,168,181,0.18)" }}>
                       <svg viewBox="0 0 12 14" fill="none" className="h-1.5 w-1.5">
@@ -181,10 +193,11 @@ export default function Feed({ stories }: { stories: Story[] }) {
                 className="block rounded-sm border p-4"
                 style={{ background: "var(--ink-card)", borderColor: "var(--border)" }}
               >
-                <div className="flex items-center gap-2 mb-2.5">
+                <div className="flex items-center gap-2 mb-2.5 flex-wrap">
                   <span className="font-mono text-[0.62rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
                     {story.category}
                   </span>
+                  {story.offLens && <OffLensBadge />}
                 </div>
                 <h2 className="font-display font-bold text-lg leading-tight mb-2">{story.headline}</h2>
                 <p className="text-[0.83rem] mb-3" style={{ color: "var(--text-body)" }}>{story.dek}</p>
