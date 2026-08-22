@@ -16,23 +16,46 @@ const dotLabel: Record<string, string> = {
   possible: "Possible — a speculative but reasonable connection",
 };
 
-function OffLensTeaser() {
+function OffLensTeaser({ stories }: { stories: Story[] }) {
+  const offLensStories = stories.filter((s) => s.offLens);
+
   return (
-    <Link
-      href="/off-lens"
-      className="flex flex-col rounded-sm border p-5 hover:opacity-90"
+    <div
+      className="flex flex-col rounded-sm border p-5"
       style={{ borderColor: "var(--brand-soft)", background: "var(--ink-card)" }}
     >
-      <div className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
-        Off-Lens
-      </div>
-      <p className="text-[0.88rem] leading-relaxed" style={{ color: "var(--text-body)" }}>
+      <Link href="/off-lens" className="hover:opacity-90">
+        <div className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
+          Off-Lens
+        </div>
+      </Link>
+      <p className="text-[0.88rem] leading-relaxed mb-4" style={{ color: "var(--text-body)" }}>
         Every story is reported from somewhere. Off-Lens shows who&apos;s covering it, from where, and where the framing splits by whose interest is at stake.
       </p>
-      <div className="mt-4 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>
-        Learn more →
-      </div>
-    </Link>
+
+      {offLensStories.length > 0 ? (
+        <div className="flex flex-col gap-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+          {offLensStories.slice(0, 4).map((story) => (
+            <Link
+              key={story.slug}
+              href={`/story/${story.slug}`}
+              className="text-[0.82rem] leading-snug hover:opacity-80"
+              style={{ color: "var(--text-on-ink)" }}
+            >
+              {story.headline}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+
+      <Link
+        href="/off-lens"
+        className="mt-4 font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80"
+        style={{ color: "var(--text-on-ink-dim)" }}
+      >
+        {offLensStories.length > 0 ? "See all →" : "Learn more →"}
+      </Link>
+    </div>
   );
 }
 
@@ -122,7 +145,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 mt-3 lg:hidden">
-        <OffLensTeaser />
+        <OffLensTeaser stories={stories} />
       </div>
 
       <main className="max-w-7xl mx-auto px-4 pb-16 lg:grid lg:grid-cols-[1fr_280px] lg:gap-6 lg:items-start">
@@ -226,7 +249,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
         </div>
 
         <aside className="hidden lg:block mt-3 lg:sticky lg:top-[130px]">
-          <OffLensTeaser />
+          <OffLensTeaser stories={stories} />
         </aside>
       </main>
     </>
