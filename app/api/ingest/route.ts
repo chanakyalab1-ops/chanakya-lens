@@ -24,14 +24,13 @@ export async function GET(req: NextRequest) {
 
   let inserted = 0;
   let skipped = 0;
-  let fetched = 0;
+  let result;
   let errorMsg: string | null = null;
 
   try {
-    const articles = await fetchGdeltCandidates();
-    fetched = articles.length;
+    result = await fetchGdeltCandidates();
 
-    for (const article of articles) {
+    for (const article of result.articles) {
       const titleLower = article.title?.toLowerCase() ?? "";
       if (EXCLUDED_KEYWORDS.some((kw) => titleLower.includes(kw))) {
         skipped++;
@@ -54,12 +53,16 @@ export async function GET(req: NextRequest) {
 
       if (!error) inserted++;
     }
+
+    if (result.queriesSucceeded === 0) {
+      errorMsg = `All ${result.queriesAttempted} GDELT queries failed: ${result.failureDetails.join("; ")}`;
+    }
   } catch (err) {
     errorMsg = err instanceof Error ? err.message : String(err);
   }
 
-  // Log this run regardless of outcome — durable record, doesn't depend on
-  // Vercel's short log retention window.
+  const fetched = result?.articles.length ?? 0;
+
   await supabase.from("ingestion_runs").insert({
     triggered_by: triggeredBy,
     fetched,
@@ -68,7 +71,23 @@ export async function GET(req: NextRequest) {
     error: errorMsg,
   });
 
-  return NextResponse.json({ fetched, inserted, skipped, error: errorMsg });
+  const responseBody = {
+    fetched,
+    inserted,
+    skipped,
+    queriesAttempted: result?.queriesAttempted ?? 0,
+    queriesSucceeded: result?.queriesSucceeded ?? 0,
+    queriesFailed: result?.queriesFailed ?? 0,
+    error: errorMsg,
+  };
+
+  if (errorMsg && !result) {
+    return NextResponse.json(responseBody, { status: 500 });
+  }
+  if (result && result.queriesSucceeded === 0) {
+    return NextResponse.json(responseBody, { status: 502 });
+  }
+  return NextResponse.json(responseBody, { status: 200 });
 }
 
 function parseGdeltDate(seendate: string | undefined): string | null {
