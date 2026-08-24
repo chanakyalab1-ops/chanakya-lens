@@ -1,4 +1,4 @@
-// GDELT DOC 2.0 API client -- free, no key required.
+﻿// GDELT DOC 2.0 API client -- free, no key required.
 // Docs: https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/
 
 export type GdeltArticle = {
@@ -27,10 +27,12 @@ const QUERIES = [
 
 const GDELT_ENDPOINT = "https://api.gdeltproject.org/api/v2/doc/doc";
 
-const BASE_DELAY_MS = 3000;
-const RATE_LIMIT_BACKOFF_MS = 15000;
-const NETWORK_RETRY_BACKOFF_MS = 3000;
-const MAX_RETRIES_PER_QUERY = 1;
+// GDELT needs roughly 5-6s minimum between requests -- 3s was too aggressive
+const BASE_DELAY_MS = 6000;
+const INITIAL_429_BACKOFF_MS = 20000;
+const MAX_429_BACKOFF_MS = 5 * 60000;
+const NETWORK_RETRY_BACKOFF_MS = 4000;
+const MAX_RETRIES_PER_QUERY = 3;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -60,12 +62,29 @@ async function fetchOneQuery(query: string): Promise<QueryOutcome> {
 
       if (res.status === 429) {
         lastReason = "rate_limited_429";
+
         if (attempt < MAX_RETRIES_PER_QUERY) {
-          console.warn(`GDELT 429 for query "${query}" -- backing off ${RATE_LIMIT_BACKOFF_MS}ms before retry`);
-          await sleep(RATE_LIMIT_BACKOFF_MS);
+          const retryAfterHeader = res.headers.get("retry-after");
+          let backoff: number;
+
+          if (retryAfterHeader && Number.isFinite(Number(retryAfterHeader))) {
+            backoff = Number(retryAfterHeader) * 1000;
+          } else {
+            const jitter = Math.floor(Math.random() * 3000);
+            backoff = Math.min(
+              INITIAL_429_BACKOFF_MS * Math.pow(2, attempt) + jitter,
+              MAX_429_BACKOFF_MS
+            );
+          }
+
+          console.warn(
+            `GDELT 429 for query "${query}" -- attempt ${attempt + 1}/${MAX_RETRIES_PER_QUERY}, backing off ${backoff}ms`
+          );
+          await sleep(backoff);
           continue;
         }
-        console.error(`GDELT still 429 for query "${query}" after retries -- giving up`);
+
+        console.error(`GDELT still 429 for query "${query}" after ${MAX_RETRIES_PER_QUERY} retries -- giving up`);
         return { status: "failed", reason: lastReason };
       }
 
@@ -90,8 +109,9 @@ async function fetchOneQuery(query: string): Promise<QueryOutcome> {
       console.error(`GDELT fetch failed for query "${query}":`, err);
 
       if (attempt < MAX_RETRIES_PER_QUERY) {
-        console.warn(`Network error -- backing off ${NETWORK_RETRY_BACKOFF_MS}ms before retry`);
-        await sleep(NETWORK_RETRY_BACKOFF_MS);
+        const backoff = NETWORK_RETRY_BACKOFF_MS * (attempt + 1);
+        console.warn(`Network error -- backing off ${backoff}ms before retry`);
+        await sleep(backoff);
         continue;
       }
       return { status: "failed", reason: lastReason };
@@ -102,6 +122,8 @@ async function fetchOneQuery(query: string): Promise<QueryOutcome> {
 }
 
 export async function fetchGdeltCandidates(): Promise<GdeltFetchResult> {
+  console.log(`[GDELT] fetchGdeltCandidates START ${new Date().toISOString()}`);
+
   const articles: Array<GdeltArticle & { queryTag: string }> = [];
   let queriesSucceeded = 0;
   let queriesFailed = 0;
@@ -122,6 +144,8 @@ export async function fetchGdeltCandidates(): Promise<GdeltFetchResult> {
 
     await sleep(BASE_DELAY_MS);
   }
+
+  console.log(`[GDELT] fetchGdeltCandidates END ${new Date().toISOString()} -- succeeded: ${queriesSucceeded}, failed: ${queriesFailed}`);
 
   return {
     articles,
