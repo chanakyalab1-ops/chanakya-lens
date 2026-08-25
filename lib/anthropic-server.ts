@@ -1,4 +1,4 @@
-export type GeneratedImpactNode = {
+﻿export type GeneratedImpactNode = {
   audience: string;
   mechanism: string;
   confidence: "direct" | "likely" | "possible";
@@ -14,6 +14,7 @@ export type GeneratedDraft = {
   impactNodes: GeneratedImpactNode[];
   chanakyaAnalysis: string | null;
   offLens: string | null;
+  subjectCountries: string[];
 };
 
 const CATEGORIES = [
@@ -45,6 +46,7 @@ You draft content for Chanakya Lens, a geopolitical news analysis platform. Ever
    - Coverage gap: heavy reporting from one country/region and conspicuous silence from another that has an obvious stake in the outcome.
    - Framing gap: the same facts told as a meaningfully different story depending on the outlet's national vantage point -- not left/right bias, but whose interest the framing quietly serves.
    Off-Lens is NOT a bias score and is NOT about whether reporting is accurate. A story reported accurately by every outlet involved can still be Off-Lens if it's only being told from one vantage point.
+5. subjectCountries -- the country or countries this story is substantively ABOUT, not the countries of the outlets reporting it. A story about Morocco covered by a Spanish outlet is about Morocco (and possibly Spain, if Spain is also a real party to the events, e.g. Ceuta). List 1-3 country names, using standard English names (e.g. "United States", "South Korea", "United Kingdom"). This drives regional categorization, so get it right based on what the story is actually about, not who wrote about it.
 
 RESEARCH PROCESS -- this is critical:
 You have a web_search tool. You are given source article titles, domains, and URLs, but NOT the full article text. Before drafting anything, use web_search to find and read the actual reporting on this story -- search for the headline text, the key names/entities involved, and related coverage. Do not draft from the headline alone. Ground every factual claim in what you actually find through search, not what seems plausible.
@@ -60,6 +62,7 @@ CRITICAL EDITORIAL RULES:
 - Never include citation markup like , [1], (source), or any other reference tags in your output text. Write clean prose only -- headline, dek, body, and all other fields must contain no citation syntax whatsoever, even though your research process involves searching and citing sources internally.
 - category must be exactly one of: ${CATEGORIES.join(", ")}
 - readTime should be a realistic estimate like "3 min" or "5 min" based on body length.
+- subjectCountries must reflect what the story is ABOUT. Do not default to the source outlets' countries -- reason about the actual subject matter.
 
 After you finish researching, your FINAL message must contain NOTHING except the raw JSON object -- not one word of narration before or after it, not even a sentence like "Here is the draft." Output the JSON object and nothing else, matching this exact shape:
 
@@ -72,7 +75,8 @@ After you finish researching, your FINAL message must contain NOTHING except the
   "statusTag": "developing" | "settled" | null,
   "impactNodes": [{ "audience": string, "mechanism": string, "confidence": "direct" | "likely" | "possible" }],
   "chanakyaAnalysis": string | null,
-  "offLens": string | null
+  "offLens": string | null,
+  "subjectCountries": string[]
 }`;
 }
 
@@ -105,6 +109,7 @@ export async function generateStoryDraft(input: {
       max_tokens: 4000,
       system: buildSystemPrompt(),
       messages: [{ role: "user", content: userPrompt }],
+      cache_control: { type: "ephemeral" },
       tools: [
         {
           type: "web_search_20250305",
@@ -142,6 +147,10 @@ export async function generateStoryDraft(input: {
     parsed = JSON.parse(jsonOnly);
   } catch {
     throw new Error("Failed to parse generated draft as JSON. Raw output: " + textBlock.text.slice(0, 300));
+  }
+
+  if (!Array.isArray(parsed.subjectCountries)) {
+    parsed.subjectCountries = [];
   }
 
   const stripCitations = (text: string) => text.replace(/<\/?cite[^>]*>/g, "").trim();
