@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { fetchGdeltCandidates } from "@/lib/gdelt";
+import { fetchNewsCatcherCandidates } from "@/lib/newscatcher";
 
 const EXCLUDED_KEYWORDS = [
   "immigration and customs enforcement",
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   let errorMsg: string | null = null;
 
   try {
-    result = await fetchGdeltCandidates();
+    result = await fetchNewsCatcherCandidates();
 
     const rows = result.articles
       .filter((article) => {
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (result.queriesSucceeded === 0) {
-      errorMsg = `All ${result.queriesAttempted} GDELT queries failed: ${result.failureDetails.join("; ")}`;
+      errorMsg = `All ${result.queriesAttempted} NewsCatcher queries failed: ${result.failureDetails.join("; ")}`;
     }
   } catch (err) {
     errorMsg = err instanceof Error ? err.message : String(err);
@@ -103,8 +103,9 @@ export async function GET(req: NextRequest) {
 
 function parseGdeltDate(seendate: string | undefined): string | null {
   if (!seendate) return null;
-  const match = seendate.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
-  if (!match) return null;
-  const [, y, mo, d, h, mi, s] = match;
-  return `${y}-${mo}-${d}T${h}:${mi}:${s}Z`;
+  // NewsCatcher dates come as "YYYY-MM-DD HH:MM:SS", already valid for Postgres timestamp
+  const isoLike = seendate.replace(" ", "T") + "Z";
+  const parsed = new Date(isoLike);
+  if (isNaN(parsed.getTime())) return null;
+  return parsed.toISOString();
 }
