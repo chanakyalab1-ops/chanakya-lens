@@ -106,7 +106,7 @@ export async function generateStoryDraft(input: {
     },
     body: JSON.stringify({
       model: "claude-sonnet-5",
-      max_tokens: 4000,
+      max_tokens: 6000,
       system: buildSystemPrompt(),
       messages: [{ role: "user", content: userPrompt }],
       cache_control: { type: "ephemeral" },
@@ -167,4 +167,5 @@ export async function generateStoryDraft(input: {
 
   return parsed;
 }
+
 
