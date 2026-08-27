@@ -15,6 +15,7 @@ const QUERIES = [
 
 const REQUEST_TIMEOUT_MS = 15000;
 const DELAY_BETWEEN_QUERIES_MS = 3000;
+const MAX_ARTICLES_PER_QUERY = 10;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -26,12 +27,6 @@ type NewsCatcherArticle = {
   domain_url?: string;
   country?: string;
   published_date?: string;
-};
-
-type NewsCatcherCluster = {
-  cluster_id: string;
-  cluster_size: number;
-  articles: NewsCatcherArticle[];
 };
 
 async function fetchOneQuery(query: string): Promise<GdeltArticle[]> {
@@ -63,17 +58,13 @@ async function fetchOneQuery(query: string): Promise<GdeltArticle[]> {
     }
 
     const data = await res.json();
-    console.log(`[NewsCatcher] "${query}" RAW: ${JSON.stringify(data).slice(0, 800)}`);
+    const articles: NewsCatcherArticle[] = data?.articles ?? [];
 
-    const clusters: NewsCatcherCluster[] = data?.clusters ?? [];
-    console.log(`[NewsCatcher] "${query}" -- ${clusters.length} clusters returned`);
+    console.log(`[NewsCatcher] "${query}" -- ${articles.length} articles returned (total_hits: ${data?.total_hits})`);
 
     const results: GdeltArticle[] = [];
-    for (const cluster of clusters) {
-      const a = cluster.articles?.[0];
-      if (!a || !a.link || !a.title) {
-        continue;
-      }
+    for (const a of articles.slice(0, MAX_ARTICLES_PER_QUERY)) {
+      if (!a.link || !a.title) continue;
       results.push({
         url: a.link,
         title: a.title,
@@ -84,7 +75,6 @@ async function fetchOneQuery(query: string): Promise<GdeltArticle[]> {
       });
     }
 
-    console.log(`[NewsCatcher] "${query}" -- ${results.length} usable articles after filtering`);
     return results;
   } catch (err) {
     clearTimeout(timeoutId);
