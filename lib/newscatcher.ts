@@ -15,7 +15,7 @@ const QUERIES = [
 
 const REQUEST_TIMEOUT_MS = 15000;
 const DELAY_BETWEEN_QUERIES_MS = 3000;
-const MAX_ARTICLES_PER_QUERY = 30;
+const MAX_ARTICLES_PER_QUERY = 10;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -38,7 +38,7 @@ async function fetchOneQuery(query: string): Promise<GdeltArticle[]> {
   const params = new URLSearchParams({
     q: query,
     lang: "en",
-    page_size: "30",
+    page_size: "20",
     exclude_duplicates: "true",
   });
 
@@ -121,4 +121,5 @@ export async function fetchNewsCatcherCandidates(): Promise<GdeltFetchResult> {
     failureDetails,
   };
 }
+
 
