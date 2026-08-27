@@ -14,7 +14,7 @@ const QUERIES = [
 ];
 
 const REQUEST_TIMEOUT_MS = 15000;
-const DELAY_BETWEEN_QUERIES_MS = 3000; // respect NewsCatcher's concurrency limit
+const DELAY_BETWEEN_QUERIES_MS = 3000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -63,15 +63,15 @@ async function fetchOneQuery(query: string): Promise<GdeltArticle[]> {
     }
 
     const data = await res.json();
-    const clusters: NewsCatcherCluster[] = data?.clusters ?? [];
+    console.log(`[NewsCatcher] "${query}" RAW: ${JSON.stringify(data).slice(0, 800)}`);
 
+    const clusters: NewsCatcherCluster[] = data?.clusters ?? [];
     console.log(`[NewsCatcher] "${query}" -- ${clusters.length} clusters returned`);
 
     const results: GdeltArticle[] = [];
     for (const cluster of clusters) {
       const a = cluster.articles?.[0];
       if (!a || !a.link || !a.title) {
-        console.warn(`[NewsCatcher] Skipping cluster ${cluster.cluster_id} -- missing link/title`);
         continue;
       }
       results.push({
@@ -116,7 +116,6 @@ export async function fetchNewsCatcherCandidates(): Promise<GdeltFetchResult> {
       console.error(`[NewsCatcher] Query failed for "${query}": ${message}`);
     }
 
-    // Delay before the next query, but not after the last one
     if (i < QUERIES.length - 1) {
       await sleep(DELAY_BETWEEN_QUERIES_MS);
     }
