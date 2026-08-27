@@ -14,13 +14,18 @@ const QUERIES = [
 ];
 
 const REQUEST_TIMEOUT_MS = 15000;
+const DELAY_BETWEEN_QUERIES_MS = 3000; // respect NewsCatcher's concurrency limit
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 type NewsCatcherArticle = {
-  title: string;
-  link: string;
-  domain_url: string;
+  title?: string;
+  link?: string;
+  domain_url?: string;
   country?: string;
-  published_date: string;
+  published_date?: string;
 };
 
 type NewsCatcherCluster = {
@@ -60,20 +65,27 @@ async function fetchOneQuery(query: string): Promise<GdeltArticle[]> {
     const data = await res.json();
     const clusters: NewsCatcherCluster[] = data?.clusters ?? [];
 
-    // Take just the top (most relevant) article from each cluster --
-    // this is the free dedupe win: one story per real-world event,
-    // not one per outlet covering the same event.
-    return clusters
-      .map((cluster) => cluster.articles?.[0])
-      .filter((a): a is NewsCatcherArticle => !!a)
-      .map((a) => ({
+    console.log(`[NewsCatcher] "${query}" -- ${clusters.length} clusters returned`);
+
+    const results: GdeltArticle[] = [];
+    for (const cluster of clusters) {
+      const a = cluster.articles?.[0];
+      if (!a || !a.link || !a.title) {
+        console.warn(`[NewsCatcher] Skipping cluster ${cluster.cluster_id} -- missing link/title`);
+        continue;
+      }
+      results.push({
         url: a.link,
         title: a.title,
-        domain: a.domain_url,
+        domain: a.domain_url ?? "",
         sourcecountry: a.country ?? "",
-        seendate: a.published_date,
+        seendate: a.published_date ?? "",
         tone: 0,
-      }));
+      });
+    }
+
+    console.log(`[NewsCatcher] "${query}" -- ${results.length} usable articles after filtering`);
+    return results;
   } catch (err) {
     clearTimeout(timeoutId);
     throw err;
@@ -88,7 +100,9 @@ export async function fetchNewsCatcherCandidates(): Promise<GdeltFetchResult> {
   let queriesFailed = 0;
   const failureDetails: string[] = [];
 
-  for (const query of QUERIES) {
+  for (let i = 0; i < QUERIES.length; i++) {
+    const query = QUERIES[i];
+
     try {
       const results = await fetchOneQuery(query);
       queriesSucceeded++;
@@ -100,6 +114,11 @@ export async function fetchNewsCatcherCandidates(): Promise<GdeltFetchResult> {
       const message = err instanceof Error ? err.message : String(err);
       failureDetails.push(`"${query}": ${message}`);
       console.error(`[NewsCatcher] Query failed for "${query}": ${message}`);
+    }
+
+    // Delay before the next query, but not after the last one
+    if (i < QUERIES.length - 1) {
+      await sleep(DELAY_BETWEEN_QUERIES_MS);
     }
   }
 
