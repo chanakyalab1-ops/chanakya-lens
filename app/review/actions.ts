@@ -138,7 +138,7 @@ export async function publishDraft(slug: string) {
   const { data: draft, error: fetchError } = await supabase
     .from('story_drafts')
     .select(
-      'slug, category, status, headline, dek, body, read_time, has_video, impact_nodes, articles, chanakya_analysis, off_lens',
+      'slug, category, status, headline, dek, body, read_time, has_video, impact_nodes, articles, chanakya_analysis, off_lens, subject_countries',
     )
     .eq('slug', slug)
     .single();
@@ -186,6 +186,7 @@ export async function publishDraft(slug: string) {
     impact_nodes: draft.impact_nodes,
     chanakya_analysis: draft.chanakya_analysis,
     off_lens: draft.off_lens,
+    subject_countries: draft.subject_countries ?? null,
     sources,
   });
 
@@ -282,6 +283,7 @@ export async function generateDraft(candidateIds: string[]) {
     })),
     chanakya_analysis: generated.chanakyaAnalysis,
     off_lens: generated.offLens,
+    subject_countries: generated.subjectCountries ?? [],
     workflow_status: 'in_review',
   });
 
@@ -363,4 +365,3 @@ export async function unpublishStory(slug: string) {
   revalidatePath('/review/manage');
   revalidatePath('/');
 }
-

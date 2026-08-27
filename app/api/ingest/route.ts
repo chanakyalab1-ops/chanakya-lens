@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { fetchGdeltCandidates } from "@/lib/gdelt";
 
@@ -30,18 +30,20 @@ export async function GET(req: NextRequest) {
   try {
     result = await fetchGdeltCandidates();
 
-    for (const article of result.articles) {
-      const titleLower = article.title?.toLowerCase() ?? "";
-      if (EXCLUDED_KEYWORDS.some((kw) => titleLower.includes(kw))) {
-        skipped++;
-        continue;
-      }
-      if (!article.url || !article.title) {
-        skipped++;
-        continue;
-      }
-
-      const { error } = await supabase.from("story_candidates").insert({
+    const rows = result.articles
+      .filter((article) => {
+        const titleLower = article.title?.toLowerCase() ?? "";
+        if (EXCLUDED_KEYWORDS.some((kw) => titleLower.includes(kw))) {
+          skipped++;
+          return false;
+        }
+        if (!article.url || !article.title) {
+          skipped++;
+          return false;
+        }
+        return true;
+      })
+      .map((article) => ({
         url: article.url,
         title: article.title,
         domain: article.domain,
@@ -49,9 +51,18 @@ export async function GET(req: NextRequest) {
         seen_date: parseGdeltDate(article.seendate),
         tone: article.tone,
         query_tag: article.queryTag,
-      });
+      }));
 
-      if (!error) inserted++;
+    if (rows.length > 0) {
+      const { error, count } = await supabase
+        .from("story_candidates")
+        .upsert(rows, { onConflict: "url", ignoreDuplicates: true, count: "exact" });
+
+      if (error) {
+        errorMsg = `Batch insert failed: ${error.message}`;
+      } else {
+        inserted = count ?? rows.length;
+      }
     }
 
     if (result.queriesSucceeded === 0) {
