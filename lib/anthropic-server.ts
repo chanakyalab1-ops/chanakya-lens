@@ -63,6 +63,7 @@ CRITICAL EDITORIAL RULES:
 - category must be exactly one of: ${CATEGORIES.join(", ")}
 - readTime should be a realistic estimate like "3 min" or "5 min" based on body length.
 - subjectCountries must reflect what the story is ABOUT. Do not default to the source outlets' countries -- reason about the actual subject matter.
+- Keep the body concise -- 4 to 6 short paragraphs is enough. Do not pad with excessive detail. This keeps your JSON output well within length limits and avoids truncation.
 
 After you finish researching, your FINAL message must contain NOTHING except the raw JSON object -- not one word of narration before or after it, not even a sentence like "Here is the draft." Output the JSON object and nothing else, matching this exact shape:
 
@@ -133,40 +134,54 @@ export async function generateStoryDraft(input: {
     throw new Error("No text content in Anthropic response. Full response: " + JSON.stringify(data).slice(0, 500));
   }
 
-  let parsed: GeneratedDraft;
-  try {
-    const withoutFences = textBlock.text.replace(/```json|```/g, "").trim();
+  function tryParseJson(raw: string): GeneratedDraft | null {
+    const withoutFences = raw.replace(/```json|```/g, "").trim();
     const firstBrace = withoutFences.indexOf("{");
     const lastBrace = withoutFences.lastIndexOf("}");
 
     if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
-      throw new Error("No JSON object found in response text.");
+      return null;
     }
 
-    const jsonOnly = withoutFences.slice(firstBrace, lastBrace + 1);
-    parsed = JSON.parse(jsonOnly);
-  } catch {
-    throw new Error("Failed to parse generated draft as JSON. Raw output: " + textBlock.text.slice(0, 300));
+    const candidate = withoutFences.slice(firstBrace, lastBrace + 1);
+
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      // Repair attempt 1: strip trailing commas before } or ]
+      const repaired = candidate.replace(/,(\s*[}\]])/g, "$1");
+      try {
+        return JSON.parse(repaired);
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  const parsed = tryParseJson(textBlock.text);
+
+  if (!parsed) {
+    throw new Error("Failed to parse generated draft as JSON. Raw output: " + textBlock.text.slice(0, 1500));
   }
 
   if (!Array.isArray(parsed.subjectCountries)) {
     parsed.subjectCountries = [];
   }
+  if (!Array.isArray(parsed.impactNodes)) {
+    parsed.impactNodes = [];
+  }
 
   const stripCitations = (text: string) => text.replace(/<\/?cite[^>]*>/g, "").trim();
-  parsed.headline = stripCitations(parsed.headline);
-  parsed.dek = stripCitations(parsed.dek);
-  parsed.body = stripCitations(parsed.body);
+  parsed.headline = stripCitations(parsed.headline ?? "");
+  parsed.dek = stripCitations(parsed.dek ?? "");
+  parsed.body = stripCitations(parsed.body ?? "");
   if (parsed.chanakyaAnalysis) parsed.chanakyaAnalysis = stripCitations(parsed.chanakyaAnalysis);
   if (parsed.offLens) parsed.offLens = stripCitations(parsed.offLens);
   parsed.impactNodes = parsed.impactNodes.map((n) => ({
     ...n,
-    audience: stripCitations(n.audience),
-    mechanism: stripCitations(n.mechanism),
+    audience: stripCitations(n.audience ?? ""),
+    mechanism: stripCitations(n.mechanism ?? ""),
   }));
 
   return parsed;
 }
-
-
-
