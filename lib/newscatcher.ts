@@ -35,11 +35,19 @@ async function fetchOneQuery(query: string): Promise<GdeltArticle[]> {
     throw new Error("Missing NEWSCATCHER_API_KEY env var.");
   }
 
+  // Only articles from the last 24 hours -- avoids stale/old news
+  // that NewsCatcher's relevancy ranking would otherwise surface.
+  const fromDate = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 19);
+
   const params = new URLSearchParams({
     q: query,
     lang: "en",
     page_size: "20",
     exclude_duplicates: "true",
+    from_: fromDate,
+    sort_by: "date",
   });
 
   const controller = new AbortController();
@@ -60,7 +68,7 @@ async function fetchOneQuery(query: string): Promise<GdeltArticle[]> {
     const data = await res.json();
     const articles: NewsCatcherArticle[] = data?.articles ?? [];
 
-    console.log(`[NewsCatcher] "${query}" -- ${articles.length} articles returned (total_hits: ${data?.total_hits})`);
+    console.log(`[NewsCatcher] "${query}" -- ${articles.length} articles returned (total_hits: ${data?.total_hits}, from: ${fromDate})`);
 
     const results: GdeltArticle[] = [];
     for (const a of articles.slice(0, MAX_ARTICLES_PER_QUERY)) {
@@ -121,5 +129,3 @@ export async function fetchNewsCatcherCandidates(): Promise<GdeltFetchResult> {
     failureDetails,
   };
 }
-
-
