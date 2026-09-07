@@ -45,7 +45,10 @@ function buildDigestHtml(stories: DigestStory[]): string {
   return `
     <div style="max-width: 560px; margin: 0 auto; font-family: -apple-system, sans-serif; padding: 24px;">
       <div style="text-align: center; margin-bottom: 32px;">
-        <img src="https://chanakyalens.com/logo-mark.png" alt="Chanakya Lens" width="48" height="48" style="border-radius: 50%; margin-bottom: 8px;" />
+        <div style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <img src="https://chanakyalens.com/logo-mark.png" alt="" width="32" height="32" style="border-radius: 50%;" />
+          <span style="font-weight: 800; font-size: 18px; letter-spacing: 0.02em; color: #0A0D11;">CHANAKYA <span style="color: #5FA8B5;">LENS</span></span>
+        </div>
         <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #7688B4;">This Week's Signal</div>
         <h1 style="font-size: 22px; margin: 8px 0 0 0;">Global moves. Local math.</h1>
       </div>
@@ -122,6 +125,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ sent, failed, failures, storiesIncluded: digestStories.length });
 }
+
 
 
 
