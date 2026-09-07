@@ -16,6 +16,31 @@ const dotLabel: Record<string, string> = {
   possible: "Possible — a speculative but reasonable connection",
 };
 
+// Shared pill style so category, status, and Off-Lens badges look consistent
+function Pill({
+  children,
+  color,
+  borderColor,
+  background,
+  dot,
+}: {
+  children: React.ReactNode;
+  color: string;
+  borderColor: string;
+  background: string;
+  dot?: boolean;
+}) {
+  return (
+    <span
+      className="font-mono text-[0.58rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1"
+      style={{ color, borderColor, background }}
+    >
+      {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />}
+      {children}
+    </span>
+  );
+}
+
 function OffLensTeaser({ stories }: { stories: Story[] }) {
   const offLensStories = stories.filter((s) => s.offLens);
 
@@ -61,12 +86,41 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
 
 function OffLensBadge() {
   return (
-    <span
-      className="font-mono text-[0.58rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1"
-      style={{ color: "var(--brand-soft)", borderColor: "rgba(95,168,181,0.5)", background: "rgba(95,168,181,0.08)" }}
-    >
-      <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} /> Off-Lens
-    </span>
+    <Pill dot color="var(--brand-soft)" borderColor="rgba(95,168,181,0.5)" background="rgba(95,168,181,0.08)">
+      Off-Lens
+    </Pill>
+  );
+}
+
+function DevelopingBadge() {
+  return (
+    <Pill dot color="var(--developing)" borderColor="rgba(217,105,74,0.5)" background="rgba(217,105,74,0.08)">
+      Developing
+    </Pill>
+  );
+}
+
+function CategoryBadge({ category }: { category: string }) {
+  return (
+    <Pill color="var(--brand-soft)" borderColor="rgba(95,168,181,0.35)" background="transparent">
+      {category}
+    </Pill>
+  );
+}
+
+// Small always-visible legend explaining the impact dots, so new visitors
+// don't have to hover a dot to learn what it means.
+function ImpactLegend() {
+  return (
+    <div className="flex items-center gap-3 font-mono text-[0.6rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+      <span className="uppercase tracking-wide">Affects you if —</span>
+      {(["direct", "likely", "possible"] as const).map((level) => (
+        <span key={level} className="flex items-center gap-1" title={dotLabel[level]}>
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: dotColor[level] }} />
+          <span className="capitalize">{level}</span>
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -144,6 +198,12 @@ export default function Feed({ stories }: { stories: Story[] }) {
         </div>
       </div>
 
+      {treated.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 pt-3">
+          <ImpactLegend />
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 mt-3 lg:hidden">
         <OffLensTeaser stories={stories} />
       </div>
@@ -159,17 +219,8 @@ export default function Feed({ stories }: { stories: Story[] }) {
                 style={{ background: "var(--ink-card)", borderColor: "var(--border)" }}
               >
                 <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-                  <span className="font-mono text-[0.62rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
-                    {story.category}
-                  </span>
-                  {story.status === "developing" && (
-                    <span
-                      className="font-mono text-[0.58rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1"
-                      style={{ color: "var(--developing)", borderColor: "rgba(217,105,74,0.5)", background: "rgba(217,105,74,0.08)" }}
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} /> Developing
-                    </span>
-                  )}
+                  <CategoryBadge category={story.category} />
+                  {story.status === "developing" && <DevelopingBadge />}
                   {story.offLens && <OffLensBadge />}
                   {story.hasVideo && (
                     <span className="ml-auto h-5 w-5 rounded-full flex items-center justify-center" style={{ background: "rgba(95,168,181,0.18)" }}>
@@ -217,9 +268,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
                 style={{ background: "var(--ink-card)", borderColor: "var(--border)" }}
               >
                 <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-                  <span className="font-mono text-[0.62rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
-                    {story.category}
-                  </span>
+                  <CategoryBadge category={story.category} />
                   {story.offLens && <OffLensBadge />}
                 </div>
                 <h2 className="font-display font-bold text-lg leading-tight mb-2">{story.headline}</h2>
