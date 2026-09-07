@@ -108,6 +108,9 @@ export async function GET(req: NextRequest) {
         html,
       });
       console.log(`[Digest] Sent to ${sub.email}:`, JSON.stringify(result));
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
       sent++;
     } catch (err) {
       failed++;
@@ -118,4 +121,5 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ sent, failed, failures, storiesIncluded: digestStories.length });
 }
+
 
