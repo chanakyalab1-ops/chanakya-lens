@@ -188,7 +188,7 @@ function CategoryRail({
   const shown = stories.slice(0, CATEGORY_ROW_LIMIT);
   const hasMore = stories.length > CATEGORY_ROW_LIMIT;
   return (
-    <section className="mb-7">
+    <section id={`cat-${category}`} className="mb-7 scroll-mt-24">
       <div className="flex items-center justify-between mb-2.5">
         <h2 className="font-display font-bold text-base" style={{ color: "var(--text-on-ink)" }}>
           {category}
@@ -283,7 +283,13 @@ export default function Feed({ stories }: { stories: Story[] }) {
           {categories.map((cat) => (
             <button
               key={cat}
-              onClick={() => setActive(cat)}
+              onClick={() => {
+                if (cat === "All") {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                } else {
+                  document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
               className="font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
               style={
                 active === cat
@@ -380,4 +386,5 @@ export default function Feed({ stories }: { stories: Story[] }) {
     </>
   );
 }
+
 
