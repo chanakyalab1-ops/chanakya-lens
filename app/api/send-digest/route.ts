@@ -101,12 +101,13 @@ export async function GET(req: NextRequest) {
 
   for (const sub of subscribers) {
     try {
-      await resend.emails.send({
+      const result = await resend.emails.send({
         from: "Chanakya Lens <onboarding@resend.dev>",
         to: sub.email,
         subject: "This Week's Signal — Chanakya Lens",
         html,
       });
+      console.log(`[Digest] Sent to ${sub.email}:`, JSON.stringify(result));
       sent++;
     } catch (err) {
       failed++;
@@ -117,3 +118,4 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ sent, failed, failures, storiesIncluded: digestStories.length });
 }
+
