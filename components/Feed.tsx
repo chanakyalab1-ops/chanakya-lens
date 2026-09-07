@@ -1,5 +1,4 @@
 ﻿"use client";
-
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Story } from "@/lib/stories";
@@ -9,14 +8,12 @@ const dotColor: Record<string, string> = {
   likely: "var(--likely)",
   possible: "var(--possible)",
 };
-
 const dotLabel: Record<string, string> = {
   direct: "Direct — a concrete, near-certain mechanism",
   likely: "Likely — a plausible mechanism, real but less certain",
   possible: "Possible — a speculative but reasonable connection",
 };
 
-// Shared pill style so category, status, and Off-Lens badges look consistent
 function Pill({
   children,
   color,
@@ -43,7 +40,6 @@ function Pill({
 
 function OffLensTeaser({ stories }: { stories: Story[] }) {
   const offLensStories = stories.filter((s) => s.offLens);
-
   return (
     <div
       className="flex flex-col rounded-sm border p-5"
@@ -57,7 +53,6 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
       <p className="text-[0.88rem] leading-relaxed mb-4" style={{ color: "var(--text-body)" }}>
         Every story is reported from somewhere. Off-Lens shows who&apos;s covering it, from where, and where the framing splits by whose interest is at stake.
       </p>
-
       {offLensStories.length > 0 ? (
         <div className="flex flex-col gap-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
           {offLensStories.slice(0, 6).map((story) => (
@@ -72,7 +67,6 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
           ))}
         </div>
       ) : null}
-
       <Link
         href="/off-lens"
         className="mt-4 font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80"
@@ -91,7 +85,6 @@ function OffLensBadge() {
     </Pill>
   );
 }
-
 function DevelopingBadge() {
   return (
     <Pill dot color="var(--developing)" borderColor="rgba(217,105,74,0.5)" background="rgba(217,105,74,0.08)">
@@ -99,7 +92,6 @@ function DevelopingBadge() {
     </Pill>
   );
 }
-
 function CategoryBadge({ category }: { category: string }) {
   return (
     <Pill color="var(--brand-soft)" borderColor="rgba(95,168,181,0.35)" background="transparent">
@@ -108,8 +100,6 @@ function CategoryBadge({ category }: { category: string }) {
   );
 }
 
-// Small always-visible legend explaining the impact dots, so new visitors
-// don't have to hover a dot to learn what it means.
 function ImpactLegend() {
   return (
     <div className="flex items-center gap-3 font-mono text-[0.6rem]" style={{ color: "var(--text-on-ink-dim)" }}>
@@ -124,6 +114,74 @@ function ImpactLegend() {
   );
 }
 
+function ImpactDots({ story }: { story: Story }) {
+  return (
+    <div className="flex gap-1">
+      {story.impactNodes!.map((n, i) => (
+        <span
+          key={i}
+          title={dotLabel[n.confidence]}
+          className="h-1.5 w-1.5 rounded-full cursor-help"
+          style={{ background: dotColor[n.confidence] }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// The lead story: big image-free hero treatment -- large headline, full dek,
+// more breathing room. Everything else stays compact so the page doesn't
+// feel like one undifferentiated wall of equal-weight cards.
+function HeroCard({ story }: { story: Story }) {
+  return (
+    <Link
+      href={`/story/${story.slug}`}
+      className="block rounded-sm border p-6 md:p-8 mb-3 hover:opacity-95"
+      style={{ background: "#0F1C33", borderColor: "var(--brand-soft)" }}
+    >
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <CategoryBadge category={story.category} />
+        {story.status === "developing" && <DevelopingBadge />}
+        {story.offLens && <OffLensBadge />}
+      </div>
+      <h2 className="font-display font-bold text-2xl md:text-3xl leading-tight mb-3">{story.headline}</h2>
+      <p className="text-[0.95rem] mb-4 max-w-2xl" style={{ color: "var(--text-body)" }}>{story.dek}</p>
+      <div className="flex items-center gap-2.5 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
+        <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if —</span>
+        <ImpactDots story={story} />
+        <span className="ml-auto font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+          {formatStoryDate(story.publishedAt)} · {story.readTime}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+// Compact row for the rest of the treated stories -- no dek, single line,
+// tighter padding so more stories are visible without extra scrolling.
+function CompactCard({ story }: { story: Story }) {
+  return (
+    <Link
+      href={`/story/${story.slug}`}
+      className="block rounded-sm border p-3.5"
+      style={{ background: "#0F1C33", borderColor: "var(--border)" }}
+    >
+      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+        <CategoryBadge category={story.category} />
+        {story.status === "developing" && <DevelopingBadge />}
+        {story.offLens && <OffLensBadge />}
+      </div>
+      <h3 className="font-display font-bold text-[0.98rem] leading-tight mb-2">{story.headline}</h3>
+      <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
+        <ImpactDots story={story} />
+        <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+          {story.readTime}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 export default function Feed({ stories }: { stories: Story[] }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
@@ -131,7 +189,6 @@ export default function Feed({ stories }: { stories: Story[] }) {
   );
   const [active, setActive] = useState("All");
   const [query, setQuery] = useState("");
-
   const categoryFiltered = active === "All" ? stories : stories.filter((s) => s.category === active);
   const filtered = query.trim()
     ? categoryFiltered.filter((s) => {
@@ -143,9 +200,9 @@ export default function Feed({ stories }: { stories: Story[] }) {
         );
       })
     : categoryFiltered;
-
   const treated = filtered.filter((s) => s.impactNodes?.length);
   const briefs = filtered.filter((s) => !s.impactNodes?.length);
+  const [hero, ...rest] = treated;
 
   return (
     <>
@@ -169,13 +226,11 @@ export default function Feed({ stories }: { stories: Story[] }) {
               aria-label="Clear search"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-sm"
               style={{ color: "var(--text-on-ink-dim)" }}
-            >
-              ✕
+            >   ✕
             </button>
           )}
         </div>
       </div>
-
       <div
         className="flex gap-2 px-4 py-3 overflow-x-auto border-b sticky top-[57px] z-10 backdrop-blur"
         style={{ borderColor: "var(--border)", background: "rgba(10,17,42,0.92)" }}
@@ -197,58 +252,25 @@ export default function Feed({ stories }: { stories: Story[] }) {
           ))}
         </div>
       </div>
-
       {treated.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 pt-3">
           <ImpactLegend />
         </div>
       )}
-
       <div className="max-w-7xl mx-auto px-4 mt-3 lg:hidden">
         <OffLensTeaser stories={stories} />
       </div>
-
       <main className="max-w-7xl mx-auto px-4 pb-16 lg:grid lg:grid-cols-[1fr_280px] lg:gap-6 lg:items-start">
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
-            {treated.map((story) => (
-              <Link
-                key={story.slug}
-                href={`/story/${story.slug}`}
-                className="block rounded-sm border p-4"
-                style={{ background: "#0F1C33", borderColor: "var(--border)" }}
-              >
-                <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-                  <CategoryBadge category={story.category} />
-                  {story.status === "developing" && <DevelopingBadge />}
-                  {story.offLens && <OffLensBadge />}
-                  {story.hasVideo && (
-                    <span className="ml-auto h-5 w-5 rounded-full flex items-center justify-center" style={{ background: "rgba(95,168,181,0.18)" }}>
-                      <svg viewBox="0 0 12 14" fill="none" className="h-1.5 w-1.5">
-                        <path d="M11 6.13a1 1 0 0 1 0 1.74L1.75 13.5A1 1 0 0 1 .25 12.63V1.37A1 1 0 0 1 1.75.5L11 6.13Z" fill="var(--brand-soft)" />
-                      </svg>
-                    </span>
-                  )}
-                </div>
-                <h2 className="font-display font-bold text-lg leading-tight mb-2">{story.headline}</h2>
-                <p className="text-[0.83rem] mb-3" style={{ color: "var(--text-body)" }}>{story.dek}</p>
-                <div className="flex items-center gap-2.5 pt-2.5 border-t" style={{ borderColor: "var(--border)" }}>
-                  <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if —</span>
-                  <div className="flex gap-1">
-                    {story.impactNodes!.map((n, i) => (
-                      <span
-                        key={i}
-                        title={dotLabel[n.confidence]}
-                        className="h-1.5 w-1.5 rounded-full cursor-help"
-                        style={{ background: dotColor[n.confidence] }}
-                      />
-                    ))}
-                  </div>
-                                   <span className="ml-auto font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
-                    {formatStoryDate(story.publishedAt)} · {story.readTime}
-                  </span>
-                </div>
-              </Link>
+          {hero && (
+            <div className="mt-3">
+              <HeroCard story={hero} />
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {rest.map((story) => (
+              <CompactCard key={story.slug} story={story} />
             ))}
           </div>
 
@@ -258,24 +280,22 @@ export default function Feed({ stories }: { stories: Story[] }) {
               <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
             </div>
           )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 mt-3">
             {briefs.map((story) => (
               <Link
                 key={story.slug}
                 href={`/story/${story.slug}`}
-                className="block rounded-sm border p-4"
+                className="block rounded-sm border p-3.5"
                 style={{ background: "#0F1C33", borderColor: "var(--border)" }}
               >
-                <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                   <CategoryBadge category={story.category} />
                   {story.offLens && <OffLensBadge />}
                 </div>
-                <h2 className="font-display font-bold text-lg leading-tight mb-2">{story.headline}</h2>
-                <p className="text-[0.83rem] mb-3" style={{ color: "var(--text-body)" }}>{story.dek}</p>
-                <div className="flex items-center pt-2.5 border-t" style={{ borderColor: "var(--border)" }}>
-                  <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "#7688B4" }}>Brief</span>
-                  <span className="ml-auto font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>{story.readTime}</span>
+                <h3 className="font-display font-bold text-[0.95rem] leading-tight mb-2">{story.headline}</h3>
+                <div className="flex items-center pt-2 border-t" style={{ borderColor: "var(--border)" }}>
+                  <span className="font-mono text-[0.58rem] uppercase tracking-wide" style={{ color: "#7688B4" }}>Brief</span>
+                  <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>{story.readTime}</span>
                 </div>
               </Link>
             ))}
@@ -296,7 +316,6 @@ export default function Feed({ stories }: { stories: Story[] }) {
             </Link>
           </div>
         </div>
-
         <aside className="hidden lg:block mt-3 lg:sticky lg:top-[130px]">
           <OffLensTeaser stories={stories} />
         </aside>
@@ -304,6 +323,3 @@ export default function Feed({ stories }: { stories: Story[] }) {
     </>
   );
 }
-
-
-
