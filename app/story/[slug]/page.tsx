@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+﻿import { notFound } from "next/navigation";
 import Link from "next/link";
 import NavDrawer from "@/components/NavDrawer";
 import { getStoryBySlug, ConfidenceLevel } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
+import { logPageView } from "@/lib/analytics";
 const tagColor: Record<ConfidenceLevel, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
@@ -20,6 +21,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
   const { slug } = await params;
   const story = await getStoryBySlug(slug);
   if (!story) return notFound();
+  logPageView(`/story/${slug}`);
 
   return (
     <>
@@ -30,7 +32,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide mb-5 hover:opacity-80"
           style={{ color: "var(--text-on-ink-dim)" }}
         >
-          ← Back to feed
+          â† Back to feed
         </Link>
 
         <div className="flex items-center gap-2.5 mb-3.5 flex-wrap">
@@ -39,7 +41,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </span>
           {story.status && (
             <>
-              <span className="text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>·</span>
+              <span className="text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>Â·</span>
               <span
                 className="font-mono text-[0.62rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1.5"
                 style={
@@ -74,7 +76,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
               </svg>
             </div>
             <div className="text-sm" style={{ color: "var(--text-body)" }}>
-              <strong style={{ color: "var(--text-on-ink)" }}>Video brief attached —</strong> companion piece with more detail.
+              <strong style={{ color: "var(--text-on-ink)" }}>Video brief attached â€”</strong> companion piece with more detail.
             </div>
           </div>
         )}
@@ -85,7 +87,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
               How could this affect you
             </div>
             <div className="text-[0.78rem] mb-6" style={{ color: "var(--text-on-ink-dim)" }}>
-              Traced by who&apos;s actually in the path of this — not everyone is.
+              Traced by who&apos;s actually in the path of this â€” not everyone is.
             </div>
 
             <div className="relative pl-6.5">
@@ -168,10 +170,11 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </div>
           <span>
             Tags rate the mechanism, not the news.{" "}
-            <Link href="/how-we-rate" className="underline" style={{ color: "var(--brand-soft)" }}>How we rate this →</Link>
+            <Link href="/how-we-rate" className="underline" style={{ color: "var(--brand-soft)" }}>How we rate this â†’</Link>
           </span>
         </div>
       </article>
     </>
   );
 }
+
