@@ -12,9 +12,12 @@ const QUERIES = [
   "military exercise defense pact",
 ];
 
+const TRUSTED_DOMAINS = "reuters.com,wsj.com,washingtonpost.com,apnews.com,bbc.com,ft.com,bloomberg.com,economist.com,nytimes.com,cnn.com";
+
 const REQUEST_TIMEOUT_MS = 15000;
-const DELAY_BETWEEN_QUERIES_MS = 2000;
-const MAX_ARTICLES_PER_QUERY = 10;
+const DELAY_BETWEEN_REQUESTS_MS = 1500;
+const ARTICLES_PER_PAGE = 3; // free tier hard cap, confirmed
+const PAGES_PER_QUERY = 4; // 4 topics x 4 pages x 3 = ~48 articles per run
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -28,7 +31,7 @@ type TheNewsApiArticle = {
   published_at?: string;
 };
 
-async function fetchOneQuery(query: string): Promise<GdeltArticle[]> {
+async function fetchOnePage(query: string, page: number): Promise<GdeltArticle[]> {
   const apiKey = process.env.THENEWSAPI_API_KEY;
   if (!apiKey) {
     throw new Error("Missing THENEWSAPI_API_KEY env var.");
@@ -36,15 +39,17 @@ async function fetchOneQuery(query: string): Promise<GdeltArticle[]> {
 
   const publishedAfter = new Date(Date.now() - 24 * 60 * 60 * 1000)
     .toISOString()
-    .slice(0, 10); // YYYY-MM-DD
+    .slice(0, 10);
 
   const params = new URLSearchParams({
     api_token: apiKey,
     search: query,
     language: "en",
     published_after: publishedAfter,
-    limit: String(MAX_ARTICLES_PER_QUERY),
+    limit: String(ARTICLES_PER_PAGE),
+    page: String(page),
     sort: "published_at",
+    domains: TRUSTED_DOMAINS,
   });
 
   const controller = new AbortController();
@@ -64,7 +69,7 @@ async function fetchOneQuery(query: string): Promise<GdeltArticle[]> {
     const data = await res.json();
     const articles: TheNewsApiArticle[] = data?.data ?? [];
 
-    console.log(`[TheNewsAPI] "${query}" -- ${articles.length} articles returned`);
+    console.log(`[TheNewsAPI] "${query}" page ${page} -- ${articles.length} articles (found: ${data?.meta?.found ?? "?"})`);
 
     const results: GdeltArticle[] = [];
     for (const a of articles) {
@@ -94,24 +99,31 @@ export async function fetchTheNewsApiCandidates(): Promise<GdeltFetchResult> {
   let queriesFailed = 0;
   const failureDetails: string[] = [];
 
-  for (let i = 0; i < QUERIES.length; i++) {
-    const query = QUERIES[i];
+  for (const query of QUERIES) {
+    let queryHadSuccess = false;
 
-    try {
-      const results = await fetchOneQuery(query);
-      queriesSucceeded++;
-      for (const a of results) {
-        articles.push({ ...a, queryTag: query });
+    for (let page = 1; page <= PAGES_PER_QUERY; page++) {
+      try {
+        const results = await fetchOnePage(query, page);
+        queryHadSuccess = true;
+        for (const a of results) {
+          articles.push({ ...a, queryTag: query });
+        }
+        // Stop paginating early if a page comes back empty -- no more results.
+        if (results.length === 0) break;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        failureDetails.push(`"${query}" page ${page}: ${message}`);
+        console.error(`[TheNewsAPI] Failed "${query}" page ${page}: ${message}`);
       }
-    } catch (err) {
-      queriesFailed++;
-      const message = err instanceof Error ? err.message : String(err);
-      failureDetails.push(`"${query}": ${message}`);
-      console.error(`[TheNewsAPI] Query failed for "${query}": ${message}`);
+
+      await sleep(DELAY_BETWEEN_REQUESTS_MS);
     }
 
-    if (i < QUERIES.length - 1) {
-      await sleep(DELAY_BETWEEN_QUERIES_MS);
+    if (queryHadSuccess) {
+      queriesSucceeded++;
+    } else {
+      queriesFailed++;
     }
   }
 
