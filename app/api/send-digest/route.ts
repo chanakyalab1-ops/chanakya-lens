@@ -50,7 +50,7 @@ function buildDigestHtml(stories: DigestStory[], topicLabel: string): string {
           <img src="https://chanakyalens.com/logo-mark.png" alt="" width="32" height="32" style="border-radius: 50%;" />
           <span style="font-weight: 800; font-size: 18px; letter-spacing: 0.02em; color: #0A0D11;">CHANAKYA <span style="color: #5FA8B5;">LENS</span></span>
         </div>
-        <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #7688B4;">This Week's Signal — ${topicLabel}</div>
+        <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #7688B4;">Today's Signal — ${topicLabel}</div>
         <h1 style="font-size: 22px; margin: 8px 0 0 0;">Global moves. Local math.</h1>
       </div>
       ${items}
@@ -73,12 +73,26 @@ export async function GET(req: NextRequest) {
   );
   const resend = new Resend(process.env.RESEND_API_KEY!);
 
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  // Skip if a digest already went out recently, to avoid duplicate sends
+  // from manual re-triggers or accidental double-invocation.
+  const twentyHoursAgo = new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString();
+  const { data: recentSend } = await supabase
+    .from("digest_sends")
+    .select("id")
+    .gte("sent_at", twentyHoursAgo)
+    .limit(1)
+    .maybeSingle();
+
+  if (recentSend) {
+    return NextResponse.json({ skipped: true, reason: "Digest already sent within the last 20 hours" });
+  }
+
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   const { data: stories, error: storiesError } = await supabase
     .from("stories")
     .select("slug, headline, dek, category, status, impact_nodes")
-    .gte("created_at", sevenDaysAgo)
+    .gte("created_at", oneDayAgo)
     .order("created_at", { ascending: false });
 
   if (storiesError || !stories || stories.length === 0) {
@@ -102,7 +116,7 @@ export async function GET(req: NextRequest) {
   const failures: string[] = [];
 
   for (const sub of subscribers) {
-    // "regions" column now stores chosen topics/categories -- reused rather than migrated.
+    // "regions" column stores chosen topics/categories.
     const subTopics: string[] = sub.regions ?? [];
     const hasPreference = subTopics.length > 0;
 
@@ -120,7 +134,7 @@ export async function GET(req: NextRequest) {
       const result = await resend.emails.send({
         from: "Chanakya Lens <digest@chanakyalens.com>",
         to: sub.email,
-        subject: `This Week's Signal — Chanakya Lens`,
+        subject: `Today's Signal — Chanakya Lens`,
         html,
       });
       console.log(`[Digest] Sent to ${sub.email}:`, JSON.stringify(result));
@@ -135,6 +149,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  await supabase.from("digest_sends").insert({});
+
   return NextResponse.json({ sent, failed, failures });
 }
-
