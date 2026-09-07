@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { fetchNewsCatcherCandidates } from "@/lib/newscatcher";
+import { fetchTheNewsApiCandidates } from "@/lib/thenewsapi";
 
 const EXCLUDED_KEYWORDS = [
   "immigration and customs enforcement",
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   let errorMsg: string | null = null;
 
   try {
-    result = await fetchNewsCatcherCandidates();
+    result = await fetchTheNewsApiCandidates();
 
     const rows = result.articles
       .filter((article) => {
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
         title: article.title,
         domain: article.domain,
         source_country: article.sourcecountry,
-        seen_date: parseGdeltDate(article.seendate),
+        seen_date: parseArticleDate(article.seendate),
         tone: article.tone,
         query_tag: article.queryTag,
       }));
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (result.queriesSucceeded === 0) {
-      errorMsg = `All ${result.queriesAttempted} NewsCatcher queries failed: ${result.failureDetails.join("; ")}`;
+      errorMsg = `All ${result.queriesAttempted} TheNewsAPI queries failed: ${result.failureDetails.join("; ")}`;
     }
   } catch (err) {
     errorMsg = err instanceof Error ? err.message : String(err);
@@ -101,11 +101,9 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(responseBody, { status: 200 });
 }
 
-function parseGdeltDate(seendate: string | undefined): string | null {
+function parseArticleDate(seendate: string | undefined): string | null {
   if (!seendate) return null;
-  // NewsCatcher dates come as "YYYY-MM-DD HH:MM:SS", already valid for Postgres timestamp
-  const isoLike = seendate.replace(" ", "T") + "Z";
-  const parsed = new Date(isoLike);
+  const parsed = new Date(seendate);
   if (isNaN(parsed.getTime())) return null;
   return parsed.toISOString();
 }
