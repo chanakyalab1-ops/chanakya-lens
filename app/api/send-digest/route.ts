@@ -118,7 +118,7 @@ export async function GET(req: NextRequest) {
 
     try {
       const result = await resend.emails.send({
-        from: "Chanakya Lens <onboarding@resend.dev>",
+        from: "Chanakya Lens <digest@chanakyalens.com>",
         to: sub.email,
         subject: `This Week's Signal — Chanakya Lens`,
         html,
@@ -137,3 +137,4 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ sent, failed, failures });
 }
+
