@@ -25,11 +25,6 @@ export default async function FeedPage() {
   return (
     <>
       <NavDrawer />
-      <div className="px-5 pt-5.5 pb-4.5 border-b text-center" style={{ borderColor: "var(--border)" }}>
-        <div className="font-display text-xl font-semibold max-w-md mx-auto" style={{ color: "var(--text-body)" }}>
-          Global moves. Local math.
-        </div>
-      </div>
 
       {signal.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 pt-5 pb-2">
@@ -58,3 +53,4 @@ export default async function FeedPage() {
     </>
   );
 }
+
