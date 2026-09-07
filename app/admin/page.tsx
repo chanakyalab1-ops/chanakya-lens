@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+export const dynamic = "force-dynamic";
 import { createClient } from "@supabase/supabase-js";
 
 async function getAnalyticsSummary() {
@@ -87,3 +88,4 @@ function AdminLink({ href, title, description }: { href: string; title: string; 
     </Link>
   );
 }
+
