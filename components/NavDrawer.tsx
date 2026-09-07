@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -22,7 +22,7 @@ export default function NavDrawer() {
         </button>
 
         <Link href="/" className="flex items-center gap-3 justify-self-center">
-          <Image src="/logo-mark.png" alt="Chanakya Lens" width={44} height={44} className="rounded-full" />
+          <Image src="/logo-mark.png" alt="Chanakya Lens" width={56} height={56} className="rounded-full" />
           <span className="font-display text-2xl font-extrabold uppercase tracking-wide">
             Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
           </span>
