@@ -11,6 +11,19 @@ async function getAnalyticsSummary() {
     .from("page_views")
     .select("*", { count: "exact", head: true })
     .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { count: views30d } = await supabase
+    .from("page_views")
+    .select("*", { count: "exact", head: true })
+    .gte("created_at", thirtyDaysAgo);
+
+  const { data: views30dRows } = await supabase
+    .from("page_views")
+    .select("path")
+    .gte("created_at", thirtyDaysAgo);
+
   const { count: totalStories } = await supabase
     .from("stories")
     .select("*", { count: "exact", head: true });
@@ -25,15 +38,25 @@ async function getAnalyticsSummary() {
   const { count: totalFeedback } = await supabase
     .from("feedback_submissions")
     .select("*", { count: "exact", head: true });
-
   const { data: recentFeedback } = await supabase
     .from("feedback_submissions")
     .select("id, email, message, created_at")
     .order("created_at", { ascending: false })
     .limit(10);
 
+  const viewCounts = new Map<string, number>();
+  for (const row of views30dRows ?? []) {
+    viewCounts.set(row.path, (viewCounts.get(row.path) ?? 0) + 1);
+  }
+  const topStories = [...viewCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([path, views]) => ({ path, views }));
+
   return {
     views24h: views24h ?? 0,
+    views30d: views30d ?? 0,
+    topStories,
     totalStories: totalStories ?? 0,
     pendingCandidates: pendingCandidates ?? 0,
     draftsInReview: draftsInReview ?? 0,
@@ -49,8 +72,9 @@ export default async function AdminPage() {
       <h1 className="font-display text-2xl font-bold mb-8" style={{ color: "var(--text-on-ink)" }}>
         Admin Dashboard
       </h1>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-10">
         <StatCard label="Views (24h)" value={stats.views24h} />
+        <StatCard label="Views (30d)" value={stats.views30d} />
         <StatCard label="Published Stories" value={stats.totalStories} />
         <StatCard label="Pending Candidates" value={stats.pendingCandidates} />
         <StatCard label="Drafts in Review" value={stats.draftsInReview} />
@@ -60,6 +84,36 @@ export default async function AdminPage() {
         <AdminLink href="/review" title="Review Queue" description="Generate and review story drafts from candidates." />
         <AdminLink href="/review/manage" title="Manage Published Stories" description="Edit or unpublish live stories." />
       </div>
+
+      <h2 className="font-display text-lg font-bold mb-4" style={{ color: "var(--text-on-ink)" }}>
+        Top Stories (30 days)
+      </h2>
+      {stats.topStories.length === 0 ? (
+        <p className="text-[0.85rem] mb-10" style={{ color: "var(--text-on-ink-dim)" }}>
+          No views yet.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2 mb-10">
+          {stats.topStories.map((s, i) => (
+            <Link
+              key={s.path}
+              href={s.path}
+              className="flex items-center justify-between gap-3 rounded-sm border p-3 hover:opacity-80"
+              style={{ background: "var(--ink-card)", borderColor: "var(--border)" }}
+            >
+              <span className="text-[0.85rem] truncate" style={{ color: "var(--text-body)" }}>
+                <span className="font-mono text-[0.7rem] mr-2" style={{ color: "var(--text-on-ink-dim)" }}>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                {s.path.replace("/story/", "")}
+              </span>
+              <span className="font-mono text-[0.68rem] shrink-0" style={{ color: "var(--brand-soft)" }}>
+                {s.views} views
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
 
       <h2 className="font-display text-lg font-bold mb-4" style={{ color: "var(--text-on-ink)" }}>
         Recent Feedback
