@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr';
+﻿import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function updateSession(request: NextRequest) {
@@ -28,16 +28,19 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isReviewRoute = request.nextUrl.pathname.startsWith('/review');
+  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
+  const isProtectedRoute = isReviewRoute || isAdminRoute;
   const isLoginRoute = request.nextUrl.pathname === '/review/login';
   const ALLOWED_ADMIN_EMAILS = ['chanakya.lab1@gmail.com'];
   const isAuthorized = user && ALLOWED_ADMIN_EMAILS.includes(user.email ?? '');
-    if (isReviewRoute && !isLoginRoute && !isAuthorized) {
+
+  if (isProtectedRoute && !isLoginRoute && !isAuthorized) {
     const url = request.nextUrl.clone();
     url.pathname = '/review/login';
     return NextResponse.redirect(url);
   }
 
-      if (isLoginRoute && isAuthorized) {
+  if (isLoginRoute && isAuthorized) {
     const url = request.nextUrl.clone();
     url.pathname = '/review';
     return NextResponse.redirect(url);
