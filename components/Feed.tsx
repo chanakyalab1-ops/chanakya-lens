@@ -137,7 +137,7 @@ function HeroCard({ story }: { story: Story }) {
     <Link
       href={`/story/${story.slug}`}
       className="block rounded-sm border p-6 md:p-8 mb-3 hover:opacity-95"
-      style={{ background: "#0F1C33", borderColor: "var(--brand-soft)" }}
+      style={{ background: "#152847", borderColor: "var(--brand-soft)" }}
     >
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         <CategoryBadge category={story.category} />
@@ -164,7 +164,7 @@ function CompactCard({ story }: { story: Story }) {
     <Link
       href={`/story/${story.slug}`}
       className="block rounded-sm border p-3.5"
-      style={{ background: "#0F1C33", borderColor: "var(--border)" }}
+      style={{ background: "#0F1E38", borderColor: "rgba(255,255,255,0.08)" }}
     >
       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
         <CategoryBadge category={story.category} />
@@ -286,7 +286,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
                 key={story.slug}
                 href={`/story/${story.slug}`}
                 className="block rounded-sm border p-3.5"
-                style={{ background: "#0F1C33", borderColor: "var(--border)" }}
+                style={{ background: "#0F1E38", borderColor: "rgba(255,255,255,0.08)" }}
               >
                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                   <CategoryBadge category={story.category} />
@@ -323,3 +323,4 @@ export default function Feed({ stories }: { stories: Story[] }) {
     </>
   );
 }
+
