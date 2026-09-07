@@ -254,7 +254,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
 
           {briefs.length > 0 && (
             <div className="flex items-center gap-2 font-mono text-[0.62rem] pt-5.5 pb-1" style={{ color: "var(--text-on-ink-dim)" }}>
-              Also today
+              More stories
               <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
             </div>
           )}
@@ -304,5 +304,6 @@ export default function Feed({ stories }: { stories: Story[] }) {
     </>
   );
 }
+
 
 
