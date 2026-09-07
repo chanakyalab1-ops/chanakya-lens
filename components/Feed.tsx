@@ -1,4 +1,5 @@
-﻿import { useState, useMemo } from "react";
+﻿"use client";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
@@ -379,3 +380,4 @@ export default function Feed({ stories }: { stories: Story[] }) {
     </>
   );
 }
+
