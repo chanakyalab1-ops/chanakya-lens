@@ -60,7 +60,7 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
 
       {offLensStories.length > 0 ? (
         <div className="flex flex-col gap-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
-          {offLensStories.slice(0, 4).map((story) => (
+          {offLensStories.slice(0, 6).map((story) => (
             <Link
               key={story.slug}
               href={`/story/${story.slug}`}
@@ -304,3 +304,4 @@ export default function Feed({ stories }: { stories: Story[] }) {
     </>
   );
 }
+
