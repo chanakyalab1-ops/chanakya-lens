@@ -189,7 +189,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
               style={
                 active === cat
                   ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
-                  : { color: "var(--text-on-ink-dim)", borderColor: "var(--border)", background: "transparent" }
+                  : { color: "var(--text-on-ink)", borderColor: "rgba(255,255,255,0.18)", background: "transparent" }
               }
             >
               {cat}
@@ -216,7 +216,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
                 key={story.slug}
                 href={`/story/${story.slug}`}
                 className="block rounded-sm border p-4"
-                style={{ background: "var(--ink-card)", borderColor: "var(--border)" }}
+                style={{ background: "#0F1C33", borderColor: "var(--border)" }}
               >
                 <div className="flex items-center gap-2 mb-2.5 flex-wrap">
                   <CategoryBadge category={story.category} />
@@ -265,7 +265,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
                 key={story.slug}
                 href={`/story/${story.slug}`}
                 className="block rounded-sm border p-4"
-                style={{ background: "var(--ink-card)", borderColor: "var(--border)" }}
+                style={{ background: "#0F1C33", borderColor: "var(--border)" }}
               >
                 <div className="flex items-center gap-2 mb-2.5 flex-wrap">
                   <CategoryBadge category={story.category} />
@@ -304,4 +304,5 @@ export default function Feed({ stories }: { stories: Story[] }) {
     </>
   );
 }
+
 
