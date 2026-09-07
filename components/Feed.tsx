@@ -160,7 +160,7 @@ function CompactCard({ story }: { story: Story }) {
         {story.status === "developing" && <DevelopingBadge />}
         {story.offLens && <OffLensBadge />}
       </div>
-      <h3 className="font-display font-bold text-[0.98rem] leading-tight mb-2">{story.headline}</h3>
+      <h3 className="font-display font-semibold text-[0.98rem] leading-tight mb-2">{story.headline}</h3>
       <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
         <ImpactDots story={story} />
         <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>
@@ -355,7 +355,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
                   <CategoryBadge category={story.category} />
                   {story.offLens && <OffLensBadge />}
                 </div>
-                <h3 className="font-display font-bold text-[0.95rem] leading-tight mb-2">{story.headline}</h3>
+                <h3 className="font-display font-semibold text-[0.95rem] leading-tight mb-2">{story.headline}</h3>
                 <div className="flex items-center pt-2 border-t" style={{ borderColor: "var(--border)" }}>
                   <span className="font-mono text-[0.58rem] uppercase tracking-wide" style={{ color: "#7688B4" }}>Brief</span>
                   <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>{story.readTime}</span>
@@ -386,5 +386,6 @@ export default function Feed({ stories }: { stories: Story[] }) {
     </>
   );
 }
+
 
 
