@@ -1,5 +1,4 @@
-﻿"use client";
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
@@ -13,7 +12,6 @@ const dotLabel: Record<string, string> = {
   likely: "Likely — a plausible mechanism, real but less certain",
   possible: "Possible — a speculative but reasonable connection",
 };
-
 function Pill({
   children,
   color,
@@ -37,7 +35,6 @@ function Pill({
     </span>
   );
 }
-
 function OffLensTeaser({ stories }: { stories: Story[] }) {
   const offLensStories = stories.filter((s) => s.offLens);
   return (
@@ -48,8 +45,7 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
       <Link href="/off-lens" className="hover:opacity-90">
         <div className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
           Off-Lens
-        </div>
-      </Link>
+        </div> </Link>
       <p className="text-[0.88rem] leading-relaxed mb-4" style={{ color: "var(--text-body)" }}>
         Every story is reported from somewhere. Off-Lens shows who&apos;s covering it, from where, and where the framing splits by whose interest is at stake.
       </p>
@@ -77,7 +73,6 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
     </div>
   );
 }
-
 function OffLensBadge() {
   return (
     <Pill dot color="var(--brand-soft)" borderColor="rgba(95,168,181,0.5)" background="rgba(95,168,181,0.08)">
@@ -99,7 +94,6 @@ function CategoryBadge({ category }: { category: string }) {
     </Pill>
   );
 }
-
 function ImpactLegend() {
   return (
     <div className="flex items-center gap-3 font-mono text-[0.6rem]" style={{ color: "var(--text-on-ink-dim)" }}>
@@ -113,7 +107,6 @@ function ImpactLegend() {
     </div>
   );
 }
-
 function ImpactDots({ story }: { story: Story }) {
   return (
     <div className="flex gap-1">
@@ -129,9 +122,6 @@ function ImpactDots({ story }: { story: Story }) {
   );
 }
 
-// The lead story: big image-free hero treatment -- large headline, full dek,
-// more breathing room. Everything else stays compact so the page doesn't
-// feel like one undifferentiated wall of equal-weight cards.
 function HeroCard({ story }: { story: Story }) {
   return (
     <Link
@@ -157,8 +147,6 @@ function HeroCard({ story }: { story: Story }) {
   );
 }
 
-// Compact row for the rest of the treated stories -- no dek, single line,
-// tighter padding so more stories are visible without extra scrolling.
 function CompactCard({ story }: { story: Story }) {
   return (
     <Link
@@ -179,6 +167,47 @@ function CompactCard({ story }: { story: Story }) {
         </span>
       </div>
     </Link>
+  );
+}
+
+const CATEGORY_ROW_LIMIT = 6;
+
+// Groups stories by category, in the order categories first appear, and
+// caps each group so the homepage reads as curated sections rather than
+// one long undifferentiated wall of cards.
+function CategoryRail({
+  category,
+  stories,
+  onSeeAll,
+}: {
+  category: string;
+  stories: Story[];
+  onSeeAll: () => void;
+}) {
+  const shown = stories.slice(0, CATEGORY_ROW_LIMIT);
+  const hasMore = stories.length > CATEGORY_ROW_LIMIT;
+  return (
+    <section className="mb-7">
+      <div className="flex items-center justify-between mb-2.5">
+        <h2 className="font-display font-bold text-base" style={{ color: "var(--text-on-ink)" }}>
+          {category}
+        </h2>
+        {hasMore && (
+          <button
+            onClick={onSeeAll}
+            className="font-mono text-[0.62rem] uppercase tracking-wide hover:opacity-80"
+            style={{ color: "var(--brand-soft)" }}
+          >
+            See all {stories.length} →
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+        {shown.map((story) => (
+          <CompactCard key={story.slug} story={story} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -203,6 +232,20 @@ export default function Feed({ stories }: { stories: Story[] }) {
   const treated = filtered.filter((s) => s.impactNodes?.length);
   const briefs = filtered.filter((s) => !s.impactNodes?.length);
   const [hero, ...rest] = treated;
+
+  // Only group into category rails on the unfiltered, no-search "All" view --
+  // once someone picks a specific category or searches, show the flat,
+  // complete list they actually asked for.
+  const showRails = active === "All" && !query.trim();
+  const restByCategory = useMemo(() => {
+    if (!showRails) return null;
+    const map = new Map<string, Story[]>();
+    for (const s of rest) {
+      if (!map.has(s.category)) map.set(s.category, []);
+      map.get(s.category)!.push(s);
+    }
+    return map;
+  }, [rest, showRails]);
 
   return (
     <>
@@ -268,11 +311,24 @@ export default function Feed({ stories }: { stories: Story[] }) {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-            {rest.map((story) => (
-              <CompactCard key={story.slug} story={story} />
-            ))}
-          </div>
+          {showRails && restByCategory ? (
+            <div className="mt-4">
+              {[...restByCategory.entries()].map(([category, catStories]) => (
+                <CategoryRail
+                  key={category}
+                  category={category}
+                  stories={catStories}
+                  onSeeAll={() => setActive(category)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 mt-3">
+              {rest.map((story) => (
+                <CompactCard key={story.slug} story={story} />
+              ))}
+            </div>
+          )}
 
           {briefs.length > 0 && (
             <div className="flex items-center gap-2 font-mono text-[0.62rem] pt-5.5 pb-1" style={{ color: "var(--text-on-ink-dim)" }}>
@@ -323,5 +379,3 @@ export default function Feed({ stories }: { stories: Story[] }) {
     </>
   );
 }
-
-
