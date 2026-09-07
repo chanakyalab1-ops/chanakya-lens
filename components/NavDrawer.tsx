@@ -1,11 +1,20 @@
 ﻿"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { supabase } from "@/lib/supabase";
+
+const ADMIN_EMAIL = "chanakya.lab1@gmail.com";
 
 export default function NavDrawer() {
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setIsAdmin(data.user?.email === ADMIN_EMAIL);
+    });
+  }, []);
 
   return (
     <>
@@ -20,14 +29,12 @@ export default function NavDrawer() {
           <span className="h-px w-[12px]" style={{ background: "var(--text-on-ink)" }} />
           <span className="h-px w-[18px]" style={{ background: "var(--text-on-ink)" }} />
         </button>
-
         <Link href="/" className="flex items-center gap-3 justify-self-center">
           <Image src="/logo-mark.png" alt="Chanakya Lens" width={56} height={56} className="rounded-full" />
           <span className="font-display text-2xl font-extrabold uppercase tracking-wide">
             Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
           </span>
         </Link>
-
         <div className="flex items-center justify-self-end">
           <Link href="/account" className="h-9 w-9 rounded-full border flex items-center justify-center" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
             <svg viewBox="0 0 16 16" className="h-4 w-4">
@@ -35,16 +42,13 @@ export default function NavDrawer() {
               <path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" fill="var(--text-on-ink)" />
             </svg>
           </Link>
-        </div>
-      </header>
-
+        </div>   </header>
       {/* Scrim */}
       <div
         onClick={() => setOpen(false)}
         className={`fixed inset-0 z-30 transition-opacity duration-200 ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
         style={{ background: "rgba(10,13,17,0.6)" }}
       />
-
       {/* Drawer */}
       <nav
         className={`fixed top-0 left-0 bottom-0 z-40 w-[250px] border-r py-5 flex flex-col transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"}`}
@@ -58,11 +62,15 @@ export default function NavDrawer() {
             X
           </button>
         </div>
-
+        {isAdmin && (
+          <>
+            <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--brand-soft)" }}>Admin</div>
+            <Link href="/admin" className="px-5 py-2.5 text-sm hover:bg-white/5" style={{ color: "var(--brand-soft)" }}>Dashboard</Link>
+          </>
+        )}
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>Read</div>
         <Link href="/" className="px-5 py-2.5 text-sm hover:bg-white/5">Latest stories</Link>
         <Link href="/regions" className="px-5 py-2.5 text-sm hover:bg-white/5">Browse by region</Link>
-
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>Follow</div>
         <a href="https://www.instagram.com/chanakya.lab/" target="_blank" rel="noreferrer" className="px-5 py-2.5 text-sm hover:bg-white/5 flex items-center justify-between">
           Instagram
@@ -85,16 +93,13 @@ export default function NavDrawer() {
         <Link href="/digest" className="px-5 py-2.5 text-sm hover:bg-white/5 flex justify-between">
           Weekly digest <span className="font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>email</span>
         </Link>
-
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>About</div>
         <Link href="/how-we-rate" className="px-5 py-2.5 text-sm hover:bg-white/5">How we rate this</Link>
         <Link href="/about" className="px-5 py-2.5 text-sm hover:bg-white/5">Our approach</Link>
         <Link href="/feedback" className="px-5 py-2.5 text-sm hover:bg-white/5">Feedback</Link>
-
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>Off-Lens</div>
         <Link href="/off-lens" className="px-5 py-2.5 text-sm hover:bg-white/5">What is Off-Lens</Link>
       </nav>
-
     </>
   );
 }
