@@ -1,7 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import { inferStoryRegion } from "@/lib/regions";
 
 type DigestStory = {
   slug: string;
@@ -10,8 +9,6 @@ type DigestStory = {
   category: string;
   status: string | null;
   impact_nodes: { confidence: string }[] | null;
-  subject_countries: string[] | null;
-  sources: { source_country: string | null }[] | null;
 };
 
 function rank(s: DigestStory): number {
@@ -27,7 +24,7 @@ function pickDigestStories(stories: DigestStory[], limit: number): DigestStory[]
   return [...stories].sort((a, b) => rank(b) - rank(a)).slice(0, limit);
 }
 
-function buildDigestHtml(stories: DigestStory[], regionLabel: string): string {
+function buildDigestHtml(stories: DigestStory[], topicLabel: string): string {
   const items = stories
     .map(
       (s) => `
@@ -53,7 +50,7 @@ function buildDigestHtml(stories: DigestStory[], regionLabel: string): string {
           <img src="https://chanakyalens.com/logo-mark.png" alt="" width="32" height="32" style="border-radius: 50%;" />
           <span style="font-weight: 800; font-size: 18px; letter-spacing: 0.02em; color: #0A0D11;">CHANAKYA <span style="color: #5FA8B5;">LENS</span></span>
         </div>
-        <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #7688B4;">This Week's Signal — ${regionLabel}</div>
+        <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #7688B4;">This Week's Signal — ${topicLabel}</div>
         <h1 style="font-size: 22px; margin: 8px 0 0 0;">Global moves. Local math.</h1>
       </div>
       ${items}
@@ -80,28 +77,13 @@ export async function GET(req: NextRequest) {
 
   const { data: stories, error: storiesError } = await supabase
     .from("stories")
-    .select("slug, headline, dek, category, status, impact_nodes, subject_countries, sources")
+    .select("slug, headline, dek, category, status, impact_nodes")
     .gte("created_at", sevenDaysAgo)
     .order("created_at", { ascending: false });
 
   if (storiesError || !stories || stories.length === 0) {
     return NextResponse.json({ error: "No stories found for digest", details: storiesError?.message }, { status: 500 });
   }
-
-  // Precompute each story's region using the same logic as /regions.
-  const storiesWithRegion = stories.map((s) => ({
-    ...s,
-    region: inferStoryRegion({
-      subjectCountries: s.subject_countries ?? undefined,
-      sources: (s.sources ?? []).map((src) => ({
-        sourceCountry: src.source_country,
-        url: "",
-        title: "",
-        domain: "",
-        role: "source" as const,
-      })),
-    } as never),
-  }));
 
   const { data: subscribers, error: subsError } = await supabase
     .from("digest_signups")
@@ -120,21 +102,19 @@ export async function GET(req: NextRequest) {
   const failures: string[] = [];
 
   for (const sub of subscribers) {
-    const subRegions: string[] = sub.regions ?? [];
-    const hasPreference = subRegions.length > 0;
+    // "regions" column now stores chosen topics/categories -- reused rather than migrated.
+    const subTopics: string[] = sub.regions ?? [];
+    const hasPreference = subTopics.length > 0;
 
     const relevantStories = hasPreference
-      ? storiesWithRegion.filter((s) => subRegions.includes(s.region))
-      : storiesWithRegion;
+      ? stories.filter((s) => subTopics.includes(s.category))
+      : stories;
 
-    if (relevantStories.length === 0) {
-      // No matching stories this week for their chosen regions -- skip rather than send an empty email.
-      continue;
-    }
+    if (relevantStories.length === 0) continue;
 
     const digestStories = pickDigestStories(relevantStories, 6);
-    const regionLabel = hasPreference ? subRegions.join(", ") : "All Regions";
-    const html = buildDigestHtml(digestStories, regionLabel);
+    const topicLabel = hasPreference ? subTopics.join(", ") : "All Topics";
+    const html = buildDigestHtml(digestStories, topicLabel);
 
     try {
       const result = await resend.emails.send({
