@@ -32,7 +32,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide mb-5 hover:opacity-80"
           style={{ color: "var(--text-on-ink-dim)" }}
         >
-          â† Back to feed
+          ← Back to feed
         </Link>
 
         <div className="flex items-center gap-2.5 mb-3.5 flex-wrap">
@@ -41,7 +41,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </span>
           {story.status && (
             <>
-              <span className="text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>Â·</span>
+              <span className="text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>·</span>
               <span
                 className="font-mono text-[0.62rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1.5"
                 style={
@@ -76,9 +76,26 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
               </svg>
             </div>
             <div className="text-sm" style={{ color: "var(--text-body)" }}>
-              <strong style={{ color: "var(--text-on-ink)" }}>Video brief attached â€”</strong> companion piece with more detail.
+              <strong style={{ color: "var(--text-on-ink)" }}>Video brief attached —</strong> companion piece with more detail.
             </div>
           </div>
+        )}
+
+        {story.chanakyaAnalysis && (
+          <section
+            className="mt-2 mb-9 p-5 rounded-sm border-2"
+            style={{ borderColor: "var(--brand-soft)", background: "#132340" }}
+          >
+            <div className="font-display font-bold uppercase tracking-wide text-xl mb-1.5" style={{ color: "var(--brand-soft)" }}>
+              Chanakya&apos;s Move
+            </div>
+            <div className="text-[0.78rem] mb-4" style={{ color: "var(--text-on-ink-dim)" }}>
+              Whose move this was, what they&apos;re betting on, what could counter it.
+            </div>
+            <p className="text-[0.95rem] leading-relaxed" style={{ color: "var(--text-on-ink)" }}>
+              {story.chanakyaAnalysis}
+            </p>
+          </section>
         )}
 
         {story.impactNodes && story.impactNodes.length > 0 && (
@@ -87,7 +104,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
               How could this affect you
             </div>
             <div className="text-[0.78rem] mb-6" style={{ color: "var(--text-on-ink-dim)" }}>
-              Traced by who&apos;s actually in the path of this â€” not everyone is.
+              Traced by who&apos;s actually in the path of this — not everyone is.
             </div>
 
             <div className="relative pl-6.5">
@@ -127,7 +144,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             </div>
             <div className="space-y-2">
               {story.sources.map((source, i) => (
-                <a
+                
                   key={i}
                   href={source.url}
                   target="_blank"
@@ -147,21 +164,6 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </section>
         )}
 
-        {story.chanakyaAnalysis && (
-          <section className="mt-9">
-            <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
-              Chanakya&apos;s Move
-            </div>
-            <div className="text-[0.78rem] mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
-              Whose move this was, what they&apos;re betting on, what could counter it.
-            </div>
-            <p className="text-[0.9rem] leading-relaxed" style={{ color: "#C6D0E8" }}>
-              {story.chanakyaAnalysis}
-            </p>
-          </section>
-        )}
-
-
         <div className="flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.68rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
           <div className="flex gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--direct)" }} />
@@ -170,11 +172,10 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </div>
           <span>
             Tags rate the mechanism, not the news.{" "}
-            <Link href="/how-we-rate" className="underline" style={{ color: "var(--brand-soft)" }}>How we rate this â†’</Link>
+            <Link href="/how-we-rate" className="underline" style={{ color: "var(--brand-soft)" }}>How we rate this →</Link>
           </span>
         </div>
       </article>
     </>
   );
 }
-
