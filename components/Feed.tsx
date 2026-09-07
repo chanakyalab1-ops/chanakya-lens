@@ -43,7 +43,7 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
   return (
     <div
       className="flex flex-col rounded-sm border p-5"
-      style={{ borderColor: "var(--brand-soft)", background: "var(--ink-card)" }}
+      style={{ borderColor: "var(--brand-soft)", background: "#132340" }}
     >
       <Link href="/off-lens" className="hover:opacity-90">
         <div className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
@@ -323,4 +323,5 @@ export default function Feed({ stories }: { stories: Story[] }) {
     </>
   );
 }
+
 
