@@ -144,7 +144,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             </div>
             <div className="space-y-2">
               {story.sources.map((source, i) => (
-                
+                <a
                   key={i}
                   href={source.url}
                   target="_blank"
@@ -179,4 +179,5 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
     </>
   );
 }
+
 
