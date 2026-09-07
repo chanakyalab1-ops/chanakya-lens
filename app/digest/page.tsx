@@ -1,4 +1,4 @@
-import NavDrawer from "@/components/NavDrawer";
+﻿import NavDrawer from "@/components/NavDrawer";
 import DigestSignup from "@/components/DigestSignup";
 
 export default function DigestPage() {
