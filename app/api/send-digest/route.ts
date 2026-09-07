@@ -1,0 +1,119 @@
+﻿import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
+
+type DigestStory = {
+  slug: string;
+  headline: string;
+  dek: string;
+  category: string;
+  status: string | null;
+  impact_nodes: { confidence: string }[] | null;
+};
+
+function pickDigestStories(stories: DigestStory[], limit: number): DigestStory[] {
+  const rank = (s: DigestStory) => {
+    const hasDirect = s.impact_nodes?.some((n) => n.confidence === "direct");
+    const isDeveloping = s.status === "developing";
+    let score = 0;
+    if (isDeveloping) score += 2;
+    if (hasDirect) score += 1;
+    return score;
+  };
+  return [...stories].sort((a, b) => rank(b) - rank(a)).slice(0, limit);
+}
+
+function buildDigestHtml(stories: DigestStory[]): string {
+  const items = stories
+    .map(
+      (s) => `
+      <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #2A3D74;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #7688B4; margin-bottom: 6px;">
+          ${s.category}
+        </div>
+        <h2 style="font-size: 18px; margin: 0 0 8px 0; color: #0A0D11;">
+          <a href="https://chanakyalens.com/story/${s.slug}" style="color: #0A0D11; text-decoration: none;">
+            ${s.headline}
+          </a>
+        </h2>
+        <p style="font-size: 14px; color: #444; margin: 0;">${s.dek}</p>
+      </div>
+    `
+    )
+    .join("");
+
+  return `
+    <div style="max-width: 560px; margin: 0 auto; font-family: -apple-system, sans-serif; padding: 24px;">
+      <div style="text-align: center; margin-bottom: 32px;">
+        <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #7688B4;">This Week's Signal</div>
+        <h1 style="font-size: 22px; margin: 8px 0 0 0;">Global moves. Local math.</h1>
+      </div>
+      ${items}
+      <div style="text-align: center; margin-top: 32px;">
+        <a href="https://chanakyalens.com" style="color: #5FA8B5; font-size: 13px;">Read more at chanakyalens.com →</a>
+      </div>
+    </div>
+  `;
+}
+
+export async function GET(req: NextRequest) {
+  const authHeader = req.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const resend = new Resend(process.env.RESEND_API_KEY!);
+
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: stories, error: storiesError } = await supabase
+    .from("stories")
+    .select("slug, headline, dek, category, status, impact_nodes")
+    .gte("created_at", sevenDaysAgo)
+    .order("created_at", { ascending: false });
+
+  if (storiesError || !stories || stories.length === 0) {
+    return NextResponse.json({ error: "No stories found for digest", details: storiesError?.message }, { status: 500 });
+  }
+
+  const digestStories = pickDigestStories(stories, 6);
+  const html = buildDigestHtml(digestStories);
+
+  const { data: subscribers, error: subsError } = await supabase
+    .from("digest_signups")
+    .select("email");
+
+  if (subsError) {
+    return NextResponse.json({ error: "Failed to load subscribers", details: subsError.message }, { status: 500 });
+  }
+
+  if (!subscribers || subscribers.length === 0) {
+    return NextResponse.json({ sent: 0, message: "No subscribers yet" });
+  }
+
+  let sent = 0;
+  let failed = 0;
+  const failures: string[] = [];
+
+  for (const sub of subscribers) {
+    try {
+      await resend.emails.send({
+        from: "Chanakya Lens <onboarding@resend.dev>",
+        to: sub.email,
+        subject: "This Week's Signal — Chanakya Lens",
+        html,
+      });
+      sent++;
+    } catch (err) {
+      failed++;
+      failures.push(sub.email);
+      console.error(`Failed to send to ${sub.email}:`, err);
+    }
+  }
+
+  return NextResponse.json({ sent, failed, failures, storiesIncluded: digestStories.length });
+}
