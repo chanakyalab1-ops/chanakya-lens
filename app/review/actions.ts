@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { supabaseServer } from '@/lib/supabase-server';
 import { slugify } from '@/lib/slug';
 import { generateStoryDraft } from '@/lib/anthropic-server';
+import { fetchImageForCategory } from '@/lib/pexels';
 
 export type ArticleRole = 'primary' | 'local' | 'international' | 'source';
 export type Confidence = 'direct' | 'likely' | 'possible';
@@ -131,7 +132,8 @@ export async function dismissCandidates(candidateIds: string[]) {
 
 // Copies the draft into `stories` (the only thing that makes it live),
 // resolving its linked candidates into a self-contained source snapshot,
-// then marks the draft published. `stories` is otherwise never written to.
+// fetching a matching stock photo, then marks the draft published.
+// `stories` is otherwise never written to.
 export async function publishDraft(slug: string) {
   const supabase = supabaseServer();
 
@@ -174,6 +176,8 @@ export async function publishDraft(slug: string) {
     })
     .filter((s): s is NonNullable<typeof s> => s !== null);
 
+  const image = await fetchImageForCategory(draft.category ?? '');
+
   const { error: insertError } = await supabase.from('stories').insert({
     slug: draft.slug,
     category: draft.category,
@@ -188,6 +192,7 @@ export async function publishDraft(slug: string) {
     off_lens: draft.off_lens,
     subject_countries: draft.subject_countries ?? null,
     sources,
+    image_url: image?.imageUrl ?? null,
   });
 
   if (insertError) {
@@ -307,6 +312,7 @@ export async function triggerAutoGenerateBatch(limit: number) {
   const { autoGenerateBatch } = await import('@/lib/auto-generate');
   return autoGenerateBatch(limit);
 }
+
 export type UpdatePublishedStoryInput = {
   headline: string;
   dek: string;
