@@ -38,6 +38,9 @@ async function getAnalyticsSummary() {
   const { count: totalFeedback } = await supabase
     .from("feedback_submissions")
     .select("*", { count: "exact", head: true });
+  const { count: totalDigestSignups } = await supabase
+    .from("digest_signups")
+    .select("*", { count: "exact", head: true });
   const { data: recentFeedback } = await supabase
     .from("feedback_submissions")
     .select("id, email, message, created_at")
@@ -61,6 +64,7 @@ async function getAnalyticsSummary() {
     pendingCandidates: pendingCandidates ?? 0,
     draftsInReview: draftsInReview ?? 0,
     totalFeedback: totalFeedback ?? 0,
+    totalDigestSignups: totalDigestSignups ?? 0,
     recentFeedback: recentFeedback ?? [],
   };
 }
@@ -72,13 +76,14 @@ export default async function AdminPage() {
       <h1 className="font-display text-2xl font-bold mb-8" style={{ color: "var(--text-on-ink)" }}>
         Admin Dashboard
       </h1>
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-7 gap-4 mb-10">
         <StatCard label="Views (24h)" value={stats.views24h} />
         <StatCard label="Views (30d)" value={stats.views30d} />
         <StatCard label="Published Stories" value={stats.totalStories} />
         <StatCard label="Pending Candidates" value={stats.pendingCandidates} />
         <StatCard label="Drafts in Review" value={stats.draftsInReview} />
         <StatCard label="Feedback" value={stats.totalFeedback} />
+        <StatCard label="Digest Signups" value={stats.totalDigestSignups} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
         <AdminLink href="/review" title="Review Queue" description="Generate and review story drafts from candidates." />
@@ -178,3 +183,4 @@ function AdminLink({ href, title, description }: { href: string; title: string; 
     </Link>
   );
 }
+
