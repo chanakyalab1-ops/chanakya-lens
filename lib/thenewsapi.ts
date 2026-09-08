@@ -10,9 +10,19 @@ const QUERIES = [
   "sanctions export controls",
   "border conflict",
   "military exercise defense pact",
+  "diplomatic talks negotiations",
+  "military buildup troop deployment",
+  "energy pipeline supply",
+  "trade deal agreement bilateral",
+  "maritime dispute territorial waters",
 ];
 
-const TRUSTED_DOMAINS = "reuters.com,wsj.com,washingtonpost.com,apnews.com,bbc.com,ft.com,bloomberg.com,economist.com,nytimes.com,cnn.com";
+// Preferred, not required -- articles from these domains get sorted first
+// within each query's results, but we no longer hard-filter to only these.
+const TRUSTED_DOMAINS = new Set([
+  "reuters.com", "wsj.com", "washingtonpost.com", "apnews.com", "bbc.com",
+  "ft.com", "bloomberg.com", "economist.com", "nytimes.com", "cnn.com",
+]);
 
 const REQUEST_TIMEOUT_MS = 15000;
 const DELAY_BETWEEN_REQUESTS_MS = 1500;
@@ -49,7 +59,6 @@ async function fetchOnePage(query: string, page: number): Promise<GdeltArticle[]
     limit: String(ARTICLES_PER_PAGE),
     page: String(page),
     sort: "published_at",
-    domains: TRUSTED_DOMAINS,
   });
 
   const controller = new AbortController();
@@ -84,6 +93,14 @@ async function fetchOnePage(query: string, page: number): Promise<GdeltArticle[]
       });
     }
 
+    // Sort trusted-source articles first within this page's results,
+    // without excluding everything else.
+    results.sort((a, b) => {
+      const aTrusted = TRUSTED_DOMAINS.has(a.domain) ? 0 : 1;
+      const bTrusted = TRUSTED_DOMAINS.has(b.domain) ? 0 : 1;
+      return aTrusted - bTrusted;
+    });
+
     return results;
   } catch (err) {
     clearTimeout(timeoutId);
@@ -109,7 +126,6 @@ export async function fetchTheNewsApiCandidates(): Promise<GdeltFetchResult> {
         for (const a of results) {
           articles.push({ ...a, queryTag: query });
         }
-        // Stop paginating early if a page comes back empty -- no more results.
         if (results.length === 0) break;
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -137,3 +153,4 @@ export async function fetchTheNewsApiCandidates(): Promise<GdeltFetchResult> {
     failureDetails,
   };
 }
+
