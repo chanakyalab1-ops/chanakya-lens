@@ -32,6 +32,7 @@ export type Story = {
   chanakyaAnalysis?: string;
   offLens?: string;
   subjectCountries?: string[];
+  imageUrl?: string;
   publishedAt: string; // ISO timestamp from stories.created_at
 };
 
@@ -50,6 +51,7 @@ type StoryRow = {
   chanakya_analysis: string | null;
   off_lens: string | null;
   subject_countries: string[] | null;
+  image_url: string | null;
   created_at: string;
 };
 
@@ -70,6 +72,7 @@ function mapRow(row: StoryRow): Story {
     chanakyaAnalysis: row.chanakya_analysis ?? undefined,
     offLens: row.off_lens ?? undefined,
     subjectCountries: row.subject_countries && row.subject_countries.length > 0 ? row.subject_countries : undefined,
+    imageUrl: row.image_url ?? undefined,
     publishedAt: row.created_at,
   };
 }
