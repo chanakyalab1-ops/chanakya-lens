@@ -153,3 +153,4 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ sent, failed, failures });
 }
+
