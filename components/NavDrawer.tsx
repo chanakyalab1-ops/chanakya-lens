@@ -91,7 +91,7 @@ export default function NavDrawer() {
           </svg>
         </a>
         <Link href="/digest" className="px-5 py-2.5 text-sm hover:bg-white/5 flex justify-between">
-          Weekly digest <span className="font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>email</span>
+          Daily digest <span className="font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>email</span>
         </Link>
         <div className="font-mono text-[0.6rem] uppercase tracking-widest px-5 pt-3.5 pb-1.5" style={{ color: "var(--text-on-ink-dim)" }}>About</div>
         <Link href="/how-we-rate" className="px-5 py-2.5 text-sm hover:bg-white/5">How we rate this</Link>
@@ -103,3 +103,4 @@ export default function NavDrawer() {
     </>
   );
 }
+
