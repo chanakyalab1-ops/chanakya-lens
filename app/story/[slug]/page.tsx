@@ -1,5 +1,6 @@
 ﻿import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import NavDrawer from "@/components/NavDrawer";
 import { getStoryBySlug, ConfidenceLevel } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
@@ -34,6 +35,18 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         >
           ← Back to feed
         </Link>
+
+        {story.imageUrl && (
+          <div className="relative w-full h-56 md:h-72 rounded-sm overflow-hidden mb-6">
+            <Image
+              src={story.imageUrl}
+              alt=""
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+        )}
 
         <div className="flex items-center gap-2.5 mb-3.5 flex-wrap">
           <span className="font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
@@ -144,7 +157,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             </div>
             <div className="space-y-2">
               {story.sources.map((source, i) => (
-                <a
+                
                   key={i}
                   href={source.url}
                   target="_blank"
@@ -179,5 +192,3 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
     </>
   );
 }
-
-
