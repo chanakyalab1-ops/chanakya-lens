@@ -2,6 +2,38 @@
 import { suggestClusters } from '@/lib/clustering';
 import { submitBatchGeneration } from '@/lib/anthropic-server';
 
+const TRUSTED_DOMAINS = new Set([
+  "reuters.com", "wsj.com", "washingtonpost.com", "apnews.com", "bbc.com",
+  "ft.com", "bloomberg.com", "economist.com", "nytimes.com", "cnn.com",
+]);
+
+const TOPIC_KEYWORDS = [
+  "tariff", "sanction", "military", "strait", "defense", "diplomatic",
+  "trade deal", "treaty", "alliance", "strike", "border", "conflict",
+  "summit", "embargo", "nuclear", "troops", "ceasefire", "negotiat",
+];
+
+type ScorableCandidate = { title: string; domain: string; seen_date: string | null };
+
+// Scores a candidate for auto-generation priority: trusted-source bonus +
+// topic keyword match in the title, with recency only as a final tiebreaker
+// rather than the primary sort.
+function scoreCandidate(c: ScorableCandidate): number {
+  let score = 0;
+  if (TRUSTED_DOMAINS.has(c.domain)) score += 30;
+
+  const titleLower = c.title.toLowerCase();
+  const keywordMatches = TOPIC_KEYWORDS.filter((k) => titleLower.includes(k)).length;
+  score += Math.min(keywordMatches * 15, 45);
+
+  if (c.seen_date) {
+    const hoursOld = (Date.now() - new Date(c.seen_date).getTime()) / (1000 * 60 * 60);
+    score += Math.max(0, 25 - hoursOld); // small recency tiebreaker, decays over ~25 hours
+  }
+
+  return score;
+}
+
 export type AutoGenerateResult = {
   batchId: string;
   groupCount: number;
@@ -33,7 +65,10 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
   const groups: string[][] = clusters.map((c) => c.candidateIds).slice(0, limit);
 
   if (groups.length < limit) {
-    const singles = all.filter((c) => !clusteredIds.has(c.id)).slice(0, limit - groups.length);
+    const singles = all
+      .filter((c) => !clusteredIds.has(c.id))
+      .sort((a, b) => scoreCandidate(b) - scoreCandidate(a))
+      .slice(0, limit - groups.length);
     for (const single of singles) {
       groups.push([single.id]);
     }
@@ -80,3 +115,5 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
 
   return { batchId: anthropicBatchId, groupCount: groups.length };
 }
+
+
