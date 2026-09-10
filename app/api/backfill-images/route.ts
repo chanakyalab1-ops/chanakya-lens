@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { fetchImageForCategory } from "@/lib/pexels";
+import { fetchImageForEntity } from "@/lib/wikimedia";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -15,10 +16,10 @@ export async function GET(req: NextRequest) {
 
   const { data: stories, error } = await supabase
     .from("stories")
-    .select("slug, category")
+    .select("slug, category, headline, body")
     .is("image_url", null)
     .order("created_at", { ascending: false })
-    .limit(25);
+    .limit(50);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -30,9 +31,13 @@ export async function GET(req: NextRequest) {
 
   let updated = 0;
   let failed = 0;
+  let fromWikimedia = 0;
+  let fromPexels = 0;
 
   for (const story of stories) {
-    const image = await fetchImageForCategory(story.category ?? "");
+    const entityImage = await fetchImageForEntity(story.headline, story.body);
+    const image = entityImage ?? (await fetchImageForCategory(story.category ?? ""));
+
     if (image) {
       const { error: updateError } = await supabase
         .from("stories")
@@ -43,14 +48,15 @@ export async function GET(req: NextRequest) {
         failed++;
       } else {
         updated++;
+        if (entityImage) fromWikimedia++;
+        else fromPexels++;
       }
     } else {
       failed++;
     }
 
-    // Small delay to stay well within Pexels' rate limits.
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
 
-  return NextResponse.json({ updated, failed, total: stories.length });
+  return NextResponse.json({ updated, failed, fromWikimedia, fromPexels, total: stories.length });
 }
