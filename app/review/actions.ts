@@ -4,8 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { supabaseServer } from '@/lib/supabase-server';
 import { slugify } from '@/lib/slug';
 import { generateStoryDraft } from '@/lib/anthropic-server';
-import { fetchImageForCategory } from '@/lib/pexels';
-import { fetchImageForEntity } from '@/lib/wikimedia';
+import { selectImageForStory } from '@/lib/imageSelection';
 
 export type ArticleRole = 'primary' | 'local' | 'international' | 'source';
 export type Confidence = 'direct' | 'likely' | 'possible';
@@ -133,9 +132,9 @@ export async function dismissCandidates(candidateIds: string[]) {
 
 // Copies the draft into `stories` (the only thing that makes it live),
 // resolving its linked candidates into a self-contained source snapshot,
-// fetching a matching image (Wikimedia entity match first, Pexels category
-// fallback), then marks the draft published. `stories` is otherwise never
-// written to.
+// selecting the best available image (Wikimedia vs Pexels, scored, or none
+// if neither clears the quality bar), then marks the draft published.
+// `stories` is otherwise never written to.
 export async function publishDraft(slug: string) {
   const supabase = supabaseServer();
 
@@ -178,10 +177,7 @@ export async function publishDraft(slug: string) {
     })
     .filter((s): s is NonNullable<typeof s> => s !== null);
 
-  // Try a specific, real Wikimedia image tied to a named place/entity first;
-  // fall back to a generic Pexels category photo if no entity match exists.
-  const entityImage = await fetchImageForEntity(draft.headline, draft.body);
-  const image = entityImage ?? (await fetchImageForCategory(draft.category ?? ''));
+  const image = await selectImageForStory(draft.headline, draft.body, draft.category ?? '');
 
   const { error: insertError } = await supabase.from('stories').insert({
     slug: draft.slug,
