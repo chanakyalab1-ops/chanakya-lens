@@ -156,6 +156,11 @@ export async function fetchImageForEntity(headline: string, body: string): Promi
         const matches = countKeywordMatches(storyKeywords, imageText);
         const year = extractImageYear(info, result.title);
 
+        // Hard rejection, not just a score penalty -- an old image should
+        // never win purely by scoring well on relevance/keywords/license.
+        const hardMaxAge = isMapType ? 75 : 20;
+        if (year !== null && new Date().getFullYear() - year > hardMaxAge) continue;
+
         const relevanceScore = Math.min((inHeadline ? 30 : 20) + Math.min(matches, 2) * 5, 40);
         const keywordScore = Math.min(matches * 5, 20);
         const recency = recencyScore(year, isMapType);
@@ -184,6 +189,7 @@ export async function fetchImageForEntity(headline: string, body: string): Promi
     return best;
   }
 }
+
 
 
 
