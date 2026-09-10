@@ -1,7 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { fetchImageForCategory } from "@/lib/pexels";
-import { fetchImageForEntity } from "@/lib/wikimedia";
+import { selectImageForStory } from "@/lib/imageSelection";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -31,12 +30,9 @@ export async function GET(req: NextRequest) {
 
   let updated = 0;
   let failed = 0;
-  let fromWikimedia = 0;
-  let fromPexels = 0;
 
   for (const story of stories) {
-    const entityImage = await fetchImageForEntity(story.headline, story.body);
-    const image = entityImage ?? (await fetchImageForCategory(story.category ?? ""));
+    const image = await selectImageForStory(story.headline, story.body, story.category ?? "");
 
     if (image) {
       const { error: updateError } = await supabase
@@ -48,8 +44,6 @@ export async function GET(req: NextRequest) {
         failed++;
       } else {
         updated++;
-        if (entityImage) fromWikimedia++;
-        else fromPexels++;
       }
     } else {
       failed++;
@@ -58,5 +52,5 @@ export async function GET(req: NextRequest) {
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
 
-  return NextResponse.json({ updated, failed, fromWikimedia, fromPexels, total: stories.length });
+  return NextResponse.json({ updated, failed, total: stories.length });
 }
