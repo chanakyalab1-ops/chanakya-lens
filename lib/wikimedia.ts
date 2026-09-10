@@ -23,6 +23,42 @@ const KNOWN_ENTITIES = [
   "Donbas",
   "Golan Heights",
   "Kaliningrad",
+  "Nepal",
+  "Ukraine",
+  "Moscow",
+  "Kyiv",
+  "Beijing",
+  "Taiwan",
+  "Iran",
+  "Israel",
+  "Gaza",
+  "Lebanon",
+  "Saudi Arabia",
+  "Yemen",
+  "Bab al-Mandeb",
+  "Venezuela",
+  "Caracas",
+  "China",
+  "India",
+  "Pakistan",
+  "Bangladesh",
+  "Indonesia",
+  "Philippines",
+  "North Korea",
+  "South Korea",
+  "Turkey",
+  "Syria",
+  "Iraq",
+  "Egypt",
+  "Morocco",
+  "Ceuta",
+  "Spain",
+  "European Union",
+  "NATO",
+  "United Nations",
+  "White House",
+  "Kremlin",
+  "Pentagon",
 ];
 
 const ACCEPTABLE_LICENSES = ["Public domain", "CC0", "CC0 1.0"];
@@ -126,3 +162,4 @@ export async function fetchImageForEntity(headline: string, body: string): Promi
     return null;
   }
 }
+
