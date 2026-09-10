@@ -55,11 +55,18 @@ function countKeywordMatches(storyKeywords: Set<string>, imageText: string): num
   return matches;
 }
 
-function extractImageYear(info: WikimediaImageInfo): number | null {
+function extractImageYear(info: WikimediaImageInfo, titleAndText: string): number | null {
   const dateStr =
     info.extmetadata?.DateTimeOriginal?.value ?? info.extmetadata?.DateTime?.value ?? "";
-  const match = dateStr.match(/(1[89]\d{2}|20\d{2})/);
-  return match ? parseInt(match[1], 10) : null;
+  const metaMatch = dateStr.match(/(1[6-9]\d{2}|20\d{2})/);
+  if (metaMatch) return parseInt(metaMatch[1], 10);
+
+  // Historical map/document scans often lack DateTimeOriginal metadata but
+  // have the year plainly in the filename or title (e.g. "Map_of_China_1840").
+  const titleMatch = titleAndText.match(/(1[6-9]\d{2}|20\d{2})/);
+  if (titleMatch) return parseInt(titleMatch[1], 10);
+
+  return null;
 }
 
 function recencyScore(year: number | null, isMapType: boolean): number {
@@ -147,7 +154,7 @@ export async function fetchImageForEntity(headline: string, body: string): Promi
         ].join(" ").replace(/<[^>]*>/g, "");
 
         const matches = countKeywordMatches(storyKeywords, imageText);
-        const year = extractImageYear(info);
+        const year = extractImageYear(info, result.title);
 
         const relevanceScore = Math.min((inHeadline ? 30 : 20) + Math.min(matches, 2) * 5, 40);
         const keywordScore = Math.min(matches * 5, 20);
@@ -177,4 +184,6 @@ export async function fetchImageForEntity(headline: string, body: string): Promi
     return best;
   }
 }
+
+
 
