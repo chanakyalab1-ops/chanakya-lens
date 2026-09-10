@@ -253,9 +253,7 @@ export async function getBatchStatus(batchId: string): Promise<BatchStatus> {
   return data.processing_status as BatchStatus;
 }
 
-export async function getBatchResults(batchId: string): Promise
-  { customId: string; draft: GeneratedDraft | null; error: string | null }[]
-> {
+export async function getBatchResults(batchId: string): Promise<{ customId: string; draft: GeneratedDraft | null; error: string | null }[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("Missing ANTHROPIC_API_KEY env var.");
@@ -297,3 +295,6 @@ export async function getBatchResults(batchId: string): Promise
     }
   });
 }
+
+
+
