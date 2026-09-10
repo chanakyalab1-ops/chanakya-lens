@@ -63,12 +63,12 @@ function extractImageYear(info: WikimediaImageInfo): number | null {
 }
 
 function recencyScore(year: number | null, isMapType: boolean): number {
-  if (isMapType) return 20; // maps/satellite exempt -- geography doesn't go stale
-  if (year === null) return 10; // unknown date, moderate penalty, not disqualifying
+  if (year === null) return isMapType ? 15 : 10; // unknown date, moderate penalty
   const age = new Date().getFullYear() - year;
-  if (age <= 5) return 20;
-  if (age >= 20) return 0;
-  return Math.max(0, Math.round(20 * (1 - age / 20)));
+  const maxAge = isMapType ? 75 : 20; // maps get real leniency, not a total exemption
+  if (age <= (isMapType ? 15 : 5)) return 20;
+  if (age >= maxAge) return 0;
+  return Math.max(0, Math.round(20 * (1 - age / maxAge)));
 }
 
 type WikimediaSearchResult = { title: string; snippet?: string };
@@ -177,3 +177,4 @@ export async function fetchImageForEntity(headline: string, body: string): Promi
     return best;
   }
 }
+
