@@ -2,7 +2,7 @@
 import Feed from "@/components/Feed";
 import Link from "next/link";
 import { getAllStories, Story } from "@/lib/stories";
-export const revalidate = 60;
+export const revalidate = 300;
 
 function pickTodaysSignal(stories: Story[]): Story[] {
   const rank = (s: Story) => {
@@ -53,4 +53,5 @@ export default async function FeedPage() {
     </>
   );
 }
+
 

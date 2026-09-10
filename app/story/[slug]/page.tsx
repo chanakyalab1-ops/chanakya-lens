@@ -16,7 +16,7 @@ const tagLabel: Record<ConfidenceLevel, string> = {
   possible: "Possible",
 };
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export default async function StoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -192,4 +192,5 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
     </>
   );
 }
+
 

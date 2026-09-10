@@ -1,8 +1,8 @@
-import NavDrawer from "@/components/NavDrawer";
+﻿import NavDrawer from "@/components/NavDrawer";
 import RegionsBrowser from "@/components/RegionsBrowser";
 import { getAllStories } from "@/lib/stories";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export default async function RegionsPage() {
   const stories = await getAllStories();
