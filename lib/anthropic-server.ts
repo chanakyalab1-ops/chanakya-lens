@@ -81,89 +81,41 @@ After you finish researching, your FINAL message must contain NOTHING except the
 }`;
 }
 
-export async function generateStoryDraft(input: {
-  articles: { title: string; domain: string; sourceCountry: string | null; url: string }[];
-}): Promise<GeneratedDraft> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing ANTHROPIC_API_KEY env var.");
-  }
-
-  const articleList = input.articles
+function buildUserPrompt(articles: { title: string; domain: string; sourceCountry: string | null; url: string }[]) {
+  const articleList = articles
     .map(
       (a, i) =>
         `${i + 1}. "${a.title}" -- ${a.domain}${a.sourceCountry ? ` (${a.sourceCountry})` : ""}\n   URL: ${a.url}`,
     )
     .join("\n");
 
-  const userPrompt = `Source articles for this story:\n${articleList}\n\nSearch for and read the actual reporting on this story first, then draft it. Respond with ONLY the final JSON object once you're done researching.`;
+  return `Source articles for this story:\n${articleList}\n\nSearch for and read the actual reporting on this story first, then draft it. Respond with ONLY the final JSON object once you're done researching.`;
+}
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 6000,
-      system: buildSystemPrompt(),
-      messages: [{ role: "user", content: userPrompt }],
-      cache_control: { type: "ephemeral" },
-      tools: [
-        {
-          type: "web_search_20250305",
-          name: "web_search",
-        },
-      ],
-    }),
-  });
+function tryParseJson(raw: string): GeneratedDraft | null {
+  const withoutFences = raw.replace(/```json|```/g, "").trim();
+  const firstBrace = withoutFences.indexOf("{");
+  const lastBrace = withoutFences.lastIndexOf("}");
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Anthropic API error (${response.status}): ${text}`);
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
+    return null;
   }
 
-  const data = await response.json();
+  const candidate = withoutFences.slice(firstBrace, lastBrace + 1);
 
-  const textBlocks = (data.content ?? []).filter((b: { type: string }) => b.type === "text");
-  const textBlock = textBlocks[textBlocks.length - 1];
-
-  if (!textBlock) {
-    throw new Error("No text content in Anthropic response. Full response: " + JSON.stringify(data).slice(0, 500));
-  }
-
-  function tryParseJson(raw: string): GeneratedDraft | null {
-    const withoutFences = raw.replace(/```json|```/g, "").trim();
-    const firstBrace = withoutFences.indexOf("{");
-    const lastBrace = withoutFences.lastIndexOf("}");
-
-    if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    const repaired = candidate.replace(/,(\s*[}\]])/g, "$1");
+    try {
+      return JSON.parse(repaired);
+    } catch {
       return null;
     }
-
-    const candidate = withoutFences.slice(firstBrace, lastBrace + 1);
-
-    try {
-      return JSON.parse(candidate);
-    } catch {
-      // Repair attempt 1: strip trailing commas before } or ]
-      const repaired = candidate.replace(/,(\s*[}\]])/g, "$1");
-      try {
-        return JSON.parse(repaired);
-      } catch {
-        return null;
-      }
-    }
   }
+}
 
-  const parsed = tryParseJson(textBlock.text);
-
-  if (!parsed) {
-    throw new Error("Failed to parse generated draft as JSON. Raw output: " + textBlock.text.slice(0, 1500));
-  }
-
+function cleanParsedDraft(parsed: GeneratedDraft): GeneratedDraft {
   if (!Array.isArray(parsed.subjectCountries)) {
     parsed.subjectCountries = [];
   }
@@ -184,4 +136,164 @@ export async function generateStoryDraft(input: {
   }));
 
   return parsed;
+}
+
+function extractDraftFromTextBlocks(content: { type: string; text?: string }[]): GeneratedDraft {
+  const textBlocks = (content ?? []).filter((b) => b.type === "text");
+  const textBlock = textBlocks[textBlocks.length - 1];
+
+  if (!textBlock?.text) {
+    throw new Error("No text content in Anthropic response.");
+  }
+
+  const parsed = tryParseJson(textBlock.text);
+  if (!parsed) {
+    throw new Error("Failed to parse generated draft as JSON. Raw output: " + textBlock.text.slice(0, 1500));
+  }
+
+  return cleanParsedDraft(parsed);
+}
+
+// Live, synchronous generation -- used by manual "Generate Draft" clicks in /review.
+export async function generateStoryDraft(input: {
+  articles: { title: string; domain: string; sourceCountry: string | null; url: string }[];
+}): Promise<GeneratedDraft> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing ANTHROPIC_API_KEY env var.");
+  }
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 6000,
+      system: buildSystemPrompt(),
+      messages: [{ role: "user", content: buildUserPrompt(input.articles) }],
+      cache_control: { type: "ephemeral" },
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Anthropic API error (${response.status}): ${text}`);
+  }
+
+  const data = await response.json();
+  return extractDraftFromTextBlocks(data.content ?? []);
+}
+
+// Batch generation -- submits many stories at once for ~50% lower cost.
+// Results arrive asynchronously; see checkAndProcessBatches for retrieval.
+export async function submitBatchGeneration(
+  groups: { customId: string; articles: { title: string; domain: string; sourceCountry: string | null; url: string }[] }[]
+): Promise<string> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing ANTHROPIC_API_KEY env var.");
+  }
+
+  const requests = groups.map((g) => ({
+    custom_id: g.customId,
+    params: {
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 6000,
+      system: buildSystemPrompt(),
+      messages: [{ role: "user", content: buildUserPrompt(g.articles) }],
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+    },
+  }));
+
+  const response = await fetch("https://api.anthropic.com/v1/messages/batches", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ requests }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Anthropic batch submit error (${response.status}): ${text}`);
+  }
+
+  const data = await response.json();
+  return data.id as string;
+}
+
+export type BatchStatus = "in_progress" | "ended" | "canceling" | "canceled";
+
+export async function getBatchStatus(batchId: string): Promise<BatchStatus> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing ANTHROPIC_API_KEY env var.");
+  }
+
+  const response = await fetch(`https://api.anthropic.com/v1/messages/batches/${batchId}`, {
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Anthropic batch status error (${response.status}): ${text}`);
+  }
+
+  const data = await response.json();
+  return data.processing_status as BatchStatus;
+}
+
+export async function getBatchResults(batchId: string): Promise
+  { customId: string; draft: GeneratedDraft | null; error: string | null }[]
+> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing ANTHROPIC_API_KEY env var.");
+  }
+
+  const statusRes = await fetch(`https://api.anthropic.com/v1/messages/batches/${batchId}`, {
+    headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+  });
+  const statusData = await statusRes.json();
+  const resultsUrl = statusData.results_url as string | null;
+  if (!resultsUrl) {
+    throw new Error("Batch has no results_url yet -- it may not be finished.");
+  }
+
+  const resultsRes = await fetch(resultsUrl, {
+    headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+  });
+  if (!resultsRes.ok) {
+    const text = await resultsRes.text();
+    throw new Error(`Anthropic batch results error (${resultsRes.status}): ${text}`);
+  }
+
+  const text = await resultsRes.text();
+  const lines = text.trim().split("\n").filter(Boolean);
+
+  return lines.map((line) => {
+    const entry = JSON.parse(line);
+    const customId = entry.custom_id as string;
+
+    if (entry.result?.type !== "succeeded") {
+      return { customId, draft: null, error: entry.result?.error?.message ?? entry.result?.type ?? "Unknown failure" };
+    }
+
+    try {
+      const draft = extractDraftFromTextBlocks(entry.result.message.content ?? []);
+      return { customId, draft, error: null };
+    } catch (err) {
+      return { customId, draft: null, error: err instanceof Error ? err.message : "Parse error" };
+    }
+  });
 }
