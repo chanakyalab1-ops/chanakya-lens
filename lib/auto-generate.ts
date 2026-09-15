@@ -15,9 +15,6 @@ const TOPIC_KEYWORDS = [
 
 type ScorableCandidate = { title: string; domain: string; seen_date: string | null };
 
-// Scores a candidate for auto-generation priority: trusted-source bonus +
-// topic keyword match in the title, with recency only as a final tiebreaker
-// rather than the primary sort.
 function scoreCandidate(c: ScorableCandidate): number {
   let score = 0;
   if (TRUSTED_DOMAINS.has(c.domain)) score += 30;
@@ -28,7 +25,7 @@ function scoreCandidate(c: ScorableCandidate): number {
 
   if (c.seen_date) {
     const hoursOld = (Date.now() - new Date(c.seen_date).getTime()) / (1000 * 60 * 60);
-    score += Math.max(0, 25 - hoursOld); // small recency tiebreaker, decays over ~25 hours
+    score += Math.max(0, 25 - hoursOld);
   }
 
   return score;
@@ -39,11 +36,6 @@ export type AutoGenerateResult = {
   groupCount: number;
 };
 
-// Submits pending candidates as a single Batch API request instead of
-// generating synchronously one at a time -- ~50% cheaper, results arrive
-// asynchronously and are picked up by /api/check-batches once ready.
-// Clustered groups (2+ related articles) go first, filled out with the
-// most recent single candidates up to `limit`.
 export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResult> {
   const supabase = supabaseServer();
 
@@ -52,13 +44,38 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
     .select('id, url, title, source_country, domain, seen_date, tone, query_tag')
     .eq('status', 'pending')
     .order('seen_date', { ascending: false })
-    .limit(150);
+    .limit(300);
 
   if (candidatesError) {
     throw new Error(`Failed to load candidates: ${candidatesError.message}`);
   }
 
-  const all = candidates ?? [];
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: recentStories } = await supabase
+    .from('stories')
+    .select('headline')
+    .gte('created_at', sevenDaysAgo);
+
+  const recentHeadlineWords = new Set(
+    (recentStories ?? []).flatMap((s: { headline: string }) =>
+      s.headline.toLowerCase().split(/\s+/).filter((w: string) => w.length > 4)
+    )
+  );
+
+  function isDuplicate(title: string): boolean {
+    const words = title.toLowerCase().split(/\s+/).filter((w) => w.length > 4);
+    const matches = words.filter((w) => recentHeadlineWords.has(w)).length;
+    return matches >= 4;
+  }
+
+  const SCORE_FLOOR = 55;
+
+  const all = (candidates ?? []).filter((c) => {
+    if (isDuplicate(c.title)) return false;
+    if (scoreCandidate(c) < SCORE_FLOOR) return false;
+    return true;
+  });
+
   const clusters = suggestClusters(all);
   const clusteredIds = new Set(clusters.flatMap((c) => c.candidateIds));
 
@@ -75,7 +92,7 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
   }
 
   if (groups.length === 0) {
-    throw new Error('No pending candidates available to generate from.');
+    throw new Error('No pending candidates above score threshold available.');
   }
 
   const candidateById = new Map(all.map((c) => [c.id, c]));
@@ -105,8 +122,6 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
     throw new Error(`Batch submitted to Anthropic (${anthropicBatchId}) but failed to save tracking record: ${insertError.message}`);
   }
 
-  // Mark these candidates as approved-pending so they aren't picked up
-  // again by a second batch before this one resolves.
   const allCandidateIds = groups.flat();
   await supabase
     .from('story_candidates')
@@ -115,5 +130,3 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
 
   return { batchId: anthropicBatchId, groupCount: groups.length };
 }
-
-
