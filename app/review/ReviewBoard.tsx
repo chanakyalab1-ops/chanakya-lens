@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -249,9 +249,9 @@ export function ReviewBoard({
                 try {
                   const result = await triggerAutoGenerateBatch(5);
                   router.refresh();
-                  if (result.failed.length > 0) {
-                    setError(`${result.succeeded.length} drafted, ${result.failed.length} failed.`);
-                  }
+                  setError(`Batch submitted: ${result.groupCount} queued (${result.batchId.slice(0, 8)}…)`);
+
+
                 } catch (e) {
                   setError(e instanceof Error ? e.message : 'Failed to run batch generate.');
                 }
