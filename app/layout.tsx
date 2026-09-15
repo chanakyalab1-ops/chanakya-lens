@@ -1,4 +1,5 @@
 ﻿import type { Metadata } from "next";
+import StickyDigestBar from "@/components/StickyDigestBar";
 import { Barlow_Condensed, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 const barlow = Barlow_Condensed({
@@ -26,7 +27,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${barlow.variable} ${plexSans.variable} ${plexMono.variable}`}>
-      <body>{children}</body>
+      <body>{children}      <StickyDigestBar />
+    </body>
     </html>
   );
 }

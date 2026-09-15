@@ -36,11 +36,8 @@ export default function NavDrawer() {
           </span>
         </Link>
         <div className="flex items-center justify-self-end">
-          <Link href="/account" className="h-9 w-9 rounded-full border flex items-center justify-center" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
-            <svg viewBox="0 0 16 16" className="h-4 w-4">
-              <circle cx="8" cy="6" r="3" fill="var(--text-on-ink)" />
-              <path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" fill="var(--text-on-ink)" />
-            </svg>
+          <Link href="/account" className="font-mono text-[0.68rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
+            Account
           </Link>
         </div>   </header>
       {/* Scrim */}
