@@ -19,6 +19,28 @@ const tagLabel: Record<ConfidenceLevel, string> = {
 
 export const revalidate = 300;
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const story = await getStoryBySlug(slug);
+  if (!story) return {};
+  return {
+    title: story.headline,
+    description: story.dek ?? story.headline,
+    openGraph: {
+      title: story.headline,
+      description: story.dek ?? story.headline,
+      url: `https://chanakyalens.com/story/${slug}`,
+      images: [{ url: `https://chanakyalens.com/api/story-card/${slug}`, width: 1080, height: 1920 }],
+    },
+    twitter: {
+      card: `summary_large_image`,
+      title: story.headline,
+      description: story.dek ?? story.headline,
+      images: [`https://chanakyalens.com/api/story-card/${slug}`],
+    },
+  };
+}
+
 export default async function StoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const story = await getStoryBySlug(slug);
@@ -74,6 +96,9 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           {formatStoryDate(story.publishedAt)}
         </div>
 
+        <div className="mb-5">
+          <ShareButtons slug={slug} headline={story.headline} />
+        </div>
         <h1 className="font-display font-bold text-3xl leading-tight mb-4">{story.headline}</h1>
         <p className="text-base mb-6" style={{ color: "var(--text-body)" }}>{story.dek}</p>
 
@@ -177,10 +202,6 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             </div>
           </section>
         )}
-
-        <section className="mt-9 pt-6 border-t" style={{ borderColor: "var(--border)" }}>
-          <ShareButtons slug={slug} headline={story.headline} />
-        </section>
 
         <div className="flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.68rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
           <div className="flex gap-1.5">
