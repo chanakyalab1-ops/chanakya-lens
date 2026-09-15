@@ -5,6 +5,7 @@ import NavDrawer from "@/components/NavDrawer";
 import { getStoryBySlug, ConfidenceLevel } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 import { logPageView } from "@/lib/analytics";
+import { ShareButtons } from "@/components/ShareButtons";
 const tagColor: Record<ConfidenceLevel, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
@@ -176,6 +177,10 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             </div>
           </section>
         )}
+
+        <section className="mt-9 pt-6 border-t" style={{ borderColor: "var(--border)" }}>
+          <ShareButtons slug={slug} headline={story.headline} />
+        </section>
 
         <div className="flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.68rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
           <div className="flex gap-1.5">
