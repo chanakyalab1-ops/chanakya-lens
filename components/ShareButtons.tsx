@@ -29,7 +29,7 @@ export function ShareButtons({ slug, headline }: { slug: string; headline: strin
         Share this story
       </div>
       <div className="flex flex-wrap gap-2">
-        
+        <a
           href={cardUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -38,7 +38,7 @@ export function ShareButtons({ slug, headline }: { slug: string; headline: strin
         >
           Story card
         </a>
-        
+        <a
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -47,7 +47,7 @@ export function ShareButtons({ slug, headline }: { slug: string; headline: strin
         >
           WhatsApp
         </a>
-        
+        <a
           href={fbUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -56,7 +56,7 @@ export function ShareButtons({ slug, headline }: { slug: string; headline: strin
         >
           Facebook
         </a>
-        
+        <a
           href={redditUrl}
           target="_blank"
           rel="noopener noreferrer"
