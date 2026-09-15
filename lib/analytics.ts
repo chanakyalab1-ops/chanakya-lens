@@ -1,6 +1,5 @@
-﻿import { supabase } from "./supabase";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+﻿import { createServerClient } from "@supabase/ssr";
+import { cookies, headers } from "next/headers";
 
 const ADMIN_EMAIL = "chanakya.lab1@gmail.com";
 
@@ -12,12 +11,8 @@ async function isAdminRequest(): Promise<boolean> {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll() {
-            // no-op -- we're only reading, not modifying the session here
-          },
+          getAll() { return cookieStore.getAll(); },
+          setAll() {},
         },
       }
     );
@@ -31,10 +26,26 @@ async function isAdminRequest(): Promise<boolean> {
 export async function logPageView(path: string) {
   try {
     const isAdmin = await isAdminRequest();
-    if (isAdmin) return; // don't count our own visits
+    if (isAdmin) return;
 
-    await supabase.from("page_views").insert({ path });
+    const cookieStore = await cookies();
+    const headersList = await headers();
+    const userAgent = headersList.get("user-agent") ?? null;
+    const referrer = headersList.get("referer") ?? null;
+
+    const serverSupabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll(); },
+          setAll() {},
+        },
+      }
+    );
+
+    await serverSupabase.from("page_views").insert({ path, user_agent: userAgent, referrer });
   } catch {
-    // silently ignore — never let analytics break a page render
+    // silently ignore
   }
 }
