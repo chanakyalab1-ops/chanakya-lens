@@ -5,6 +5,12 @@ import { submitBatchGeneration } from '@/lib/anthropic-server';
 const TRUSTED_DOMAINS = new Set([
   "reuters.com", "wsj.com", "washingtonpost.com", "apnews.com", "bbc.com",
   "ft.com", "bloomberg.com", "economist.com", "nytimes.com", "cnn.com",
+  "rferl.org", "aljazeera.com", "theguardian.com", "foreignpolicy.com",
+  "foreignaffairs.com", "politico.com", "axios.com", "thehill.com",
+  "scmp.com", "hindustantimes.com", "thehindu.com", "ndtv.com",
+  "economictimes.indiatimes.com", "timesofindia.indiatimes.com",
+  "jpost.com", "haaretz.com", "middleeasteye.net", "arabnews.com",
+  "dawn.com", "thenews.com.pk", "dw.com", "euronews.com",
 ]);
 
 const TOPIC_KEYWORDS = [
@@ -68,7 +74,7 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
     return matches >= 4;
   }
 
-  const SCORE_FLOOR = 55;
+  const SCORE_FLOOR = 35;
 
   const all = (candidates ?? []).filter((c) => {
     if (isDuplicate(c.title)) return false;
