@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import NavDrawer from "@/components/NavDrawer";
-import { getStoryBySlug, ConfidenceLevel } from "@/lib/stories";
+import { getStoryBySlug, getAllStories, ConfidenceLevel } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 import { logPageView } from "@/lib/analytics";
 import { ShareButtons } from "@/components/ShareButtons";
@@ -46,6 +46,20 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
   const story = await getStoryBySlug(slug);
   if (!story) return notFound();
   logPageView(`/story/${slug}`);
+
+  const allStories = await getAllStories();
+  const related = allStories
+    .filter((s) => s.slug !== slug)
+    .map((s) => ({
+      story: s,
+      score:
+        (s.category === story.category ? 2 : 0) +
+        (s.subjectCountries?.some((c) => story.subjectCountries?.includes(c)) ? 1 : 0),
+    }))
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score || new Date(b.story.publishedAt).getTime() - new Date(a.story.publishedAt).getTime())
+    .slice(0, 3)
+    .map((s) => s.story);
 
   const schemaData = {
     "@context": "https://schema.org",
@@ -126,6 +140,20 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         <div className="font-mono text-[0.68rem] mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
           {formatStoryDate(story.publishedAt)}
         </div>
+
+        {story.subjectCountries && story.subjectCountries.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {story.subjectCountries.map((country) => (
+              <span
+                key={country}
+                className="font-mono text-[0.6rem] uppercase tracking-wide px-2.5 py-1 rounded-full border"
+                style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}
+              >
+                {country}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="mb-5">
           <ShareButtons slug={slug} headline={story.headline} />
@@ -229,6 +257,29 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                     {source.sourceCountry ?? source.domain}
                   </span>
                 </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {related.length > 0 && (
+          <section className="mt-10 pt-6 border-t" style={{ borderColor: "var(--border)" }}>
+            <div className="font-display font-bold uppercase tracking-wide text-lg mb-4" style={{ color: "var(--brand-soft)" }}>
+              Related
+            </div>
+            <div className="space-y-3">
+              {related.map((r) => (
+                <Link
+                  key={r.slug}
+                  href={`/story/${r.slug}`}
+                  className="block p-3.5 rounded-sm border hover:opacity-80"
+                  style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}
+                >
+                  <div className="font-mono text-[0.6rem] uppercase tracking-wide mb-1.5" style={{ color: "var(--brand-soft)" }}>
+                    {r.category}
+                  </div>
+                  <div className="font-display font-bold text-[0.95rem] leading-tight">{r.headline}</div>
+                </Link>
               ))}
             </div>
           </section>
