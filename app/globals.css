@@ -22,7 +22,7 @@
 [data-theme="light"] {
   --ink: #F5F0E8;
   --ink-soft: #EDE8DF;
-  --ink-card: #EAE4DA;
+  --ink-card: #FFFFFF;
   --paper: #1A1A2E;
   --text-on-ink: #1A1A2E;
   --text-on-ink-dim: #5A6080;
@@ -34,7 +34,7 @@
   --possible: #3A8A6A;
   --developing: #B94A2A;
   --settled: #5E6A8A;
-  --border: #C8C0B0;
+  --border: #D0C8B8;
 }
 
 * { box-sizing: border-box; }
