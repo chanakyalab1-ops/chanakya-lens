@@ -47,8 +47,39 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
   if (!story) return notFound();
   logPageView(`/story/${slug}`);
 
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "headline": story.headline,
+    "datePublished": story.publishedAt,
+    "dateModified": story.publishedAt,
+    "image": `https://chanakyalens.com/api/story-card/${slug}`,
+    "description": story.dek ?? story.headline,
+    "author": {
+      "@type": "Organization",
+      "name": "Chanakya Lens",
+      "url": "https://chanakyalens.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Chanakya Lens",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://chanakyalens.com/logo-mark.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://chanakyalens.com/story/${slug}`
+    }
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
       <NavDrawer />
       <article className="max-w-2xl mx-auto px-5 pt-7 pb-16">
         <Link
