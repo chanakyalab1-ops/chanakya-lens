@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 :root {
   --ink: #0A112A;
@@ -17,6 +17,24 @@
   --settled: #7E8AAA;
   --border: #22326B;
   --radius: 2px;
+}
+
+[data-theme="light"] {
+  --ink: #F5F0E8;
+  --ink-soft: #EDE8DF;
+  --ink-card: #EAE4DA;
+  --paper: #1A1A2E;
+  --text-on-ink: #1A1A2E;
+  --text-on-ink-dim: #5A6080;
+  --text-body: #3A4060;
+  --brand: #3A8A96;
+  --brand-soft: #2E7A86;
+  --direct: #C06A2E;
+  --likely: #A08A2E;
+  --possible: #3A8A6A;
+  --developing: #B94A2A;
+  --settled: #5E6A8A;
+  --border: #C8C0B0;
 }
 
 * { box-sizing: border-box; }
