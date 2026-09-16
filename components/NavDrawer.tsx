@@ -1,9 +1,8 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-import ThemeToggle from "@/components/ThemeToggle";
 
 const ADMIN_EMAIL = "chanakya.lab1@gmail.com";
 
@@ -36,8 +35,7 @@ export default function NavDrawer() {
             Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
           </span>
         </Link>
-        <div className="flex items-center gap-2 justify-self-end">
-          <ThemeToggle />
+        <div className="flex items-center justify-self-end">
           <Link href="/account" className="font-mono text-[0.68rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
             Account
           </Link>
