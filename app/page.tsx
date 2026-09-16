@@ -13,7 +13,12 @@ function pickTodaysSignal(stories: Story[]): Story[] {
     if (hasDirect) score += 1;
     return score;
   };
-  return [...stories]
+  const now = Date.now();
+  const h24 = 24 * 60 * 60 * 1000;
+  const h48 = 48 * 60 * 60 * 1000;
+  const recent = stories.filter((s) => now - new Date(s.publishedAt).getTime() < h24);
+  const pool = recent.length >= 3 ? recent : stories.filter((s) => now - new Date(s.publishedAt).getTime() < h48);
+  return [...pool]
     .sort((a, b) => rank(b) - rank(a) || (new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()))
     .slice(0, 3);
 }
