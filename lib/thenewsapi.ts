@@ -24,6 +24,95 @@ const TRUSTED_DOMAINS = new Set([
   "ft.com", "bloomberg.com", "economist.com", "nytimes.com", "cnn.com",
 ]);
 
+const DOMAIN_TO_COUNTRY: Record<string, string> = {
+  // South Asia
+  "dawn.com": "Pakistan",
+  "thenews.com.pk": "Pakistan",
+  "geo.tv": "Pakistan",
+  "thehindu.com": "India",
+  "hindustantimes.com": "India",
+  "ndtv.com": "India",
+  "indiatoday.in": "India",
+  "economictimes.indiatimes.com": "India",
+  "timesofindia.indiatimes.com": "India",
+  "thewire.in": "India",
+  "theprint.in": "India",
+  "scroll.in": "India",
+  "thedailystar.net": "Bangladesh",
+  "colombotelegraph.com": "Sri Lanka",
+  // Middle East
+  "aljazeera.com": "Qatar",
+  "arabnews.com": "Saudi Arabia",
+  "saudigazette.com.sa": "Saudi Arabia",
+  "haaretz.com": "Israel",
+  "jpost.com": "Israel",
+  "timesofisrael.com": "Israel",
+  "ynetnews.com": "Israel",
+  "presstv.ir": "Iran",
+  "irna.ir": "Iran",
+  "tehrantimes.com": "Tehran",
+  "middleeasteye.net": "United Kingdom",
+  "alarabiya.net": "Saudi Arabia",
+  "thenationalnews.com": "UAE",
+  "gulfnews.com": "UAE",
+  "khaleejtimes.com": "UAE",
+  "jordantimes.com": "Jordan",
+  "dailysabah.com": "Turkey",
+  "hurriyetdailynews.com": "Turkey",
+  "yenisafak.com": "Turkey",
+  // East Asia
+  "globaltimes.cn": "China",
+  "xinhuanet.com": "China",
+  "chinadaily.com.cn": "China",
+  "scmp.com": "Hong Kong",
+  "koreaherald.com": "South Korea",
+  "koreatimes.co.kr": "South Korea",
+  "japantimes.co.jp": "Japan",
+  "nhk.or.jp": "Japan",
+  "taipeitimes.com": "Taiwan",
+  "focustaiwan.tw": "Taiwan",
+  "vietnamnews.vn": "Vietnam",
+  "bangkokpost.com": "Thailand",
+  "straitstimes.com": "Singapore",
+  "channelnewsasia.com": "Singapore",
+  "philstar.com": "Philippines",
+  "inquirer.net": "Philippines",
+  // Russia/Eastern Europe
+  "rt.com": "Russia",
+  "tass.com": "Russia",
+  "interfax.com": "Russia",
+  "kommersant.ru": "Russia",
+  "kyivindependent.com": "Ukraine",
+  "pravda.com.ua": "Ukraine",
+  "unian.info": "Ukraine",
+  // Africa
+  "dailymaverick.co.za": "South Africa",
+  "timeslive.co.za": "South Africa",
+  "nation.africa": "Kenya",
+  "thisdaylive.com": "Nigeria",
+  "punchng.com": "Nigeria",
+  "egyptindependent.com": "Egypt",
+  "ahram.org.eg": "Egypt",
+  "moroccoworldnews.com": "Morocco",
+  // Europe (regional only, not wire services)
+  "dw.com": "Germany",
+  "thelocal.de": "Germany",
+  "lefigaro.fr": "France",
+  "lemonde.fr": "France",
+  "elpais.com": "Spain",
+  "corriere.it": "Italy",
+  "rferl.org": "United States",
+  // Latin America
+  "buenosairesherald.com": "Argentina",
+  "mercopress.com": "Uruguay",
+  "brasilwire.com": "Brazil",
+};
+
+function inferCountryFromDomain(domain: string): string {
+  const cleaned = domain.replace(/^www\./, "");
+  return DOMAIN_TO_COUNTRY[cleaned] ?? "";
+}
+
 const REQUEST_TIMEOUT_MS = 15000;
 const DELAY_BETWEEN_REQUESTS_MS = 1500;
 const ARTICLES_PER_PAGE = 3; // free tier hard cap, confirmed
@@ -87,7 +176,7 @@ async function fetchOnePage(query: string, page: number): Promise<GdeltArticle[]
         url: a.url,
         title: a.title,
         domain: a.source ?? "",
-        sourcecountry: "",
+        sourcecountry: inferCountryFromDomain(a.source ?? ""),
         seendate: a.published_at ?? "",
         tone: 0,
       });
