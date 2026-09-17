@@ -1,4 +1,5 @@
 ﻿import type { Metadata } from "next";
+import Footer from "@/components/Footer";
 import StickyDigestBar from "@/components/StickyDigestBar";
 import { Barlow_Condensed, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
@@ -27,7 +28,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${barlow.variable} ${plexSans.variable} ${plexMono.variable}`}>
-      <body>{children}      <StickyDigestBar />
+      <body>{children}      <Footer />
+      <StickyDigestBar />
     </body>
     </html>
   );
