@@ -1,4 +1,4 @@
-// Hybrid clustering (v1): suggests which raw candidates are probably the
+﻿// Hybrid clustering (v1): suggests which raw candidates are probably the
 // same story, so a reviewer can confirm/override rather than group by hand.
 export type Candidate = {
   id: string;
@@ -21,8 +21,8 @@ const STOPWORDS = new Set([
   'has', 'have', 'will', 'after', 'over', 'amid', 'says', 'say', 'said',
 ]);
 
-const SIMILARITY_THRESHOLD = 0.28;
-const MAX_HOURS_APART = 60;
+const SIMILARITY_THRESHOLD = 0.20;
+const MAX_HOURS_APART = 96;
 
 function tokenize(title: string): Set<string> {
   return new Set(
