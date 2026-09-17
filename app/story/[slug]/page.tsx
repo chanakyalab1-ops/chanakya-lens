@@ -119,31 +119,33 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </div>
         )}
 
-        <div className="flex items-center gap-2.5 mb-3.5 flex-wrap">
-          <span className="font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
-            {story.category}
-          </span>
-          {story.status && (
-            <>
-              <span className="text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>·</span>
-              <span
-                className="font-mono text-[0.62rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1.5"
-                style={
-                  story.status === "developing"
-                    ? { color: "var(--developing)", borderColor: "rgba(217,105,74,0.5)", background: "rgba(217,105,74,0.08)" }
-                    : { color: "var(--settled)", borderColor: "#2A3D74", background: "rgba(255,255,255,0.02)" }
-                }
-              >
-                <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />
-                {story.status === "developing" ? "Developing" : "Settled"}
-              </span>
-            </>
-          )}
+        <div className="flex items-center justify-between gap-3 mb-3.5 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+              {story.category}
+            </span>
+            {story.status && (
+              <>
+                <span className="text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>·</span>
+                <span
+                  className="font-mono text-[0.62rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1.5"
+                  style={
+                    story.status === "developing"
+                      ? { color: "var(--developing)", borderColor: "rgba(217,105,74,0.5)", background: "rgba(217,105,74,0.08)" }
+                      : { color: "var(--settled)", borderColor: "#2A3D74", background: "rgba(255,255,255,0.02)" }
+                  }
+                >
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />
+                  {story.status === "developing" ? "Developing" : "Settled"}
+                </span>
+              </>
+            )}
+          </div>
+          <ShareButtons slug={slug} headline={story.headline} />
         </div>
         <div className="font-mono text-[0.68rem] mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
           {formatStoryDate(story.publishedAt)}
         </div>
-
         {story.subjectCountries && story.subjectCountries.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {story.subjectCountries.map((country) => (
@@ -157,10 +159,6 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             ))}
           </div>
         )}
-
-        <div className="mb-5">
-          <ShareButtons slug={slug} headline={story.headline} />
-        </div>
         <h1 className="font-display font-bold text-3xl leading-tight mb-4">{story.headline}</h1>
         <p className="text-base mb-6" style={{ color: "var(--text-body)" }}>{story.dek}</p>
 
@@ -284,7 +282,11 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             </p>
           </section>
         )}
+        </aside>
+      </article>
 
+      {/* Full width below grid — Impact, Sources, Related */}
+      <div className="mt-10 space-y-10">
         {story.impactNodes && story.impactNodes.length > 0 && (
           <section className="mt-9">
             <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
@@ -385,8 +387,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             <Link href="/how-we-rate" className="underline" style={{ color: "var(--brand-soft)" }}>How we rate this →</Link>
           </span>
         </div>
-        </aside>
-      </article>
+      </div>
       </div>
     </>
   );
