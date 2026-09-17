@@ -5,11 +5,12 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 
 const ADMIN_EMAIL = "chanakya.lab1@gmail.com";
+const REGIONS = ["Asia", "Americas", "Europe", "Middle East", "Africa"];
 
 export default function NavDrawer() {
-  const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [regionsOpen, setRegionsOpen] = useState(false);
+  const regionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -19,67 +20,87 @@ export default function NavDrawer() {
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
+      if (regionsRef.current && !regionsRef.current.contains(e.target as Node)) {
+        setRegionsOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClick);
+    document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
+  }, []);
+
+  const linkClass = "font-mono text-[0.68rem] uppercase tracking-widest hover:opacity-60 transition-opacity";
 
   return (
-    <header className="sticky top-0 z-20 grid grid-cols-[1fr_auto_1fr] items-center border-b px-5 py-4 backdrop-blur"
-      style={{ borderColor: "var(--border)", background: "rgba(10,17,42,0.92)" }}>
-      <div className="relative justify-self-start" ref={ref}>
-        <button
-          aria-label="Open menu"
-          onClick={() => setOpen(!open)}
-          className="flex flex-col gap-1 p-1.5"
-        >
-          <span className="h-px w-[18px]" style={{ background: "var(--text-on-ink)" }} />
-          <span className="h-px w-[12px]" style={{ background: "var(--text-on-ink)" }} />
-          <span className="h-px w-[18px]" style={{ background: "var(--text-on-ink)" }} />
-        </button>
+    <header className="sticky top-0 z-20 border-b px-5 py-3 backdrop-blur"
+      style={{ borderColor: "var(--border)", background: "rgba(10,17,42,0.95)" }}>
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
 
-        {open && (
-          <nav
-            className="absolute top-full left-0 mt-2 w-56 rounded-sm border shadow-xl z-50"
-            style={{ background: "var(--ink-soft)", borderColor: "var(--border)" }}
-          >
-            {isAdmin && (
-              <>
-                <div className="font-mono text-[0.6rem] uppercase tracking-widest px-4 pt-3 pb-1" style={{ color: "var(--brand-soft)" }}>Admin</div>
-                <Link href="/admin" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-white/5" style={{ color: "var(--brand-soft)" }}>Dashboard</Link>
-              </>
+        {/* Left nav */}
+        <nav className="flex items-center gap-5">
+          <Link href="/" className={linkClass} style={{ color: "var(--text-on-ink-dim)" }}>Latest</Link>
+
+          {/* Regions dropdown */}
+          <div className="relative" ref={regionsRef}>
+            <button
+              onClick={() => setRegionsOpen(!regionsOpen)}
+              className={linkClass + " flex items-center gap-1"}
+              style={{ color: "var(--text-on-ink-dim)" }}
+            >
+              Regions
+              <svg viewBox="0 0 10 6" fill="none" className="h-2 w-2 opacity-50">
+                <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            {regionsOpen && (
+              <div
+                className="absolute top-full left-0 mt-2 w-44 rounded-sm border shadow-xl py-1"
+                style={{ background: "var(--ink-soft)", borderColor: "var(--border)" }}
+              >
+                <Link
+                  href="/regions"
+                  onClick={() => setRegionsOpen(false)}
+                  className="block px-4 py-2 text-[0.78rem] hover:bg-white/5 font-mono uppercase tracking-wide"
+                  style={{ color: "var(--brand-soft)" }}
+                >
+                  All regions
+                </Link>
+                <div className="border-t my-1" style={{ borderColor: "var(--border)" }} />
+                {REGIONS.map((r) => (
+                  <Link
+                    key={r}
+                    href={`/regions?r=${encodeURIComponent(r)}`}
+                    onClick={() => setRegionsOpen(false)}
+                    className="block px-4 py-2 text-[0.78rem] hover:bg-white/5"
+                    style={{ color: "var(--text-body)" }}
+                  >
+                    {r}
+                  </Link>
+                ))}
+              </div>
             )}
-            <div className="font-mono text-[0.6rem] uppercase tracking-widest px-4 pt-3 pb-1" style={{ color: "var(--text-on-ink-dim)" }}>Read</div>
-            <Link href="/" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-white/5">Latest stories</Link>
-            <Link href="/regions" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-white/5">Browse by region</Link>
-            <Link href="/off-lens" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-white/5">Off-Lens</Link>
-            <div className="font-mono text-[0.6rem] uppercase tracking-widest px-4 pt-3 pb-1" style={{ color: "var(--text-on-ink-dim)" }}>Follow</div>
-            <a href="https://www.instagram.com/chanakya.lab/" target="_blank" rel="noreferrer" className="block px-4 py-2 text-sm hover:bg-white/5">Instagram</a>
-            <a href="https://www.youtube.com/@Chanakya_lab" target="_blank" rel="noreferrer" className="block px-4 py-2 text-sm hover:bg-white/5">YouTube</a>
-            <a href="https://www.facebook.com/share/1HntT8Xo6x/" target="_blank" rel="noreferrer" className="block px-4 py-2 text-sm hover:bg-white/5">Facebook</a>
-            <Link href="/digest" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-white/5">Daily digest</Link>
-            <div className="font-mono text-[0.6rem] uppercase tracking-widest px-4 pt-3 pb-1" style={{ color: "var(--text-on-ink-dim)" }}>About</div>
-            <Link href="/how-we-rate" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-white/5">How we rate this</Link>
-            <Link href="/about" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm hover:bg-white/5">Our approach</Link>
-            <Link href="/feedback" onClick={() => setOpen(false)} className="block px-4 py-2 pb-3 text-sm hover:bg-white/5">Feedback</Link>
-          </nav>
-        )}
-      </div>
+          </div>
 
-      <Link href="/" className="flex items-center gap-3 justify-self-center">
-        <Image src="/logo-mark.png" alt="Chanakya Lens" width={56} height={56} className="rounded-full" />
-        <span className="font-display text-2xl font-extrabold uppercase tracking-wide">
-          Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
-        </span>
-      </Link>
+          <Link href="/off-lens" className={linkClass} style={{ color: "var(--text-on-ink-dim)" }}>Off-Lens</Link>
+          <Link href="/digest" className={linkClass} style={{ color: "var(--text-on-ink-dim)" }}>Digest</Link>
+          {isAdmin && (
+            <Link href="/admin" className={linkClass} style={{ color: "var(--brand-soft)" }}>Admin</Link>
+          )}
+        </nav>
 
-      <div className="flex items-center justify-self-end">
-        <Link href="/account" className="font-mono text-[0.68rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
-          Account
+        {/* Center logo */}
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          <Image src="/logo-mark.png" alt="Chanakya Lens" width={40} height={40} className="rounded-full" />
+          <span className="font-display text-xl font-extrabold uppercase tracking-wide hidden sm:block">
+            Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
+          </span>
         </Link>
+
+        {/* Right */}
+        <div className="flex items-center gap-4">
+          <Link href="/about" className={linkClass} style={{ color: "var(--text-on-ink-dim)" }}>About</Link>
+          <Link href="/account" className={linkClass} style={{ color: "var(--text-on-ink-dim)" }}>Account</Link>
+        </div>
+
       </div>
     </header>
   );
