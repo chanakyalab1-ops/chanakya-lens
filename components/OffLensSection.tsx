@@ -87,7 +87,7 @@ export function OffLensSection({
 
           <div className="mt-4 flex flex-wrap gap-2">
             {validSources.map((s, i) => (
-              
+              <a
                 key={i}
                 href={s.url}
                 target="_blank"
