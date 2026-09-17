@@ -95,7 +95,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
       <NavDrawer />
-      <article className="max-w-3xl mx-auto px-5 pt-7 pb-16">
+      <article className="max-w-2xl mx-auto px-5 pt-7 pb-16">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide mb-5 hover:opacity-80"
