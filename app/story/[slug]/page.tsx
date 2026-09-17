@@ -6,6 +6,7 @@ import { getStoryBySlug, getAllStories, ConfidenceLevel } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 import { logPageView } from "@/lib/analytics";
 import { ShareButtons } from "@/components/ShareButtons";
+import { OffLensSection } from "@/components/OffLensSection";
 const tagColor: Record<ConfidenceLevel, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
