@@ -207,7 +207,8 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           const sorted = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]);
           const subjectSet = new Set(story.subjectCountries ?? []);
           const coveredSet = new Set(Object.keys(sourceCounts));
-          const missing = [...subjectSet].filter((c) => !coveredSet.has(c));
+          const NON_COUNTRIES = new Set(["Global", "International", "Middle East", "Southeast Asia", "East Asia", "Central Asia", "Latin America", "Sub-Saharan Africa", "North Africa", "Eastern Europe", "Western Europe", "Gulf States", "Balkans"]);
+          const missing = [...subjectSet].filter((c) => !coveredSet.has(c) && !NON_COUNTRIES.has(c));
           return (
             <section className="mt-9 mb-9 p-5 rounded-sm border" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
               <div className="font-display font-bold uppercase tracking-wide text-xl mb-1.5" style={{ color: "var(--brand-soft)" }}>
