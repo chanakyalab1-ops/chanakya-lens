@@ -96,7 +96,9 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
       <NavDrawer />
-      <article className="max-w-2xl mx-auto px-5 pt-7 pb-16">
+      <div className="max-w-7xl mx-auto px-5 pt-7 pb-16">
+      <article className="max-w-2xl mx-auto md:max-w-none md:grid md:grid-cols-[1fr_380px] md:gap-10">
+        <div>
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide mb-5 hover:opacity-80"
@@ -163,6 +165,10 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         <p className="text-base mb-6" style={{ color: "var(--text-body)" }}>{story.dek}</p>
 
         <p className="text-[0.95rem] leading-relaxed mb-8" style={{ color: "#C6D0E8" }}>{story.body}</p>
+        </div>
+
+        {/* RIGHT SIDEBAR */}
+        <aside className="space-y-6">
 
         {story.hasVideo && (
           <div
@@ -379,7 +385,9 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             <Link href="/how-we-rate" className="underline" style={{ color: "var(--brand-soft)" }}>How we rate this →</Link>
           </span>
         </div>
+        </aside>
       </article>
+      </div>
     </>
   );
 }
