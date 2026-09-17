@@ -71,7 +71,7 @@ export default function NavDrawer() {
           className="fixed left-0 right-0 z-30 border-b shadow-2xl"
           style={{ top: "73px", background: "rgba(10,17,42,0.98)", borderColor: "var(--border)" }}
         >
-          <div className="max-w-7xl mx-auto px-8 py-8 grid grid-cols-5 gap-8">
+          <div className="max-w-7xl mx-auto px-5 py-6 grid grid-cols-2 md:grid-cols-5 gap-6">
             <div>
               <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Read</div>
               <div className="space-y-3">
@@ -106,7 +106,7 @@ export default function NavDrawer() {
                 {isAdmin && <Link href="/admin" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--brand-soft)" }}>Admin</Link>}
               </div>
             </div>
-            <div>
+            <div className="col-span-2 md:col-span-1 md:block">
               <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Stay ahead</div>
               {subStatus === "done" ? (
                 <p className="text-sm" style={{ color: "var(--brand-soft)" }}>You are on the list.</p>
