@@ -179,6 +179,87 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </div>
         )}
 
+        {(story.offLens || (story.sources && story.sources.length > 0)) && (() => {
+          const COUNTRY_FLAGS: Record<string, string> = {
+            "AF": "🇦🇫", "AU": "🇦🇺", "AZ": "🇦🇿", "BD": "🇧🇩",
+            "CN": "🇨🇳", "DE": "🇩🇪", "ES": "🇪🇸", "FR": "🇫🇷",
+            "GB": "🇬🇧", "GE": "🇬🇪", "HK": "🇭🇰", "IN": "🇮🇳",
+            "MA": "🇲🇦", "MY": "🇲🇾", "PH": "🇵🇭", "PK": "🇵🇰",
+            "RU": "🇷🇺", "SA": "🇸🇦", "SG": "🇸🇬", "TR": "🇹🇷",
+            "US": "🇺🇸", "Afghanistan": "🇦🇫", "Australia": "🇦🇺",
+            "Azerbaijan": "🇦🇿", "Brazil": "🇧🇷", "Canada": "🇨🇦",
+            "China": "🇨🇳", "France": "🇫🇷", "Germany": "🇩🇪",
+            "Greece": "🇬🇷", "India": "🇮🇳", "Iran": "🇮🇷",
+            "Iraq": "🇮🇶", "Israel": "🇮🇱", "Italy": "🇮🇹",
+            "Japan": "🇯🇵", "Macedonia": "🇲🇰", "Mexico": "🇲🇽",
+            "Nigeria": "🇳🇬", "Pakistan": "🇵🇰", "Philippines": "🇵🇭",
+            "Singapore": "🇸🇬", "South Africa": "🇿🇦", "South Korea": "🇰🇷",
+            "Spain": "🇪🇸", "Syria": "🇸🇾", "Thailand": "🇹🇭",
+            "United Arab Emirates": "🇦🇪", "United Kingdom": "🇬🇧",
+            "United States": "🇺🇸", "Vietnam": "🇻🇳",
+          };
+          const sourceCounts: Record<string, number> = {};
+          (story.sources ?? []).forEach((s) => {
+            const c = s.sourceCountry ?? "unknown";
+            if (c && c !== "unknown") sourceCounts[c] = (sourceCounts[c] ?? 0) + 1;
+          });
+          const total = Object.values(sourceCounts).reduce((a, b) => a + b, 0);
+          const sorted = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]);
+          const subjectSet = new Set(story.subjectCountries ?? []);
+          const coveredSet = new Set(Object.keys(sourceCounts));
+          const missing = [...subjectSet].filter((c) => !coveredSet.has(c));
+          return (
+            <section className="mt-9 mb-9 p-5 rounded-sm border" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
+              <div className="font-display font-bold uppercase tracking-wide text-xl mb-1.5" style={{ color: "var(--brand-soft)" }}>
+                Off-Lens
+              </div>
+              <div className="text-[0.78rem] mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
+                Who is covering this — and who is not.
+              </div>
+              {sorted.length > 0 && (
+                <div className="mb-5 space-y-2">
+                  {sorted.map(([country, count]) => {
+                    const pct = Math.round((count / total) * 100);
+                    const flag = COUNTRY_FLAGS[country] ?? "🌐";
+                    return (
+                      <div key={country} className="flex items-center gap-3">
+                        <span className="text-lg w-7 shrink-0">{flag}</span>
+                        <span className="font-mono text-[0.68rem] w-32 shrink-0" style={{ color: "var(--text-body)" }}>{country}</span>
+                        <div className="flex-1 rounded-full overflow-hidden h-1.5" style={{ background: "var(--border)" }}>
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--brand-soft)" }} />
+                        </div>
+                        <span className="font-mono text-[0.68rem] w-8 text-right shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>{pct}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {missing.length > 0 && (
+                <div className="mb-5">
+                  <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-2" style={{ color: "var(--developing)" }}>
+                    Not covered by
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {missing.map((c) => (
+                      <span key={c} className="font-mono text-[0.68rem] px-2 py-0.5 rounded border" style={{ borderColor: "var(--developing)", color: "var(--developing)" }}>
+                        {COUNTRY_FLAGS[c] ?? "🌐"} {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {story.offLens && (
+                <div className="pt-4 border-t" style={{ borderColor: "var(--border)" }}>
+                  <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
+                    Analysis
+                  </div>
+                  <p className="text-[0.9rem] leading-relaxed" style={{ color: "var(--text-on-ink)" }}>{story.offLens}</p>
+                </div>
+              )}
+            </section>
+          );
+        })()}
+
         {story.chanakyaAnalysis && (
           <section
             className="mt-2 mb-9 p-5 rounded-sm border-2"
