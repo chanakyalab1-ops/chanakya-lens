@@ -287,32 +287,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
       {/* Full width below grid — Impact, Sources, Related */}
       <div className="mt-10 space-y-10 max-w-screen-xl mx-auto px-8">
-        {false && (
-              <div
-                className="absolute left-[5px] top-1.5 bottom-1.5 w-px"
-                style={{ backgroundImage: "linear-gradient(to bottom, #3A5192 0 4px, transparent 4px 8px)", backgroundSize: "1px 8px" }}
-              />
-              {story.impactNodes.map((node, i) => (
-                <div key={i} className="relative mb-5.5 last:mb-0">
-                  <span
-                    className="absolute -left-6.5 top-1.5 h-2.5 w-2.5 rounded-full"
-                    style={{ boxShadow: `0 0 0 1px ${tagColor[node.confidence]}`, border: "2px solid var(--ink)" }}
-                  >
-                    <span className="absolute inset-0.5 rounded-full" style={{ background: tagColor[node.confidence] }} />
-                  </span>
-                  <span
-                    className="inline-block font-mono text-[0.6rem] uppercase tracking-wide rounded px-1.5 py-0.5 mb-1.5"
-                    style={{ color: tagColor[node.confidence], background: `${tagColor[node.confidence]}20` }}
-                  >
-                    {tagLabel[node.confidence]}
-                  </span>
-                  <div className="text-[0.92rem] font-semibold mb-1">{node.audience}</div>
-                  <div className="text-[0.86rem] leading-relaxed" style={{ color: "#B9B4A6" }}>{node.mechanism}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        
 
         {story.sources && story.sources.length > 0 && (
           <section className="mt-9">
