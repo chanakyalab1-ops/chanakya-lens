@@ -286,7 +286,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
       </article>
 
       {/* Full width below grid — Impact, Sources, Related */}
-      <div className="mt-10 space-y-10">
+      <div className="mt-10 space-y-10 max-w-screen-xl mx-auto px-8">
         {story.impactNodes && story.impactNodes.length > 0 && (
           <section className="mt-9">
             <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
@@ -296,7 +296,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
               Traced by who&apos;s actually in the path of this — not everyone is.
             </div>
 
-            <div className="relative pl-6.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div
                 className="absolute left-[5px] top-1.5 bottom-1.5 w-px"
                 style={{ backgroundImage: "linear-gradient(to bottom, #3A5192 0 4px, transparent 4px 8px)", backgroundSize: "1px 8px" }}
