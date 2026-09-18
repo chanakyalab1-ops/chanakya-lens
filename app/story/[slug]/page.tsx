@@ -98,7 +98,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
       <NavDrawer />
       <div className="max-w-7xl mx-auto px-5 pt-7 pb-16">
       <article className="max-w-2xl mx-auto md:max-w-none md:grid md:grid-cols-[1fr_380px] md:gap-10">
-        <div>
+        <div className="flex flex-col">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide mb-5 hover:opacity-80"
@@ -163,10 +163,35 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         <p className="text-base mb-6" style={{ color: "var(--text-body)" }}>{story.dek}</p>
 
         <p className="text-[0.95rem] leading-relaxed mb-8" style={{ color: "#C6D0E8" }}>{story.body}</p>
+
+        {story.impactNodes && story.impactNodes.length > 0 && (
+          <section className="mt-9">
+            <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
+              How could this affect you
+            </div>
+            <div className="text-[0.78rem] mb-6" style={{ color: "var(--text-on-ink-dim)" }}>
+              Traced by who&apos;s actually in the path of this — not everyone is.
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {story.impactNodes.map((node, i) => (
+                <div key={i} className="p-4 rounded-sm border" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
+                  <span
+                    className="inline-block font-mono text-[0.6rem] uppercase tracking-wide rounded px-1.5 py-0.5 mb-2"
+                    style={{ color: tagColor[node.confidence], background: `${tagColor[node.confidence]}20` }}
+                  >
+                    {tagLabel[node.confidence]}
+                  </span>
+                  <div className="text-[0.92rem] font-semibold mb-1">{node.audience}</div>
+                  <div className="text-[0.86rem] leading-relaxed" style={{ color: "#B9B4A6" }}>{node.mechanism}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
         </div>
 
         {/* RIGHT SIDEBAR */}
-        <aside className="space-y-6">
+        <aside className="space-y-6 md:sticky md:top-20 md:self-start">
 
         {story.hasVideo && (
           <div
