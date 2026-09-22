@@ -23,7 +23,7 @@ async function getAnalyticsSummary() {
     .from("page_views")
     .select("path")
     .gte("created_at", thirtyDaysAgo)
-      .limit(100000);
+    .limit(100000);
 
   const { count: totalStories } = await supabase
     .from("stories")
