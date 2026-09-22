@@ -220,7 +220,7 @@ export async function publishDraft(slug: string) {
 
 // Rejects a draft and releases its candidates back to the queue so they
 // can be reconsidered or bundled into a different story.
-export async function rejectDraft(slug: string) {
+export async function rejectDraft(slug: string, reason?: string) {
   const supabase = supabaseServer();
 
   const { error: releaseError } = await supabase
@@ -248,6 +248,7 @@ export async function rejectDraft(slug: string) {
   await supabase.from('draft_decisions').insert({
     draft_slug: slug,
     decision: 'rejected',
+    reason: reason ?? null,
     category: draftData?.category ?? null,
     subject_countries: draftData?.subject_countries ?? [],
     quality_score: draftData?.quality_score ?? null,
