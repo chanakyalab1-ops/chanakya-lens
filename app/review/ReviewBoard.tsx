@@ -168,13 +168,23 @@ export function ReviewBoard({
   }
 
   function handleReject(slug: string) {
+    setRejectingSlug(slug);
+    setRejectReason("");
+  }
+
+  function confirmReject() {
+    if (!rejectingSlug) return;
+    const slug = rejectingSlug;
+    const reason = rejectReason;
+    setRejectingSlug(null);
+    setRejectReason("");
     setError(null);
     startTransition(async () => {
       try {
-        await rejectDraft(slug);
+        await rejectDraft(slug, reason);
         router.refresh();
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to reject.');
+        setError(e instanceof Error ? e.message : "Failed to reject.");
       }
     });
   }
