@@ -93,6 +93,8 @@ export function ReviewBoard({
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingDraft, setEditingDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [rejectingSlug, setRejectingSlug] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState<string>("");
 
   const candidateById = useMemo(
     () => new Map(candidates.map((c) => [c.id, c])),
@@ -388,6 +390,26 @@ export function ReviewBoard({
         </section>
       </main>
 
+      {rejectingSlug && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-20">
+          <div className="bg-[#0F1826] border border-white/10 rounded-lg p-6 w-full max-w-sm space-y-4">
+            <h3 className="font-serif text-lg">Why reject this draft?</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {["Duplicate", "Stale / outdated", "Too thin", "Wrong framing", "Bad sources", "Off-brand", "Low quality score", "Other"].map((r) => (
+                <button key={r} onClick={() => setRejectReason(r)}
+                  className={`text-sm px-3 py-2 rounded border ${rejectReason === r ? "border-[#C97B4A] bg-[#C97B4A]/10" : "border-white/15 hover:bg-white/5"}`}>
+                  {r}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button onClick={() => setRejectingSlug(null)} className="text-sm px-4 py-2 rounded border border-white/15 hover:bg-white/5">Cancel</button>
+              <button onClick={confirmReject} disabled={!rejectReason} className="text-sm px-4 py-2 rounded bg-red-500/80 text-white font-medium hover:bg-red-500 disabled:opacity-40">Confirm reject</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {editorOpen && (
         <StoryEditor
           candidates={editingDraft ? editingDraftCandidates : selectedCandidates}
@@ -513,6 +535,8 @@ function StoryEditor({
   const [offLens, setOffLens] = useState(initial?.offLens ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rejectingSlug, setRejectingSlug] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState<string>("");
 
   function addNode() {
     setImpactNodes((n) => [...n, { audience: '', mechanism: '', confidence: 'likely' }]);
