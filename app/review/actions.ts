@@ -1,4 +1,4 @@
-﻿'use server';
+'use server';
 
 import { revalidatePath } from 'next/cache';
 import { supabaseServer } from '@/lib/supabase-server';
@@ -208,6 +208,13 @@ export async function publishDraft(slug: string) {
     throw new Error(`Published, but failed to update draft status: ${statusError.message}`);
   }
 
+  await supabase.from('draft_decisions').insert({
+    draft_slug: slug,
+    decision: 'accepted',
+    category: draft.category ?? null,
+    subject_countries: draft.subject_countries ?? [],
+  });
+
   revalidatePath('/review');
 }
 
@@ -224,6 +231,12 @@ export async function rejectDraft(slug: string) {
     throw new Error(`Failed to release candidates: ${releaseError.message}`);
   }
 
+  const { data: draftData } = await supabase
+    .from('story_drafts')
+    .select('headline, category, subject_countries, quality_score')
+    .eq('slug', slug)
+    .single();
+
   const { error: statusError } = await supabase
     .from('story_drafts')
     .update({ workflow_status: 'rejected' })
@@ -231,6 +244,14 @@ export async function rejectDraft(slug: string) {
   if (statusError) {
     throw new Error(`Failed to reject draft: ${statusError.message}`);
   }
+
+  await supabase.from('draft_decisions').insert({
+    draft_slug: slug,
+    decision: 'rejected',
+    category: draftData?.category ?? null,
+    subject_countries: draftData?.subject_countries ?? [],
+    quality_score: draftData?.quality_score ?? null,
+  });
 
   revalidatePath('/review');
 }
