@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getBatchStatus, getBatchResults } from "@/lib/anthropic-server";
 import { slugify } from "@/lib/slug";
@@ -53,7 +53,6 @@ export async function GET(req: NextRequest) {
         if (!result.draft) {
           draftsFailed++;
           errors.push(`${result.customId}: ${result.error}`);
-          // Release these candidates back to pending so they can be retried.
           await supabase.from("story_candidates").update({ status: "pending" }).in("id", candidateIds);
           continue;
         }
@@ -77,7 +76,7 @@ export async function GET(req: NextRequest) {
           slug = `${baseSlug}-${attempt + 2}`;
         }
 
-        const { error: draftError } = await supabase.from("story_drafts").insert({
+        const { data: newDraft, error: draftError } = await supabase.from("story_drafts").insert({
           slug,
           category: generated.category || null,
           status: generated.statusTag,
@@ -95,7 +94,7 @@ export async function GET(req: NextRequest) {
           off_lens: generated.offLens,
           subject_countries: generated.subjectCountries ?? [],
           workflow_status: "in_review",
-        });
+        }).select("id").single();
 
         if (draftError) {
           draftsFailed++;
@@ -110,6 +109,16 @@ export async function GET(req: NextRequest) {
           .in("id", candidateIds);
 
         draftsCreated++;
+
+        // Fire fact-check in background (non-blocking)
+        if (newDraft?.id) {
+          const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://chanakyalens.com";
+          fetch(`${baseUrl}/api/fact-check`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ draft_id: newDraft.id }),
+          }).catch(() => {}); // fire and forget
+        }
       }
 
       await supabase
