@@ -279,7 +279,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
         className="flex gap-2 px-4 py-3 overflow-x-auto border-b sticky top-[57px] z-10 backdrop-blur"
         style={{ borderColor: "var(--border)", background: "rgba(10,17,42,0.92)" }}
       >
-        <div className="flex gap-2 max-w-7xl mx-auto w-full">
+        <div className="flex gap-2 max-w-7xl mx-auto w-max min-w-full">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -290,7 +290,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
                   document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }
               }}
-              className="font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
+              className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
               style={
                 active === cat
                   ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
