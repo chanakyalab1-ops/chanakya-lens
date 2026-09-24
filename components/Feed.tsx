@@ -295,7 +295,7 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
         </div>
       </div>
       <div
-        className="flex gap-2 px-4 py-3 overflow-x-auto border-b backdrop-blur"
+        className="flex gap-2 px-4 py-3 overflow-x-auto border-b sticky top-[57px] z-10 backdrop-blur"
         style={{ borderColor: "var(--border)", background: "var(--overlay)" }}
       >
         <div className="flex gap-2 max-w-7xl mx-auto w-max min-w-full">
