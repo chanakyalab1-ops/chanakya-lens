@@ -4,7 +4,7 @@ import Image from "next/image";
 import NavDrawer from "@/components/NavDrawer";
 import { getStoryBySlug, getAllStories, ConfidenceLevel } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
-import { logPageView } from "@/lib/analytics";
+import { PageViewBeacon } from "@/components/PageViewBeacon";
 import { ShareButtons } from "@/components/ShareButtons";
 import { OffLensSection } from "@/components/OffLensSection";
 const tagColor: Record<ConfidenceLevel, string> = {
@@ -46,7 +46,6 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
   const { slug } = await params;
   const story = await getStoryBySlug(slug);
   if (!story) return notFound();
-  logPageView(`/story/${slug}`);
 
   const allStories = await getAllStories();
   const related = allStories
@@ -95,6 +94,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
+      <PageViewBeacon path={`/story/${slug}`} />
       <NavDrawer />
       <div className="max-w-7xl mx-auto px-5 pt-7 pb-16">
       <article className="max-w-2xl mx-auto md:max-w-none md:grid md:grid-cols-[1fr_380px] md:gap-10">
