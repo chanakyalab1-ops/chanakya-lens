@@ -23,12 +23,24 @@ function pickTodaysSignal(stories: Story[]): Story[] {
     .slice(0, 3);
 }
 
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Chanakya Lens",
+  "url": "https://chanakyalens.com",
+  "description": "Geopolitical news analysis through an Indian strategic lens",
+};
+
 export default async function FeedPage() {
   const stories = await getAllStories();
   const signal = pickTodaysSignal(stories);
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
       <NavDrawer />
 
       {signal.length > 0 && (
