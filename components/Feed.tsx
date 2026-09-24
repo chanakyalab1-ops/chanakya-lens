@@ -296,7 +296,7 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
         </div>
       </div>
       <div
-        className="flex gap-2 py-3 overflow-x-auto border-b backdrop-blur"
+        className="flex gap-2 py-3 px-[max(1rem,calc((100%-80rem)/2+1rem))] overflow-x-auto border-b backdrop-blur"
         style={{
           borderColor: "var(--border)",
           background: "var(--overlay)",
@@ -304,7 +304,7 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
           WebkitMaskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
         }}
       >
-        <div className="flex gap-2 max-w-7xl mx-auto px-4 w-max min-w-full">
+        <div className="flex gap-2 w-max">
           {categories.map((cat) => (
             <button
               key={cat}
