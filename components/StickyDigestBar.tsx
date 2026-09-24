@@ -26,9 +26,10 @@ export default function StickyDigestBar() {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 border-t px-4 py-3 flex items-center justify-between gap-4"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t"
       style={{ background: "var(--overlay)", borderColor: "var(--border)", backdropFilter: "blur(8px)" }}
     >
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
       {status === "done" ? (
         <div className="flex items-center justify-between w-full">
           <p className="text-sm font-mono" style={{ color: "var(--brand-soft)" }}>
@@ -72,6 +73,7 @@ export default function StickyDigestBar() {
           </button>
         </>
       )}
+      </div>
     </div>
   );
 }
