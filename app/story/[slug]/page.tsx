@@ -67,6 +67,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
     "headline": story.headline,
     "datePublished": story.publishedAt,
     "dateModified": story.publishedAt,
+    "url": `https://chanakyalens.com/story/${slug}`,
     "image": `https://chanakyalens.com/api/og?slug=${slug}`,
     "description": story.dek ?? story.headline,
     "author": {
