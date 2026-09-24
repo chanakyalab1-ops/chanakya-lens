@@ -108,14 +108,27 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         </Link>
 
         {story.imageUrl && (
-          <div className="relative w-full h-56 md:h-72 rounded-sm overflow-hidden mb-6">
-            <Image
-              src={story.imageUrl}
-              alt=""
-              fill
-              className="object-cover"
-              unoptimized
-            />
+          <div className="mb-6">
+            <div className="relative w-full h-56 md:h-72 rounded-sm overflow-hidden">
+              <Image
+                src={story.imageUrl}
+                alt={story.headline}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+            {(() => {
+              const primarySource = story.sources?.find((s) => s.role === "primary");
+              return primarySource ? (
+                <p className="mt-1.5 text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+                  Photo via{" "}
+                  <a href={primarySource.url} target="_blank" rel="noreferrer" className="hover:opacity-80" style={{ textDecoration: "underline" }}>
+                    {primarySource.domain}
+                  </a>
+                </p>
+              ) : null;
+            })()}
           </div>
         )}
 

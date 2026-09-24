@@ -1,5 +1,6 @@
 ﻿import { fetchImageForEntity } from "./wikimedia";
 import { fetchImageForCategory, logImageUsage } from "./pexels";
+import { fetchSourceOgImage } from "./ogImage";
 
 const MIN_ACCEPTABLE_SCORE = 35;
 
@@ -7,8 +8,17 @@ export async function selectImageForStory(
   headline: string,
   body: string,
   category: string,
-  subjectCountries?: string[]
+  subjectCountries?: string[],
+  primarySourceUrl?: string
 ): Promise<{ imageUrl: string } | null> {
+  // The actual event photo from the story's own primary source beats any
+  // stock/entity photo -- try it first and only fall back if it's missing,
+  // blocked, or not a real photo.
+  if (primarySourceUrl) {
+    const ogImage = await fetchSourceOgImage(primarySourceUrl);
+    if (ogImage) return { imageUrl: ogImage };
+  }
+
   const [wiki, pexels] = await Promise.all([
     fetchImageForEntity(headline, body),
     fetchImageForCategory(category, headline, body, subjectCountries),

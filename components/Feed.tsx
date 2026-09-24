@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
+import { isOptimizableImageUrl } from "@/lib/imageHost";
 const dotColor: Record<string, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
@@ -133,7 +134,7 @@ function HeroCard({ story }: { story: Story }) {
     >
       {story.imageUrl && (
         <div className="relative w-full aspect-[3/1] rounded-sm overflow-hidden mb-3 -mt-1">
-          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 1023px) 100vw, 944px" className="object-cover" />
+          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 1023px) 100vw, 944px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
         </div>
       )}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -163,7 +164,7 @@ function CompactCard({ story }: { story: Story }) {
     >
       {story.imageUrl && (
         <div className="relative w-full aspect-[5/2] rounded-sm overflow-hidden mb-2.5">
-          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 320px" className="object-cover" />
+          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 320px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
         </div>
       )}
       <div className="flex items-center gap-2 mb-1.5 flex-wrap">

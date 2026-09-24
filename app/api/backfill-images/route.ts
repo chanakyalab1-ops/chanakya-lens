@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   const { data: stories, error } = await supabase
     .from("stories")
-    .select("slug, category, headline, body, subject_countries")
+    .select("slug, category, headline, body, subject_countries, sources")
     .is("image_url", null)
     .order("created_at", { ascending: false })
     .limit(50);
@@ -35,7 +35,9 @@ export async function GET(req: NextRequest) {
   let dbErrors = 0;
 
   for (const story of stories) {
-    const image = await selectImageForStory(story.headline, story.body, story.category ?? "", story.subject_countries ?? undefined);
+    const sources = (story.sources ?? []) as { url: string; role: string }[];
+    const primarySource = sources.find((s) => s.role === "primary");
+    const image = await selectImageForStory(story.headline, story.body, story.category ?? "", story.subject_countries ?? undefined, primarySource?.url);
 
     if (image) {
       const { error: updateError } = await supabase
