@@ -42,12 +42,12 @@ export default function NavDrawer() {
 
   return (
     <div ref={ref}>
-      <header className="sticky top-0 z-20 grid grid-cols-[1fr_auto_1fr] items-center border-b px-5 py-4 backdrop-blur"
+      <header className="sticky top-0 z-20 flex items-center justify-between md:grid md:grid-cols-[1fr_auto_1fr] border-b px-5 py-4 backdrop-blur"
         style={{ borderColor: "var(--border)", background: "var(--overlay)" }}>
-        <div className="w-8 justify-self-start" />
-        <Link href="/" className="flex items-center gap-3 justify-self-center">
-          <Image src="/logo-mark.png" alt="Chanakya Lens" width={40} height={40} className="rounded-full" />
-          <span className="font-display text-2xl font-extrabold uppercase tracking-wide">
+        <div className="w-8 justify-self-start hidden md:block" />
+        <Link href="/" className="flex items-center gap-2 md:gap-3 md:justify-self-center">
+          <Image src="/logo-mark.png" alt="Chanakya Lens" width={40} height={40} className="rounded-full w-8 h-8 md:w-10 md:h-10" />
+          <span className="font-display text-lg md:text-2xl font-extrabold uppercase tracking-wide whitespace-nowrap">
             Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
           </span>
         </Link>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
+import { isOptimizableImageUrl } from "@/lib/imageHost";
 const dotColor: Record<string, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
@@ -133,7 +134,7 @@ function HeroCard({ story }: { story: Story }) {
     >
       {story.imageUrl && (
         <div className="relative w-full aspect-[3/1] rounded-sm overflow-hidden mb-3 -mt-1">
-          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 1023px) 100vw, 944px" className="object-cover" />
+          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 1023px) 100vw, 944px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
         </div>
       )}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -163,7 +164,7 @@ function CompactCard({ story }: { story: Story }) {
     >
       {story.imageUrl && (
         <div className="relative w-full aspect-[5/2] rounded-sm overflow-hidden mb-2.5">
-          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 320px" className="object-cover" />
+          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 320px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
         </div>
       )}
       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -296,7 +297,12 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
       </div>
       <div
         className="flex gap-2 px-4 py-3 overflow-x-auto border-b backdrop-blur"
-        style={{ borderColor: "var(--border)", background: "var(--overlay)" }}
+        style={{
+          borderColor: "var(--border)",
+          background: "var(--overlay)",
+          maskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
+          WebkitMaskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
+        }}
       >
         <div className="flex gap-2 max-w-7xl mx-auto w-max min-w-full">
           {categories.map((cat) => (
@@ -326,9 +332,6 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
           <ImpactLegend />
         </div>
       )}
-      <div className="max-w-7xl mx-auto px-4 mt-3 lg:hidden">
-        <OffLensTeaser stories={stories} />
-      </div>
       <main className="max-w-7xl mx-auto px-4 pb-16 lg:grid lg:grid-cols-[1fr_280px] lg:gap-6 lg:items-start">
         <div>
           {hero && (
@@ -396,6 +399,10 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
             <Link href="/how-we-rate" className="text-[0.78rem] whitespace-nowrap underline" style={{ color: "var(--brand-soft)" }}>
               How we rate →
             </Link>
+          </div>
+
+          <div className="mt-6 lg:hidden">
+            <OffLensTeaser stories={stories} />
           </div>
         </div>
         <aside className="hidden lg:block mt-3 lg:sticky lg:top-[130px]">
