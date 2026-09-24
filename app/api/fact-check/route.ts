@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 60;
 import { createClient } from "@supabase/supabase-js";
+import { sendAlert } from "@/lib/alerts";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -86,31 +87,43 @@ export async function POST(req: NextRequest) {
     .update({ fact_check_status: "checking" })
     .eq("id", draft_id);
 
-  const claims = await extractClaims(draft.body);
-  const results = [];
+  try {
+    const claims = await extractClaims(draft.body);
+    const results = [];
 
-  for (const claim of claims) {
-    const result = await checkClaimWithGemini(claim);
-    results.push(result);
-    await sleep(4500);
+    for (const claim of claims) {
+      const result = await checkClaimWithGemini(claim);
+      results.push(result);
+      await sleep(4500);
+    }
+
+    const verifiedCount = results.filter((r) => r.verified).length;
+    const avgConfidence = results.length
+      ? Math.round(results.reduce((sum, r) => sum + r.confidence, 0) / results.length)
+      : 0;
+    const qualityScore = results.length
+      ? Math.round((verifiedCount / results.length) * 100 * 0.5 + avgConfidence * 0.5)
+      : 0;
+
+    await supabase
+      .from("story_drafts")
+      .update({
+        fact_check_status: "done",
+        fact_check_flags: { claims: results, overall_score: qualityScore },
+        quality_score: qualityScore,
+      })
+      .eq("id", draft_id);
+
+    return NextResponse.json({ success: true, quality_score: qualityScore, claims: results });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    // Without this, a mid-run failure (e.g. Gemini erroring) leaves the
+    // draft stuck at "checking" forever instead of surfacing as failed.
+    await supabase
+      .from("story_drafts")
+      .update({ fact_check_status: "failed" })
+      .eq("id", draft_id);
+    await sendAlert("fact-check", `Draft ${draft.slug}: ${message}`);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const verifiedCount = results.filter((r) => r.verified).length;
-  const avgConfidence = results.length
-    ? Math.round(results.reduce((sum, r) => sum + r.confidence, 0) / results.length)
-    : 0;
-  const qualityScore = results.length
-    ? Math.round((verifiedCount / results.length) * 100 * 0.5 + avgConfidence * 0.5)
-    : 0;
-
-  await supabase
-    .from("story_drafts")
-    .update({
-      fact_check_status: "done",
-      fact_check_flags: { claims: results, overall_score: qualityScore },
-      quality_score: qualityScore,
-    })
-    .eq("id", draft_id);
-
-  return NextResponse.json({ success: true, quality_score: qualityScore, claims: results });
 }

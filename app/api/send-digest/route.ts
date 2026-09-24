@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { sendAlert } from "@/lib/alerts";
 
 type DigestStory = {
   slug: string;
@@ -95,8 +96,12 @@ export async function GET(req: NextRequest) {
     .gte("created_at", oneDayAgo)
     .order("created_at", { ascending: false });
 
-  if (storiesError || !stories || stories.length === 0) {
-    return NextResponse.json({ error: "No stories found for digest", details: storiesError?.message }, { status: 500 });
+  if (storiesError) {
+    await sendAlert("send-digest", `Failed to load stories: ${storiesError.message}`);
+    return NextResponse.json({ error: "Failed to load stories", details: storiesError.message }, { status: 500 });
+  }
+  if (!stories || stories.length === 0) {
+    return NextResponse.json({ error: "No stories found for digest" }, { status: 500 });
   }
 
   const { data: subscribers, error: subsError } = await supabase
@@ -104,6 +109,7 @@ export async function GET(req: NextRequest) {
     .select("email, regions");
 
   if (subsError) {
+    await sendAlert("send-digest", `Failed to load subscribers: ${subsError.message}`);
     return NextResponse.json({ error: "Failed to load subscribers", details: subsError.message }, { status: 500 });
   }
 
@@ -150,6 +156,10 @@ export async function GET(req: NextRequest) {
   }
 
   await supabase.from("digest_sends").insert({});
+
+  if (failed > 0) {
+    await sendAlert("send-digest", `${failed}/${subscribers.length} sends failed: ${failures.join(", ")}`);
+  }
 
   return NextResponse.json({ sent, failed, failures });
 }

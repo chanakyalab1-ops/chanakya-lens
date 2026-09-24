@@ -48,7 +48,7 @@ const MIN_SCORE_TO_ACCEPT = 35;
 const HIGH_CONFIDENCE_SCORE = 70;
 const RECENT_USE_EXCLUSION_DAYS = 30;
 
-function extractCountryFromHeadline(headline: string): string | null {
+export function extractCountryFromHeadline(headline: string): string | null {
   for (const country of KNOWN_COUNTRIES) {
     if (headline.includes(country)) return country;
   }
@@ -71,7 +71,7 @@ const GENERIC_HEADLINE_WORDS = new Set([
   "world", "amid", "faces", "says", "report", "new",
 ]);
 
-function extractKeyActor(headline: string, country: string | null): string | null {
+export function extractKeyActor(headline: string, country: string | null): string | null {
   const words = headline.split(/\s+/);
   const phrases: string[] = [];
   let current: string[] = [];
@@ -91,13 +91,13 @@ function extractKeyActor(headline: string, country: string | null): string | nul
   return filtered[0] ?? null;
 }
 
-function isDiplomaticContext(category: string, headline: string, body: string): boolean {
+export function isDiplomaticContext(category: string, headline: string, body: string): boolean {
   if (DIPLOMATIC_CATEGORIES.has(category)) return true;
   const text = `${headline} ${body}`.toLowerCase();
   return DIPLOMATIC_CONTEXT_TERMS.some((t) => text.includes(t));
 }
 
-function isGenericStock(altText: string, diplomatic: boolean): boolean {
+export function isGenericStock(altText: string, diplomatic: boolean): boolean {
   const alt = altText.toLowerCase();
   if (!alt) return false; // no description to judge -- don't penalize on missing metadata
   const isFlagOrEmblem = FLAG_TERMS.some((t) => alt.includes(t));

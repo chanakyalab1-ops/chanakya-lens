@@ -259,7 +259,9 @@ export async function rejectDraft(slug: string, reason?: string) {
     throw new Error(`Failed to reject draft: ${statusError.message}`);
   }
 
-  await supabase.from('draft_decisions').insert({
+  // Best-effort, same as publishDraft: a logging failure shouldn't look
+  // like a failed reject when the reject itself already succeeded above.
+  const { error: decisionError } = await supabase.from('draft_decisions').insert({
     draft_slug: slug,
     decision: 'rejected',
     reason: reason ?? null,
@@ -267,6 +269,9 @@ export async function rejectDraft(slug: string, reason?: string) {
     subject_countries: draftData?.subject_countries ?? [],
     quality_score: draftData?.quality_score ?? null,
   });
+  if (decisionError) {
+    console.error(`Failed to log reject decision for ${slug}: ${decisionError.message}`);
+  }
 
   revalidatePath('/review');
 }

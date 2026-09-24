@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from 'next/server';
 import { autoGenerateBatch } from '@/lib/auto-generate';
+import { sendAlert } from '@/lib/alerts';
 
 export const maxDuration = 60;
 
@@ -13,9 +14,8 @@ export async function GET(req: Request) {
     const result = await autoGenerateBatch(40);
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    await sendAlert('auto-generate', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

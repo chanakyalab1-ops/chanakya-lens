@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getBatchStatus, getBatchResults } from "@/lib/anthropic-server";
 import { slugify } from "@/lib/slug";
+import { sendAlert } from "@/lib/alerts";
 
 export const maxDuration = 300;
 
@@ -145,6 +146,10 @@ export async function GET(req: NextRequest) {
         )
       );
     });
+  }
+
+  if (errors.length > 0) {
+    await sendAlert("check-batches", `${errors.length} error(s): ${errors.join("; ")}`);
   }
 
   return NextResponse.json({ stillProcessing, completed, draftsCreated, draftsFailed, errors });
