@@ -162,7 +162,7 @@ function CompactCard({ story }: { story: Story }) {
       style={{ background: "var(--surface)", borderColor: "var(--surface-border)" }}
     >
       {story.imageUrl && (
-        <div className="relative w-full aspect-[16/9] rounded-sm overflow-hidden mb-2.5">
+        <div className="relative w-full aspect-[5/2] rounded-sm overflow-hidden mb-2.5">
           <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 320px" className="object-cover" />
         </div>
       )}
