@@ -128,11 +128,11 @@ function HeroCard({ story }: { story: Story }) {
   return (
     <Link
       href={`/story/${story.slug}`}
-      className="block rounded-sm border p-6 md:p-8 mb-3 hover:opacity-95"
+      className="block rounded-sm border p-5 md:p-6 mb-3 hover:opacity-95"
       style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}
     >
       {story.imageUrl && (
-        <div className="relative w-full aspect-[16/9] rounded-sm overflow-hidden mb-4 -mt-1">
+        <div className="relative w-full aspect-[3/1] rounded-sm overflow-hidden mb-3 -mt-1">
           <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 1023px) 100vw, 944px" className="object-cover" />
         </div>
       )}
@@ -142,7 +142,7 @@ function HeroCard({ story }: { story: Story }) {
         {story.offLens && <OffLensBadge />}
       </div>
       <h2 className="font-display font-bold text-2xl md:text-3xl leading-tight mb-3">{story.headline}</h2>
-      <p className="text-[0.95rem] mb-4 max-w-2xl" style={{ color: "var(--text-body)" }}>{story.dek}</p>
+      <p className="text-[0.95rem] mb-4 max-w-2xl line-clamp-2" style={{ color: "var(--text-body)" }}>{story.dek}</p>
       <div className="flex items-center gap-2.5 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
         <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if —</span>
         <ImpactDots story={story} />
