@@ -1,6 +1,7 @@
 ﻿"use client";
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 const dotColor: Record<string, string> = {
@@ -130,6 +131,11 @@ function HeroCard({ story }: { story: Story }) {
       className="block rounded-sm border p-6 md:p-8 mb-3 hover:opacity-95"
       style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}
     >
+      {story.imageUrl && (
+        <div className="relative w-full aspect-[16/9] rounded-sm overflow-hidden mb-4 -mt-1">
+          <Image src={story.imageUrl} alt="" fill sizes="(max-width: 768px) 100vw, 800px" className="object-cover" />
+        </div>
+      )}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         <CategoryBadge category={story.category} />
         {story.status === "developing" && <DevelopingBadge />}
@@ -155,6 +161,11 @@ function CompactCard({ story }: { story: Story }) {
       className="block rounded-sm border p-3.5"
       style={{ background: "var(--surface)", borderColor: "var(--surface-border)" }}
     >
+      {story.imageUrl && (
+        <div className="relative w-full aspect-[16/9] rounded-sm overflow-hidden mb-2.5">
+          <Image src={story.imageUrl} alt="" fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover" />
+        </div>
+      )}
       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
         <CategoryBadge category={story.category} />
         {story.status === "developing" && <DevelopingBadge />}

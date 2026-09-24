@@ -31,13 +31,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: story.headline,
       description: story.dek ?? story.headline,
       url: `https://chanakyalens.com/story/${slug}`,
-      images: [{ url: `https://chanakyalens.com/api/story-card/${slug}`, width: 1080, height: 1920 }],
+      images: [{ url: `https://chanakyalens.com/api/og?slug=${slug}`, width: 1200, height: 630 }],
     },
     twitter: {
       card: `summary_large_image`,
       title: story.headline,
       description: story.dek ?? story.headline,
-      images: [`https://chanakyalens.com/api/story-card/${slug}`],
+      images: [`https://chanakyalens.com/api/og?slug=${slug}`],
     },
   };
 }
@@ -68,7 +68,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
     "headline": story.headline,
     "datePublished": story.publishedAt,
     "dateModified": story.publishedAt,
-    "image": `https://chanakyalens.com/api/story-card/${slug}`,
+    "image": `https://chanakyalens.com/api/og?slug=${slug}`,
     "description": story.dek ?? story.headline,
     "author": {
       "@type": "Organization",
