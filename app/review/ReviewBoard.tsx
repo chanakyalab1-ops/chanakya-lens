@@ -43,6 +43,8 @@ type Draft = {
   chanakya_analysis: string | null;
   off_lens: string | null;
   workflow_status: string;
+  quality_score: number | null;
+  fact_check_status: string | null;
   created_at: string;
   updated_at: string;
   articles: { candidate_id: string; role: ArticleRole }[];
@@ -231,6 +233,17 @@ export function ReviewBoard({
     .map((id) => candidateById.get(id))
     .filter((c): c is Candidate => Boolean(c));
 
+  // Surface the best-verified draft first -- not for auto-publish (not
+  // doing that yet), just so it's obvious at a glance which one to
+  // prioritize reviewing while manually training the process.
+  const sortedDrafts = useMemo(
+    () =>
+      [...drafts].sort((a, b) => (b.quality_score ?? -1) - (a.quality_score ?? -1)),
+    [drafts],
+  );
+  const bestDraftSlug =
+    sortedDrafts.length > 1 && sortedDrafts[0].quality_score !== null ? sortedDrafts[0].slug : null;
+
   const editingDraftCandidates = editingDraft
     ? (editingDraft.articles ?? [])
         .map((a) => draftCandidateById.get(a.candidate_id))
@@ -323,13 +336,38 @@ export function ReviewBoard({
               Drafts in review
             </h2>
             <div className="space-y-2">
-              {drafts.map((d) => (
+              {sortedDrafts.map((d) => (
                 <div
                   key={d.slug}
-                  className="flex items-center justify-between border border-white/10 rounded px-4 py-3 bg-white/[0.02]"
+                  className={`flex items-center justify-between border rounded px-4 py-3 bg-white/[0.02] ${
+                    d.slug === bestDraftSlug ? 'border-[#6FA98A]/60' : 'border-white/10'
+                  }`}
                 >
                   <div>
-                    <div className="font-serif text-lg">{d.headline}</div>
+                    <div className="flex items-center gap-2">
+                      {d.slug === bestDraftSlug && (
+                        <span className="text-[0.65rem] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded bg-[#6FA98A]/15 text-[#6FA98A]">
+                          ★ Best fact-checked
+                        </span>
+                      )}
+                      {d.fact_check_status === 'done' && d.quality_score !== null && (
+                        <span
+                          className="text-[0.65rem] font-mono px-1.5 py-0.5 rounded"
+                          style={{
+                            color: d.quality_score >= 70 ? '#6FA98A' : d.quality_score >= 40 ? '#C9A94E' : '#C97B4A',
+                            background: 'rgba(255,255,255,0.05)',
+                          }}
+                        >
+                          Fact-check: {d.quality_score}/100
+                        </span>
+                      )}
+                      {d.fact_check_status === 'failed' && (
+                        <span className="text-[0.65rem] font-mono px-1.5 py-0.5 rounded text-red-300 bg-red-400/10">
+                          ⚠ Fact-check failed
+                        </span>
+                      )}
+                    </div>
+                    <div className="font-serif text-lg mt-1">{d.headline}</div>
                     <div className="font-mono text-xs text-[#8A93A6] mt-1">
                       {d.category && `${d.category} · `}
                       {d.status === 'developing' && '🔴 Developing · '}

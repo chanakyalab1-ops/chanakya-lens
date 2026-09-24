@@ -102,7 +102,9 @@ export async function GET(req: NextRequest) {
           chanakya_analysis: generated.chanakyaAnalysis,
           off_lens: generated.offLens,
           subject_countries: generated.subjectCountries ?? [],
-          workflow_status: "in_review",
+          // Held out of the review queue until fact-check completes (see
+          // /api/fact-check, which flips this to "in_review").
+          workflow_status: "fact_checking",
         }).select("id").single();
 
         if (draftError) {

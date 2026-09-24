@@ -1,10 +1,27 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { slugify } from '@/lib/slug';
 import { generateStoryDraft } from '@/lib/anthropic-server';
 import { selectImageForStory } from '@/lib/imageSelection';
+
+// Every path that creates a draft holds it at workflow_status='fact_checking'
+// (invisible to the /review queue) and fires this so a reviewer never sees
+// a draft that hasn't actually been fact-checked yet. /api/fact-check flips
+// it to 'in_review' when done (or failed -- it still needs to surface, just
+// flagged as unverified rather than withheld forever).
+function triggerFactCheck(draftId: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://chanakyalens.com';
+  after(async () => {
+    await fetch(`${baseUrl}/api/fact-check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draft_id: draftId }),
+    }).catch(() => {});
+  });
+}
 
 export type ArticleRole = 'primary' | 'local' | 'international' | 'source';
 export type Confidence = 'direct' | 'likely' | 'possible';
@@ -53,7 +70,7 @@ export async function createDraft(input: CreateDraftInput) {
     slug = `${baseSlug}-${attempt + 2}`;
   }
 
-  const { error: draftError } = await supabase.from('story_drafts').insert({
+  const { data: newDraft, error: draftError } = await supabase.from('story_drafts').insert({
     slug,
     category: input.category || null,
     status: input.statusTag,
@@ -64,10 +81,10 @@ export async function createDraft(input: CreateDraftInput) {
     has_video: input.hasVideo,
     impact_nodes: input.impactNodes,
     articles: input.articles.map((a) => ({ candidate_id: a.candidateId, role: a.role })),
-    workflow_status: 'in_review',
+    workflow_status: 'fact_checking',
     chanakya_analysis: input.chanakyaAnalysis.trim() || null,
     off_lens: input.offLens.trim() || null,
-  });
+  }).select('id').single();
 
   if (draftError) {
     throw new Error(`Failed to create draft: ${draftError.message}`);
@@ -83,6 +100,8 @@ export async function createDraft(input: CreateDraftInput) {
   if (candidateError) {
     throw new Error(`Failed to update candidate status: ${candidateError.message}`);
   }
+
+  if (newDraft?.id) triggerFactCheck(newDraft.id);
 
   revalidatePath('/review');
   return slug;
@@ -320,7 +339,7 @@ export async function generateDraft(candidateIds: string[]) {
     slug = `${baseSlug}-${attempt + 2}`;
   }
 
-  const { error: draftError } = await supabase.from('story_drafts').insert({
+  const { data: newDraft, error: draftError } = await supabase.from('story_drafts').insert({
     slug,
     category: generated.category || null,
     status: generated.statusTag,
@@ -337,8 +356,8 @@ export async function generateDraft(candidateIds: string[]) {
     chanakya_analysis: generated.chanakyaAnalysis,
     off_lens: generated.offLens,
     subject_countries: generated.subjectCountries ?? [],
-    workflow_status: 'in_review',
-  });
+    workflow_status: 'fact_checking',
+  }).select('id').single();
 
   if (draftError) {
     throw new Error(`Failed to save generated draft: ${draftError.message}`);
@@ -351,6 +370,8 @@ export async function generateDraft(candidateIds: string[]) {
   if (candidateError) {
     throw new Error(`Failed to update candidate status: ${candidateError.message}`);
   }
+
+  if (newDraft?.id) triggerFactCheck(newDraft.id);
 
   revalidatePath('/review');
   return slug;
