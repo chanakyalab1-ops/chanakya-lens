@@ -107,7 +107,10 @@ export function isGenericStock(altText: string, diplomatic: boolean): boolean {
 
 type PexelsPhoto = {
   id: number;
-  src: { large: string; medium: string };
+  // large2x (~1880px wide) is what we actually use -- large (~940px) isn't
+  // wide enough for our hero card at 2x device pixel ratio and ends up
+  // visibly upscaled/soft on Retina displays.
+  src: { large2x: string; large: string; medium: string };
   photographer: string;
   url: string;
   alt?: string;
@@ -242,7 +245,7 @@ export async function fetchImageForCategory(
     }
 
     return {
-      imageUrl: chosen.photo.src.large,
+      imageUrl: chosen.photo.src.large2x ?? chosen.photo.src.large,
       photographer: chosen.photo.photographer,
       pexelsUrl: chosen.photo.url,
       photoId: String(chosen.photo.id),

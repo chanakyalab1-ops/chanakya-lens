@@ -133,7 +133,7 @@ function HeroCard({ story }: { story: Story }) {
     >
       {story.imageUrl && (
         <div className="relative w-full aspect-[16/9] rounded-sm overflow-hidden mb-4 -mt-1">
-          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 768px) 100vw, 800px" className="object-cover" />
+          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 1023px) 100vw, 944px" className="object-cover" />
         </div>
       )}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -163,7 +163,7 @@ function CompactCard({ story }: { story: Story }) {
     >
       {story.imageUrl && (
         <div className="relative w-full aspect-[16/9] rounded-sm overflow-hidden mb-2.5">
-          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover" />
+          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 320px" className="object-cover" />
         </div>
       )}
       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
