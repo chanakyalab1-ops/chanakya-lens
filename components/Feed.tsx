@@ -385,7 +385,7 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
             <OffLensTeaser stories={stories} />
           </div>
         </div>
-        <aside className="hidden lg:block mt-3 lg:sticky lg:top-[130px]">
+        <aside className="hidden lg:block mt-3">
           <OffLensTeaser stories={stories} />
         </aside>
       </main>

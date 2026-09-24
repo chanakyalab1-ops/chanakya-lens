@@ -45,7 +45,7 @@ export default async function FeedPage() {
       <NavDrawer />
 
       {signal.length > 0 && (
-        <div className="sticky top-[73px] z-10 border-b overflow-hidden" style={{ borderColor: "var(--border)", background: "var(--surface-strong)" }}>
+        <div className="border-b overflow-hidden" style={{ borderColor: "var(--border)", background: "var(--surface-strong)" }}>
           <div className="max-w-7xl mx-auto flex items-center gap-3 px-4 py-2">
             <span className="font-mono text-[0.62rem] uppercase tracking-widest shrink-0" style={{ color: "var(--brand-soft)" }}>
               Signal
