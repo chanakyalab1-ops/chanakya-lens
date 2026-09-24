@@ -183,8 +183,13 @@ export async function publishDraft(slug: string, feedback?: PublishFeedback) {
     })
     .filter((s): s is NonNullable<typeof s> => s !== null);
 
-  const primarySource = sources.find((s) => s.role === 'primary');
-  const image = await selectImageForStory(draft.headline, draft.body, draft.category ?? '', draft.subject_countries ?? undefined, primarySource?.url);
+  const image = await selectImageForStory(
+    draft.headline,
+    draft.body,
+    draft.category ?? '',
+    draft.subject_countries ?? undefined,
+    sources.map((s) => ({ url: s.url, domain: s.domain })),
+  );
 
   const { error: insertError } = await supabase.from('stories').insert({
     slug: draft.slug,

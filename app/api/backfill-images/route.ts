@@ -35,9 +35,8 @@ export async function GET(req: NextRequest) {
   let dbErrors = 0;
 
   for (const story of stories) {
-    const sources = (story.sources ?? []) as { url: string; role: string }[];
-    const primarySource = sources.find((s) => s.role === "primary");
-    const image = await selectImageForStory(story.headline, story.body, story.category ?? "", story.subject_countries ?? undefined, primarySource?.url);
+    const sources = (story.sources ?? []) as { url: string; domain: string }[];
+    const image = await selectImageForStory(story.headline, story.body, story.category ?? "", story.subject_countries ?? undefined, sources);
 
     if (image) {
       const { error: updateError } = await supabase
