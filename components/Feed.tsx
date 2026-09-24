@@ -276,7 +276,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
         </div>
       </div>
       <div
-        className="flex gap-2 px-4 py-3 overflow-x-auto border-b sticky top-[57px] z-10 backdrop-blur"
+        className="flex gap-2 px-4 py-3 overflow-x-auto border-b backdrop-blur"
         style={{ borderColor: "var(--border)", background: "rgba(10,17,42,0.92)" }}
       >
         <div className="flex gap-2 max-w-7xl mx-auto w-max min-w-full">
