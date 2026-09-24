@@ -32,24 +32,28 @@ export default async function FeedPage() {
       <NavDrawer />
 
       {signal.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 pt-5 pb-2">
-          <div className="font-mono text-[0.64rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>
-            Today&apos;s Signal — {signal.length} things actually moving the world
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {signal.map((story, i) => (
-              <Link
-                key={story.slug}
-                href={`/story/${story.slug}`}
-                className="block rounded-sm border p-4 hover:opacity-90"
-                style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}
-              >
-                <div className="font-mono text-[0.7rem] mb-2" style={{ color: "var(--brand-soft)" }}>
-                  {String(i + 1).padStart(2, "0")}
-                </div>
-                <h3 className="font-display font-bold text-[0.95rem] leading-tight" style={{ color: "var(--text-on-ink)" }}>{story.headline}</h3>
-              </Link>
-            ))}
+        <div className="border-b overflow-hidden" style={{ borderColor: "var(--border)", background: "var(--surface-strong)" }}>
+          <div className="max-w-7xl mx-auto flex items-center gap-3 px-4 py-2">
+            <span className="font-mono text-[0.62rem] uppercase tracking-widest shrink-0" style={{ color: "var(--brand-soft)" }}>
+              Signal
+            </span>
+            <div className="relative flex-1 overflow-hidden">
+              <div className="ticker-track flex gap-10 whitespace-nowrap w-max">
+                {[...signal, ...signal].map((story, i) => (
+                  <Link
+                    key={`${story.slug}-${i}`}
+                    href={`/story/${story.slug}`}
+                    aria-hidden={i >= signal.length || undefined}
+                    tabIndex={i >= signal.length ? -1 : undefined}
+                    className="flex items-center gap-2 text-sm hover:opacity-80"
+                    style={{ color: "var(--text-on-ink)" }}
+                  >
+                    <span aria-hidden style={{ color: "var(--brand-soft)" }}>●</span>
+                    {story.headline}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
