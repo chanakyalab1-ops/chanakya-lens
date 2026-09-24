@@ -223,7 +223,7 @@ function CategoryRail({
   );
 }
 
-export default function Feed({ stories }: { stories: Story[] }) {
+export default function Feed({ stories, signalSlugs }: { stories: Story[]; signalSlugs?: string[] }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
     [stories]
@@ -243,12 +243,20 @@ export default function Feed({ stories }: { stories: Story[] }) {
     : categoryFiltered;
   const treated = filtered.filter((s) => s.impactNodes?.length);
   const briefs = filtered.filter((s) => !s.impactNodes?.length);
-  const [hero, ...rest] = treated;
 
   // Only group into category rails on the unfiltered, no-search "All" view --
   // once someone picks a specific category or searches, show the flat,
   // complete list they actually asked for.
   const showRails = active === "All" && !query.trim();
+
+  // On that same default landing view, the Today's Signal panel above the
+  // feed already shows the top story -- skip it as the hero pick too so
+  // the same headline doesn't appear twice in a row. Everything else
+  // (including the other signal stories) still flows into the rails below
+  // as normal -- this only changes which single story becomes the hero.
+  const nonSignal = showRails && signalSlugs?.length ? treated.filter((s) => !signalSlugs.includes(s.slug)) : treated;
+  const hero = nonSignal[0] ?? treated[0];
+  const rest = treated.filter((s) => s.slug !== hero?.slug);
   const restByCategory = useMemo(() => {
     if (!showRails) return null;
     const map = new Map<string, Story[]>();

@@ -54,7 +54,7 @@ export default async function FeedPage() {
         </div>
       )}
 
-      <Feed stories={stories} />
+      <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} />
     </>
   );
 }
