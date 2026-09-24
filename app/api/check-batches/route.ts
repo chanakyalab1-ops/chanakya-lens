@@ -48,16 +48,21 @@ export async function GET(req: NextRequest) {
 
       const results = await getBatchResults(batch.anthropic_batch_id);
       const groups: string[][] = batch.candidate_groups;
+      const handledGroupIndexes = new Set<number>();
 
       for (const result of results) {
         const groupIndex = parseInt(result.customId.replace("group-", ""), 10);
         const candidateIds = groups[groupIndex];
         if (!candidateIds) continue;
+        handledGroupIndexes.add(groupIndex);
 
         if (!result.draft) {
           draftsFailed++;
           errors.push(`${result.customId}: ${result.error}`);
-          await supabase.from("story_candidates").update({ status: "pending" }).in("id", candidateIds);
+          // Rejected, not pending -- otherwise a permanently-failing group
+          // (e.g. content the model refuses) gets resubmitted every cycle
+          // forever instead of ever leaving the queue.
+          await supabase.from("story_candidates").update({ status: "rejected" }).in("id", candidateIds);
           continue;
         }
 
@@ -66,7 +71,7 @@ export async function GET(req: NextRequest) {
         if (!baseSlug) {
           draftsFailed++;
           errors.push(`${result.customId}: empty headline`);
-          await supabase.from("story_candidates").update({ status: "pending" }).in("id", candidateIds);
+          await supabase.from("story_candidates").update({ status: "rejected" }).in("id", candidateIds);
           continue;
         }
 
@@ -103,7 +108,7 @@ export async function GET(req: NextRequest) {
         if (draftError) {
           draftsFailed++;
           errors.push(`${result.customId}: ${draftError.message}`);
-          await supabase.from("story_candidates").update({ status: "pending" }).in("id", candidateIds);
+          await supabase.from("story_candidates").update({ status: "rejected" }).in("id", candidateIds);
           continue;
         }
 
@@ -116,6 +121,36 @@ export async function GET(req: NextRequest) {
 
         if (newDraft?.id) {
           draftIdsToFactCheck.push(newDraft.id);
+        }
+      }
+
+      // Anthropic's batch response can omit a customId entirely (not even a
+      // "failed" result) -- those groups never went through the loop above
+      // and would otherwise sit at "pending" forever with no record of why.
+      for (let i = 0; i < groups.length; i++) {
+        if (handledGroupIndexes.has(i)) continue;
+        const candidateIds = groups[i];
+        if (!candidateIds || candidateIds.length === 0) continue;
+        draftsFailed++;
+        errors.push(`group-${i}: no result returned by Anthropic for this batch`);
+        await supabase.from("story_candidates").update({ status: "rejected" }).in("id", candidateIds);
+      }
+
+      // Verification: nothing this batch touched should still be pending
+      // once it's marked processed. If something is, a code path above
+      // missed it -- force it out of the loop rather than let it silently
+      // recur in every future batch.
+      const allCandidateIds = groups.flat();
+      if (allCandidateIds.length > 0) {
+        const { data: stillPending } = await supabase
+          .from("story_candidates")
+          .select("id")
+          .in("id", allCandidateIds)
+          .eq("status", "pending");
+        if (stillPending && stillPending.length > 0) {
+          const stuckIds = stillPending.map((c) => c.id);
+          errors.push(`Batch ${batch.anthropic_batch_id}: ${stuckIds.length} candidate(s) still pending after processing, forced to rejected: ${stuckIds.join(", ")}`);
+          await supabase.from("story_candidates").update({ status: "rejected" }).in("id", stuckIds);
         }
       }
 
