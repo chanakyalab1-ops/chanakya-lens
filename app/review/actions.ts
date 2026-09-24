@@ -135,7 +135,13 @@ export async function dismissCandidates(candidateIds: string[]) {
 // selecting the best available image (Wikimedia vs Pexels, scored, or none
 // if neither clears the quality bar), then marks the draft published.
 // `stories` is otherwise never written to.
-export async function publishDraft(slug: string) {
+export type PublishFeedback = {
+  reason?: string;
+  tags?: string[];
+  rating?: number;
+};
+
+export async function publishDraft(slug: string, feedback?: PublishFeedback) {
   const supabase = supabaseServer();
 
   const { data: draft, error: fetchError } = await supabase
@@ -177,7 +183,7 @@ export async function publishDraft(slug: string) {
     })
     .filter((s): s is NonNullable<typeof s> => s !== null);
 
-  const image = await selectImageForStory(draft.headline, draft.body, draft.category ?? '');
+  const image = await selectImageForStory(draft.headline, draft.body, draft.category ?? '', draft.subject_countries ?? undefined);
 
   const { error: insertError } = await supabase.from('stories').insert({
     slug: draft.slug,
@@ -208,12 +214,20 @@ export async function publishDraft(slug: string) {
     throw new Error(`Published, but failed to update draft status: ${statusError.message}`);
   }
 
-  await supabase.from('draft_decisions').insert({
+  // Best-effort: a failure here shouldn't undo a publish that already
+  // succeeded above, so log rather than throw.
+  const { error: decisionError } = await supabase.from('draft_decisions').insert({
     draft_slug: slug,
     decision: 'accepted',
     category: draft.category ?? null,
     subject_countries: draft.subject_countries ?? [],
+    reason: feedback?.reason?.trim() || null,
+    tags: feedback?.tags ?? [],
+    rating: feedback?.rating ?? null,
   });
+  if (decisionError) {
+    console.error(`Failed to log publish decision for ${slug}: ${decisionError.message}`);
+  }
 
   revalidatePath('/review');
 }

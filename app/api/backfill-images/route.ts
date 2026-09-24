@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   const { data: stories, error } = await supabase
     .from("stories")
-    .select("slug, category, headline, body")
+    .select("slug, category, headline, body, subject_countries")
     .is("image_url", null)
     .order("created_at", { ascending: false })
     .limit(50);
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   let failed = 0;
 
   for (const story of stories) {
-    const image = await selectImageForStory(story.headline, story.body, story.category ?? "");
+    const image = await selectImageForStory(story.headline, story.body, story.category ?? "", story.subject_countries ?? undefined);
 
     if (image) {
       const { error: updateError } = await supabase

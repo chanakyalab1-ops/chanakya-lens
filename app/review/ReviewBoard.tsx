@@ -17,6 +17,8 @@ import {
   type StatusTag,
 } from './actions';
 
+const PUBLISH_TAGS = ["Strong Off-Lens", "Unique angle", "Breaking", "High quality score"];
+
 type Candidate = {
   id: string;
   url: string;
@@ -95,6 +97,10 @@ export function ReviewBoard({
   const [error, setError] = useState<string | null>(null);
   const [rejectingSlug, setRejectingSlug] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState<string>("");
+  const [publishingSlug, setPublishingSlug] = useState<string | null>(null);
+  const [publishReason, setPublishReason] = useState<string>("");
+  const [publishTags, setPublishTags] = useState<Set<string>>(new Set());
+  const [publishRating, setPublishRating] = useState<number>(0);
 
   const candidateById = useMemo(
     () => new Map(candidates.map((c) => [c.id, c])),
@@ -156,10 +162,37 @@ export function ReviewBoard({
   }
 
   function handlePublish(slug: string) {
+    setPublishingSlug(slug);
+    setPublishReason("");
+    setPublishTags(new Set());
+    setPublishRating(0);
+  }
+
+  function togglePublishTag(tag: string) {
+    setPublishTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+  }
+
+  function confirmPublish() {
+    if (!publishingSlug) return;
+    const slug = publishingSlug;
+    const feedback = {
+      reason: publishReason,
+      tags: [...publishTags],
+      rating: publishRating || undefined,
+    };
+    setPublishingSlug(null);
+    setPublishReason("");
+    setPublishTags(new Set());
+    setPublishRating(0);
     setError(null);
     startTransition(async () => {
       try {
-        await publishDraft(slug);
+        await publishDraft(slug, feedback);
         router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to publish.');
@@ -415,6 +448,49 @@ export function ReviewBoard({
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={() => setRejectingSlug(null)} className="text-sm px-4 py-2 rounded border border-white/15 hover:bg-white/5">Cancel</button>
               <button onClick={confirmReject} disabled={!rejectReason} className="text-sm px-4 py-2 rounded bg-red-500/80 text-white font-medium hover:bg-red-500 disabled:opacity-40">Confirm reject</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {publishingSlug && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-20">
+          <div className="bg-[#0F1826] border border-white/10 rounded-lg p-6 w-full max-w-sm space-y-4">
+            <h3 className="font-serif text-lg">Why is this story worth publishing?</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {PUBLISH_TAGS.map((tag) => (
+                <button key={tag} onClick={() => togglePublishTag(tag)}
+                  className={`text-sm px-3 py-2 rounded border ${publishTags.has(tag) ? "border-[#6FA98A] bg-[#6FA98A]/10" : "border-white/15 hover:bg-white/5"}`}>
+                  {tag}
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={publishReason}
+              onChange={(e) => setPublishReason(e.target.value)}
+              placeholder="Anything else worth noting (optional)"
+              rows={3}
+              className="w-full text-sm rounded border border-white/15 bg-transparent px-3 py-2 outline-none focus:border-[#6FA98A]"
+            />
+            <div>
+              <div className="font-mono text-xs uppercase tracking-wider text-[#8A93A6] mb-2">Quality signal</div>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setPublishRating(publishRating === n ? 0 : n)}
+                    aria-label={`${n} star${n === 1 ? '' : 's'}`}
+                    className="text-2xl leading-none hover:opacity-80"
+                    style={{ color: n <= publishRating ? '#C97B4A' : '#3A4256' }}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button onClick={() => setPublishingSlug(null)} className="text-sm px-4 py-2 rounded border border-white/15 hover:bg-white/5">Cancel</button>
+              <button onClick={confirmPublish} className="text-sm px-4 py-2 rounded bg-[#6FA98A] text-[#0B1220] font-medium hover:bg-[#7EB899]">Confirm publish</button>
             </div>
           </div>
         </div>

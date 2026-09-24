@@ -6,11 +6,12 @@ const MIN_ACCEPTABLE_SCORE = 35;
 export async function selectImageForStory(
   headline: string,
   body: string,
-  category: string
+  category: string,
+  subjectCountries?: string[]
 ): Promise<{ imageUrl: string } | null> {
   const [wiki, pexels] = await Promise.all([
     fetchImageForEntity(headline, body),
-    fetchImageForCategory(category, headline, body),
+    fetchImageForCategory(category, headline, body, subjectCountries),
   ]);
 
   const candidates = [
