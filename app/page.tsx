@@ -42,12 +42,12 @@ export default async function FeedPage() {
                 key={story.slug}
                 href={`/story/${story.slug}`}
                 className="block rounded-sm border p-4 hover:opacity-90"
-                style={{ background: "#132340", borderColor: "var(--brand-soft)" }}
+                style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}
               >
                 <div className="font-mono text-[0.7rem] mb-2" style={{ color: "var(--brand-soft)" }}>
                   {String(i + 1).padStart(2, "0")}
                 </div>
-                <h3 className="font-display font-bold text-[0.95rem] leading-tight">{story.headline}</h3>
+                <h3 className="font-display font-bold text-[0.95rem] leading-tight" style={{ color: "var(--text-on-ink)" }}>{story.headline}</h3>
               </Link>
             ))}
           </div>

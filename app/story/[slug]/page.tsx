@@ -294,7 +294,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         {story.chanakyaAnalysis && (
           <section
             className="mt-2 mb-9 p-5 rounded-sm border-2"
-            style={{ borderColor: "var(--brand-soft)", background: "#132340" }}
+            style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}
           >
             <div className="font-display font-bold uppercase tracking-wide text-xl mb-1.5" style={{ color: "var(--brand-soft)" }}>
               Chanakya&apos;s Move
