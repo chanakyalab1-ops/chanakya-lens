@@ -23,7 +23,7 @@ export default async function OffLensPage() {
             <h2 className="font-display font-bold text-lg mb-2" style={{ color: "var(--brand-soft)" }}>
               We rate the coverage, not the event
             </h2>
-            <p className="text-[0.9rem] leading-relaxed" style={{ color: "#C6D0E8" }}>
+            <p className="text-[0.9rem] leading-relaxed" style={{ color: "var(--text-body)" }}>
               Off-Lens isn't about whether a story is true. It's about whose vantage point it was reported from -- which countries have real coverage, which are conspicuously quiet, and where the same facts get told as a different story depending on who's telling it.
             </p>
           </section>
@@ -31,7 +31,7 @@ export default async function OffLensPage() {
             <h2 className="font-display font-bold text-lg mb-2" style={{ color: "var(--brand-soft)" }}>
               Not a political bias score
             </h2>
-            <p className="text-[0.9rem] leading-relaxed" style={{ color: "#C6D0E8" }}>
+            <p className="text-[0.9rem] leading-relaxed" style={{ color: "var(--text-body)" }}>
               Off-Lens has nothing to do with left versus right. A story can be reported accurately by every outlet involved and still be Off-Lens, if it's only being told from one country's vantage point. The axis here is geography and national interest, not partisanship.
             </p>
           </section>
@@ -55,7 +55,7 @@ export default async function OffLensPage() {
                 key={story.slug}
                 href={`/story/${story.slug}`}
                 className="block rounded-sm border p-4 hover:opacity-90"
-                style={{ background: "#0F1C33", borderColor: "var(--border)" }}
+                style={{ background: "var(--surface)", borderColor: "var(--border)" }}
               >
                 <div className="font-mono text-[0.62rem] uppercase tracking-wide mb-2" style={{ color: "var(--brand-soft)" }}>
                   {story.category}

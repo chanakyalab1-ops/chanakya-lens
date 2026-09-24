@@ -22,11 +22,11 @@ export default function AboutPage() {
           Small events. Traceable consequences.
         </h1>
 
-        <p className="text-[0.95rem] leading-relaxed mb-6" style={{ color: "#C6D0E8" }}>
+        <p className="text-[0.95rem] leading-relaxed mb-6" style={{ color: "var(--text-body)" }}>
           Most news tells you what happened. It rarely tells you why it should matter to you specifically — why a tariff announced in another hemisphere shows up on your grocery receipt, or why a naval dispute halfway around the world nudges the price at the pump. Chanakya Lens exists to trace that chain: from the headline, through the mechanism, to the place it actually reaches you.
         </p>
 
-        <p className="text-[0.95rem] leading-relaxed mb-9" style={{ color: "#C6D0E8" }}>
+        <p className="text-[0.95rem] leading-relaxed mb-9" style={{ color: "var(--text-body)" }}>
           We're named after Kautilya (Chanakya), the ancient strategist who read events not as isolated incidents but as moves on a larger board — each one revealing leverage, intent, and consequence beneath the surface. That's the lens we try to apply to modern geopolitics: cold, structural, and honest about what's actually at stake.
         </p>
 

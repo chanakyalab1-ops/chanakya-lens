@@ -1,6 +1,7 @@
 ﻿"use client";
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 const dotColor: Record<string, string> = {
@@ -41,7 +42,7 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
   return (
     <div
       className="flex flex-col rounded-sm border p-5"
-      style={{ borderColor: "var(--brand-soft)", background: "#132340" }}
+      style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}
     >
       <Link href="/off-lens" className="hover:opacity-90">
         <div className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
@@ -127,16 +128,21 @@ function HeroCard({ story }: { story: Story }) {
   return (
     <Link
       href={`/story/${story.slug}`}
-      className="block rounded-sm border p-6 md:p-8 mb-3 hover:opacity-95"
-      style={{ background: "#152847", borderColor: "var(--brand-soft)" }}
+      className="block rounded-sm border p-5 md:p-6 mb-3 hover:opacity-95"
+      style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}
     >
+      {story.imageUrl && (
+        <div className="relative w-full aspect-[3/1] rounded-sm overflow-hidden mb-3 -mt-1">
+          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 1023px) 100vw, 944px" className="object-cover" />
+        </div>
+      )}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         <CategoryBadge category={story.category} />
         {story.status === "developing" && <DevelopingBadge />}
         {story.offLens && <OffLensBadge />}
       </div>
       <h2 className="font-display font-bold text-2xl md:text-3xl leading-tight mb-3">{story.headline}</h2>
-      <p className="text-[0.95rem] mb-4 max-w-2xl" style={{ color: "var(--text-body)" }}>{story.dek}</p>
+      <p className="text-[0.95rem] mb-4 max-w-2xl line-clamp-2" style={{ color: "var(--text-body)" }}>{story.dek}</p>
       <div className="flex items-center gap-2.5 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
         <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if —</span>
         <ImpactDots story={story} />
@@ -153,14 +159,19 @@ function CompactCard({ story }: { story: Story }) {
     <Link
       href={`/story/${story.slug}`}
       className="block rounded-sm border p-3.5"
-      style={{ background: "#0F1E38", borderColor: "rgba(255,255,255,0.08)" }}
+      style={{ background: "var(--surface)", borderColor: "var(--surface-border)" }}
     >
+      {story.imageUrl && (
+        <div className="relative w-full aspect-[5/2] rounded-sm overflow-hidden mb-2.5">
+          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 320px" className="object-cover" />
+        </div>
+      )}
       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
         <CategoryBadge category={story.category} />
         {story.status === "developing" && <DevelopingBadge />}
         {story.offLens && <OffLensBadge />}
       </div>
-      <h3 className="font-display font-semibold text-[0.98rem] leading-tight mb-2">{story.headline}</h3>
+      <h3 className="font-display font-bold text-[0.98rem] leading-tight mb-2">{story.headline}</h3>
       <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
         <ImpactDots story={story} />
         <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>
@@ -212,7 +223,7 @@ function CategoryRail({
   );
 }
 
-export default function Feed({ stories }: { stories: Story[] }) {
+export default function Feed({ stories, signalSlugs }: { stories: Story[]; signalSlugs?: string[] }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
     [stories]
@@ -232,12 +243,20 @@ export default function Feed({ stories }: { stories: Story[] }) {
     : categoryFiltered;
   const treated = filtered.filter((s) => s.impactNodes?.length);
   const briefs = filtered.filter((s) => !s.impactNodes?.length);
-  const [hero, ...rest] = treated;
 
   // Only group into category rails on the unfiltered, no-search "All" view --
   // once someone picks a specific category or searches, show the flat,
   // complete list they actually asked for.
   const showRails = active === "All" && !query.trim();
+
+  // On that same default landing view, the Today's Signal panel above the
+  // feed already shows the top story -- skip it as the hero pick too so
+  // the same headline doesn't appear twice in a row. Everything else
+  // (including the other signal stories) still flows into the rails below
+  // as normal -- this only changes which single story becomes the hero.
+  const nonSignal = showRails && signalSlugs?.length ? treated.filter((s) => !signalSlugs.includes(s.slug)) : treated;
+  const hero = nonSignal[0] ?? treated[0];
+  const rest = treated.filter((s) => s.slug !== hero?.slug);
   const restByCategory = useMemo(() => {
     if (!showRails) return null;
     const map = new Map<string, Story[]>();
@@ -276,10 +295,10 @@ export default function Feed({ stories }: { stories: Story[] }) {
         </div>
       </div>
       <div
-        className="flex gap-2 px-4 py-3 overflow-x-auto border-b sticky top-[57px] z-10 backdrop-blur"
-        style={{ borderColor: "var(--border)", background: "rgba(10,17,42,0.92)" }}
+        className="flex gap-2 px-4 py-3 overflow-x-auto border-b backdrop-blur"
+        style={{ borderColor: "var(--border)", background: "var(--overlay)" }}
       >
-        <div className="flex gap-2 max-w-7xl mx-auto w-full">
+        <div className="flex gap-2 max-w-7xl mx-auto w-max min-w-full">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -290,11 +309,11 @@ export default function Feed({ stories }: { stories: Story[] }) {
                   document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }
               }}
-              className="font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
+              className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
               style={
                 active === cat
                   ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
-                  : { color: "var(--text-on-ink)", borderColor: "rgba(255,255,255,0.18)", background: "transparent" }
+                  : { color: "var(--text-on-ink)", borderColor: "var(--border)", background: "transparent" }
               }
             >
               {cat}
@@ -349,15 +368,15 @@ export default function Feed({ stories }: { stories: Story[] }) {
                 key={story.slug}
                 href={`/story/${story.slug}`}
                 className="block rounded-sm border p-3.5"
-                style={{ background: "#0F1E38", borderColor: "rgba(255,255,255,0.08)" }}
+                style={{ background: "var(--surface)", borderColor: "var(--surface-border)" }}
               >
                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                   <CategoryBadge category={story.category} />
                   {story.offLens && <OffLensBadge />}
                 </div>
-                <h3 className="font-display font-semibold text-[0.95rem] leading-tight mb-2">{story.headline}</h3>
+                <h3 className="font-display font-bold text-[0.95rem] leading-tight mb-2">{story.headline}</h3>
                 <div className="flex items-center pt-2 border-t" style={{ borderColor: "var(--border)" }}>
-                  <span className="font-mono text-[0.58rem] uppercase tracking-wide" style={{ color: "#7688B4" }}>Brief</span>
+                  <span className="font-mono text-[0.58rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Brief</span>
                   <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>{story.readTime}</span>
                 </div>
               </Link>
@@ -370,7 +389,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
             </div>
           )}
 
-          <div className="mt-6 p-4 rounded-sm border border-dashed flex items-center justify-between gap-3" style={{ borderColor: "#2A3D74" }}>
+          <div className="mt-6 p-4 rounded-sm border border-dashed flex items-center justify-between gap-3" style={{ borderColor: "var(--border)" }}>
             <div className="text-[0.78rem]" style={{ color: "var(--text-on-ink-dim)" }}>
               <strong style={{ color: "var(--text-body)" }}>Not every story gets the full treatment.</strong> We only trace impact when the chain is real.
             </div>

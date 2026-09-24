@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getBatchStatus, getBatchResults } from "@/lib/anthropic-server";
 import { slugify } from "@/lib/slug";
+import { sendAlert } from "@/lib/alerts";
+
+export const maxDuration = 300;
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -32,6 +35,7 @@ export async function GET(req: NextRequest) {
   let draftsCreated = 0;
   let draftsFailed = 0;
   const errors: string[] = [];
+  const draftIdsToFactCheck: string[] = [];
 
   for (const batch of pendingBatches) {
     try {
@@ -110,14 +114,8 @@ export async function GET(req: NextRequest) {
 
         draftsCreated++;
 
-        // Fire fact-check in background (non-blocking)
         if (newDraft?.id) {
-          const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://chanakyalens.com";
-          fetch(`${baseUrl}/api/fact-check`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ draft_id: newDraft.id }),
-          }).catch(() => {}); // fire and forget
+          draftIdsToFactCheck.push(newDraft.id);
         }
       }
 
@@ -130,6 +128,28 @@ export async function GET(req: NextRequest) {
     } catch (err) {
       errors.push(`Batch ${batch.anthropic_batch_id}: ${err instanceof Error ? err.message : "Unknown error"}`);
     }
+  }
+
+  if (draftIdsToFactCheck.length > 0) {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://chanakyalens.com";
+    // Vercel freezes the function runtime as soon as the response above is sent,
+    // which kills any unawaited fetch before it reaches the fact-check endpoint.
+    // after() keeps the runtime alive until these requests actually complete.
+    after(async () => {
+      await Promise.allSettled(
+        draftIdsToFactCheck.map((draft_id) =>
+          fetch(`${baseUrl}/api/fact-check`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ draft_id }),
+          })
+        )
+      );
+    });
+  }
+
+  if (errors.length > 0) {
+    await sendAlert("check-batches", `${errors.length} error(s): ${errors.join("; ")}`);
   }
 
   return NextResponse.json({ stillProcessing, completed, draftsCreated, draftsFailed, errors });

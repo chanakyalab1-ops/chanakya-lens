@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { selectImageForStory } from "@/lib/imageSelection";
+import { sendAlert } from "@/lib/alerts";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -15,12 +16,13 @@ export async function GET(req: NextRequest) {
 
   const { data: stories, error } = await supabase
     .from("stories")
-    .select("slug, category, headline, body")
+    .select("slug, category, headline, body, subject_countries")
     .is("image_url", null)
     .order("created_at", { ascending: false })
     .limit(50);
 
   if (error) {
+    await sendAlert("backfill-images", `Failed to query stories: ${error.message}`);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
@@ -30,9 +32,10 @@ export async function GET(req: NextRequest) {
 
   let updated = 0;
   let failed = 0;
+  let dbErrors = 0;
 
   for (const story of stories) {
-    const image = await selectImageForStory(story.headline, story.body, story.category ?? "");
+    const image = await selectImageForStory(story.headline, story.body, story.category ?? "", story.subject_countries ?? undefined);
 
     if (image) {
       const { error: updateError } = await supabase
@@ -42,14 +45,23 @@ export async function GET(req: NextRequest) {
 
       if (updateError) {
         failed++;
+        dbErrors++;
       } else {
         updated++;
       }
     } else {
-      failed++;
+      failed++; // no candidate cleared the quality bar -- expected, not an error
     }
 
     await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+
+  // Only alert on real errors, not the ordinary "no good image found" case
+  // -- that's expected to happen for a meaningful share of stories.
+  if (dbErrors > 0) {
+    await sendAlert("backfill-images", `${dbErrors} database update(s) failed while writing image_url.`);
+  } else if (failed === stories.length) {
+    await sendAlert("backfill-images", `All ${stories.length} stories failed to get an image -- check PEXELS_API_KEY and upstream APIs.`);
   }
 
   return NextResponse.json({ updated, failed, total: stories.length });

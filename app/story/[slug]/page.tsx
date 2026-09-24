@@ -31,13 +31,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: story.headline,
       description: story.dek ?? story.headline,
       url: `https://chanakyalens.com/story/${slug}`,
-      images: [{ url: `https://chanakyalens.com/api/story-card/${slug}`, width: 1080, height: 1920 }],
+      images: [{ url: `https://chanakyalens.com/api/og?slug=${slug}`, width: 1200, height: 630 }],
     },
     twitter: {
       card: `summary_large_image`,
       title: story.headline,
       description: story.dek ?? story.headline,
-      images: [`https://chanakyalens.com/api/story-card/${slug}`],
+      images: [`https://chanakyalens.com/api/og?slug=${slug}`],
     },
   };
 }
@@ -68,7 +68,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
     "headline": story.headline,
     "datePublished": story.publishedAt,
     "dateModified": story.publishedAt,
-    "image": `https://chanakyalens.com/api/story-card/${slug}`,
+    "image": `https://chanakyalens.com/api/og?slug=${slug}`,
     "description": story.dek ?? story.headline,
     "author": {
       "@type": "Organization",
@@ -132,7 +132,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                   style={
                     story.status === "developing"
                       ? { color: "var(--developing)", borderColor: "rgba(217,105,74,0.5)", background: "rgba(217,105,74,0.08)" }
-                      : { color: "var(--settled)", borderColor: "#2A3D74", background: "rgba(255,255,255,0.02)" }
+                      : { color: "var(--settled)", borderColor: "var(--border)", background: "var(--surface-border)" }
                   }
                 >
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />
@@ -294,7 +294,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         {story.chanakyaAnalysis && (
           <section
             className="mt-2 mb-9 p-5 rounded-sm border-2"
-            style={{ borderColor: "var(--brand-soft)", background: "#132340" }}
+            style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}
           >
             <div className="font-display font-bold uppercase tracking-wide text-xl mb-1.5" style={{ color: "var(--brand-soft)" }}>
               Chanakya&apos;s Move

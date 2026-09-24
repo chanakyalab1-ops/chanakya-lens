@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const ADMIN_EMAIL = "chanakya.lab1@gmail.com";
 const REGIONS = ["Asia", "Americas", "Europe", "Middle East", "Africa"];
@@ -42,7 +43,7 @@ export default function NavDrawer() {
   return (
     <div ref={ref}>
       <header className="sticky top-0 z-20 grid grid-cols-[1fr_auto_1fr] items-center border-b px-5 py-4 backdrop-blur"
-        style={{ borderColor: "var(--border)", background: "rgba(10,17,42,0.95)" }}>
+        style={{ borderColor: "var(--border)", background: "var(--overlay)" }}>
         <div className="w-8 justify-self-start" />
         <Link href="/" className="flex items-center gap-3 justify-self-center">
           <Image src="/logo-mark.png" alt="Chanakya Lens" width={40} height={40} className="rounded-full" />
@@ -51,6 +52,7 @@ export default function NavDrawer() {
           </span>
         </Link>
         <div className="flex items-center gap-3 justify-self-end">
+          <ThemeToggle />
           <Link href="/account" className="font-mono text-[0.68rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
             Account
           </Link>
@@ -69,7 +71,7 @@ export default function NavDrawer() {
       {open && (
         <div
           className="fixed left-0 right-0 z-30 border-b shadow-2xl"
-          style={{ top: "73px", background: "rgba(10,17,42,0.98)", borderColor: "var(--border)" }}
+          style={{ top: "73px", background: "var(--overlay)", borderColor: "var(--border)" }}
         >
           <div className="max-w-7xl mx-auto px-5 py-6 grid grid-cols-2 md:grid-cols-5 gap-6">
             <div>

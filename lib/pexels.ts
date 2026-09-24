@@ -10,6 +10,26 @@ const CATEGORY_SEARCH_TERMS: Record<string, string> = {
   "Tech & Regulation": "technology data center",
 };
 
+// Categories where a flag/emblem photo reads as on-topic rather than as
+// filler -- everywhere else a flag is as generic as a globe or a handshake.
+const DIPLOMATIC_CATEGORIES = new Set(["Political"]);
+const DIPLOMATIC_CONTEXT_TERMS = [
+  "united nations", "un security council", "summit", "diplomat", "diplomatic",
+  "treaty", "embassy", "bilateral", "g7", "g20", "nato", "foreign minister",
+  "state visit", "ambassador",
+];
+const FLAG_TERMS = ["flag", "flags", "emblem", "coat of arms"];
+
+// Stock-photo filler that shows up for almost any geopolitics query
+// regardless of relevance -- excluded unless the photo is a flag/emblem in
+// a diplomatic context (see isDiplomaticContext).
+const GENERIC_STOCK_TERMS = [
+  "handshake", "shaking hands", "hand shake", "globe", "world globe",
+  "businessman", "businessmen", "business meeting", "boardroom",
+  "meeting room", "conference room", "cityscape", "skyline", "office building",
+  "suit and tie", "men in suits",
+];
+
 const KNOWN_COUNTRIES = [
   "United States", "China", "Russia", "India", "Japan", "Germany", "France",
   "United Kingdom", "Canada", "Mexico", "Brazil", "Iran", "Israel", "Saudi Arabia",
@@ -25,9 +45,10 @@ const STOPWORDS = new Set([
 
 const CANDIDATE_POOL_SIZE = 15;
 const MIN_SCORE_TO_ACCEPT = 35;
+const HIGH_CONFIDENCE_SCORE = 70;
 const RECENT_USE_EXCLUSION_DAYS = 30;
 
-function extractCountryFromHeadline(headline: string): string | null {
+export function extractCountryFromHeadline(headline: string): string | null {
   for (const country of KNOWN_COUNTRIES) {
     if (headline.includes(country)) return country;
   }
@@ -39,6 +60,49 @@ function extractKeywords(text: string): Set<string> {
     text.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/)
       .filter((w) => w.length > 3 && !STOPWORDS.has(w))
   );
+}
+
+// Lightweight heuristic for "who this is actually about" beyond the
+// country -- not real NER, just consecutive capitalized words in the
+// headline (skipping the first, since that's capitalized regardless) that
+// aren't a country or generic headline vocabulary.
+const GENERIC_HEADLINE_WORDS = new Set([
+  "trade", "war", "deal", "talks", "summit", "crisis", "week", "global",
+  "world", "amid", "faces", "says", "report", "new",
+]);
+
+export function extractKeyActor(headline: string, country: string | null): string | null {
+  const words = headline.split(/\s+/);
+  const phrases: string[] = [];
+  let current: string[] = [];
+
+  for (let i = 1; i < words.length; i++) {
+    const clean = words[i].replace(/[^A-Za-z]/g, "");
+    if (clean.length > 1 && /^[A-Z]/.test(clean) && !GENERIC_HEADLINE_WORDS.has(clean.toLowerCase())) {
+      current.push(clean);
+    } else {
+      if (current.length > 0) phrases.push(current.join(" "));
+      current = [];
+    }
+  }
+  if (current.length > 0) phrases.push(current.join(" "));
+
+  const filtered = phrases.filter((p) => p !== country && !KNOWN_COUNTRIES.includes(p));
+  return filtered[0] ?? null;
+}
+
+export function isDiplomaticContext(category: string, headline: string, body: string): boolean {
+  if (DIPLOMATIC_CATEGORIES.has(category)) return true;
+  const text = `${headline} ${body}`.toLowerCase();
+  return DIPLOMATIC_CONTEXT_TERMS.some((t) => text.includes(t));
+}
+
+export function isGenericStock(altText: string, diplomatic: boolean): boolean {
+  const alt = altText.toLowerCase();
+  if (!alt) return false; // no description to judge -- don't penalize on missing metadata
+  const isFlagOrEmblem = FLAG_TERMS.some((t) => alt.includes(t));
+  if (diplomatic && isFlagOrEmblem) return false; // flags/symbols are on-topic here
+  return GENERIC_STOCK_TERMS.some((t) => alt.includes(t));
 }
 
 type PexelsPhoto = {
@@ -89,7 +153,13 @@ export type PexelsCandidate = {
   score: number;
 };
 
-export async function fetchImageForCategory(category: string, headline?: string, body?: string): Promise<PexelsCandidate | null> {
+export async function fetchImageForCategory(
+  category: string,
+  headline?: string,
+  body?: string,
+  subjectCountries?: string[],
+  allowGenericFallback = false
+): Promise<PexelsCandidate | null> {
   const apiKey = process.env.PEXELS_API_KEY;
   if (!apiKey) {
     console.error("Missing PEXELS_API_KEY env var.");
@@ -97,8 +167,10 @@ export async function fetchImageForCategory(category: string, headline?: string,
   }
 
   const categoryTerm = CATEGORY_SEARCH_TERMS[category] ?? "world map";
-  const country = headline ? extractCountryFromHeadline(headline) : null;
-  const query = country ? `${country} ${categoryTerm}` : categoryTerm;
+  const country = subjectCountries?.[0] ?? (headline ? extractCountryFromHeadline(headline) : null);
+  const keyActor = headline ? extractKeyActor(headline, country) : null;
+  const diplomatic = isDiplomaticContext(category, headline ?? "", body ?? "");
+  const query = [country, keyActor, categoryTerm].filter(Boolean).join(" ") || categoryTerm;
   const storyKeywords = extractKeywords(`${headline ?? ""} ${body ?? ""}`);
 
   try {
@@ -113,39 +185,59 @@ export async function fetchImageForCategory(category: string, headline?: string,
 
     const data = await res.json();
     let photos: PexelsPhoto[] = data?.photos ?? [];
-    if (photos.length === 0 && country) {
-      return fetchImageForCategory(category, undefined, body); // retry without country narrowing
+    if (photos.length === 0 && (country || keyActor)) {
+      // retry with just the category term -- the narrowed query found nothing
+      return fetchImageForCategory(category, undefined, body, undefined, allowGenericFallback);
     }
     if (photos.length === 0) return null;
 
     const excludedIds = await getRecentlyUsedPexelsIds();
     photos = photos.filter((p) => !excludedIds.has(String(p.id)));
-    if (photos.length === 0) return null;
+
+    // Filter out generic stock filler (handshakes, globes, boardrooms, ...)
+    // unless the story is diplomatic/political/UN-related and the photo is
+    // specifically a flag or emblem, which reads as on-topic there.
+    if (!allowGenericFallback) {
+      photos = photos.filter((p) => !isGenericStock(p.alt ?? "", diplomatic));
+    }
+    if (photos.length === 0) {
+      if (!allowGenericFallback) {
+        // narrowed search + blocklist left nothing -- widen once rather than
+        // publish with no image at all
+        return fetchImageForCategory(category, headline, body, subjectCountries, true);
+      }
+      return null;
+    }
 
     const scored = photos.map((p) => {
       const altOverlap = p.alt ? [...extractKeywords(p.alt)].filter((w) => storyKeywords.has(w)).length : 0;
       const score =
         20 + // base: landscape + category match
         (country ? 25 : 10) + // country specificity
+        (keyActor ? 10 : 0) + // named-actor specificity
         Math.min(altOverlap * 8, 25) + // keyword overlap with story
         15; // guaranteed fresh (not recently used)
       return { photo: p, score: Math.min(score, 100) };
     });
 
     scored.sort((a, b) => b.score - a.score);
-    const top5 = scored.slice(0, 5).filter((s) => s.score >= MIN_SCORE_TO_ACCEPT);
-    if (top5.length === 0) return null;
+    const top3 = scored.slice(0, 3).filter((s) => s.score >= MIN_SCORE_TO_ACCEPT);
+    if (top3.length === 0) return null;
 
-    // Weighted random among the top candidates so repeated categories don't
-    // always converge on the single highest-scored photo.
-    const totalWeight = top5.reduce((sum, s) => sum + s.score, 0);
-    let roll = Math.random() * totalWeight;
-    let chosen = top5[0];
-    for (const s of top5) {
-      roll -= s.score;
-      if (roll <= 0) {
-        chosen = s;
-        break;
+    // High confidence: weighted random among the top matches so repeated
+    // categories don't always converge on the same photo. Low confidence:
+    // no point adding randomness on top of an uncertain match -- take the
+    // single highest-relevance candidate instead.
+    let chosen = top3[0];
+    if (top3[0].score >= HIGH_CONFIDENCE_SCORE) {
+      const totalWeight = top3.reduce((sum, s) => sum + s.score, 0);
+      let roll = Math.random() * totalWeight;
+      for (const s of top3) {
+        roll -= s.score;
+        if (roll <= 0) {
+          chosen = s;
+          break;
+        }
       }
     }
 

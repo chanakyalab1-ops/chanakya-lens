@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { fetchTheNewsApiCandidates } from "@/lib/thenewsapi";
+import { sendAlert } from "@/lib/alerts";
 
 const EXCLUDED_KEYWORDS = [
   "immigration and customs enforcement",
@@ -81,6 +82,10 @@ export async function GET(req: NextRequest) {
     skipped,
     error: errorMsg,
   });
+
+  if (errorMsg) {
+    await sendAlert("ingest", errorMsg);
+  }
 
   const responseBody = {
     fetched,
