@@ -1,12 +1,6 @@
 "use client";
 import { useSyncExternalStore } from "react";
-
-export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("theme");if(t==="light"){document.documentElement.setAttribute("data-theme","light");}}catch(e){}})();`;
-
-function subscribe(callback: () => void) {
-  window.addEventListener("themechange", callback);
-  return () => window.removeEventListener("themechange", callback);
-}
+import { subscribeTheme, setThemePreference, resolveTheme, getStoredPreference } from "@/lib/theme";
 
 function getSnapshot(): "dark" | "light" {
   return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
@@ -35,21 +29,17 @@ function MoonIcon({ className, style }: { className?: string; style?: React.CSSP
   );
 }
 
+// Mobile-only sliding switch. Always sets an explicit light/dark
+// preference (never "auto") -- that's only reachable via the desktop
+// segmented control (ThemeSegmentedControl).
 export default function ThemeToggle() {
-  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const theme = useSyncExternalStore(subscribeTheme, getSnapshot, getServerSnapshot);
   const isLight = theme === "light";
 
   function toggle() {
-    const next = isLight ? "dark" : "light";
-    if (next === "light") {
-      document.documentElement.setAttribute("data-theme", "light");
-    } else {
-      document.documentElement.removeAttribute("data-theme");
-    }
-    try {
-      localStorage.setItem("theme", next);
-    } catch {}
-    window.dispatchEvent(new Event("themechange"));
+    const current = getStoredPreference();
+    const currentResolved = resolveTheme(current);
+    setThemePreference(currentResolved === "light" ? "dark" : "light");
   }
 
   return (

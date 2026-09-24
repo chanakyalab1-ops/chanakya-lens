@@ -1,4 +1,5 @@
-﻿import NavDrawer from "@/components/NavDrawer";
+﻿import { Suspense } from "react";
+import NavDrawer from "@/components/NavDrawer";
 import Feed from "@/components/Feed";
 import Link from "next/link";
 import { getAllStories, Story } from "@/lib/stories";
@@ -70,7 +71,9 @@ export default async function FeedPage() {
         </div>
       )}
 
-      <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} />
+      <Suspense fallback={null}>
+        <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} />
+      </Suspense>
     </>
   );
 }
