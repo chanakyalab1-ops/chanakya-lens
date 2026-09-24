@@ -297,7 +297,12 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
       </div>
       <div
         className="flex gap-2 px-4 py-3 overflow-x-auto border-b backdrop-blur"
-        style={{ borderColor: "var(--border)", background: "var(--overlay)" }}
+        style={{
+          borderColor: "var(--border)",
+          background: "var(--overlay)",
+          maskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
+          WebkitMaskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
+        }}
       >
         <div className="flex gap-2 max-w-7xl mx-auto w-max min-w-full">
           {categories.map((cat) => (
@@ -327,9 +332,6 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
           <ImpactLegend />
         </div>
       )}
-      <div className="max-w-7xl mx-auto px-4 mt-3 lg:hidden">
-        <OffLensTeaser stories={stories} />
-      </div>
       <main className="max-w-7xl mx-auto px-4 pb-16 lg:grid lg:grid-cols-[1fr_280px] lg:gap-6 lg:items-start">
         <div>
           {hero && (
@@ -397,6 +399,10 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
             <Link href="/how-we-rate" className="text-[0.78rem] whitespace-nowrap underline" style={{ color: "var(--brand-soft)" }}>
               How we rate →
             </Link>
+          </div>
+
+          <div className="mt-6 lg:hidden">
+            <OffLensTeaser stories={stories} />
           </div>
         </div>
         <aside className="hidden lg:block mt-3 lg:sticky lg:top-[130px]">
