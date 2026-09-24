@@ -27,7 +27,7 @@ export default function StickyDigestBar() {
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-50 border-t px-4 py-3 flex items-center justify-between gap-4"
-      style={{ background: "rgba(10,17,42,0.97)", borderColor: "var(--border)", backdropFilter: "blur(8px)" }}
+      style={{ background: "var(--overlay)", borderColor: "var(--border)", backdropFilter: "blur(8px)" }}
     >
       {status === "done" ? (
         <div className="flex items-center justify-between w-full">

@@ -1,10 +1,17 @@
 @import "tailwindcss";
 
 :root {
+  /* fixed regardless of theme: text/icon color placed on top of accent fills */
   --ink: #0A112A;
+  --paper: #EEF2F6;
+
+  --bg: #0A112A;
   --ink-soft: #131F47;
   --ink-card: #101B40;
-  --paper: #EEF2F6;
+  --surface: #0F1E38;
+  --surface-strong: #152847;
+  --surface-border: rgba(255, 255, 255, 0.08);
+  --overlay: rgba(10, 17, 42, 0.95);
   --text-on-ink: #EEF2F6;
   --text-on-ink-dim: #8E9DC0;
   --text-body: #AEBBDD;
@@ -17,12 +24,29 @@
   --settled: #7E8AAA;
   --border: #22326B;
   --radius: 2px;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #F5F7FA;
+  --ink-soft: #FFFFFF;
+  --ink-card: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-strong: #EEF6F7;
+  --surface-border: rgba(10, 17, 42, 0.1);
+  --overlay: rgba(255, 255, 255, 0.92);
+  --text-on-ink: #101830;
+  --text-on-ink-dim: #55607F;
+  --text-body: #333E5C;
+  --brand-soft: #0E7080;
+  --border: #D7DEEA;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
 
 html, body {
-  background: var(--ink);
+  background: var(--bg);
   color: var(--text-on-ink);
   font-family: var(--font-plex-sans), sans-serif;
   line-height: 1.55;

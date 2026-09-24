@@ -132,7 +132,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                   style={
                     story.status === "developing"
                       ? { color: "var(--developing)", borderColor: "rgba(217,105,74,0.5)", background: "rgba(217,105,74,0.08)" }
-                      : { color: "var(--settled)", borderColor: "#2A3D74", background: "rgba(255,255,255,0.02)" }
+                      : { color: "var(--settled)", borderColor: "var(--border)", background: "var(--surface-border)" }
                   }
                 >
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />

@@ -54,7 +54,7 @@ export default function DigestSignup() {
             style={
               selectedTopics.includes(topic)
                 ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
-                : { color: "var(--text-on-ink)", borderColor: "rgba(255,255,255,0.18)", background: "transparent" }
+                : { color: "var(--text-on-ink)", borderColor: "var(--border)", background: "transparent" }
             }
           >
             {topic}

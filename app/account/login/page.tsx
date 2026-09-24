@@ -63,7 +63,7 @@ export default function AccountLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-5" style={{ background: 'var(--ink)', color: 'var(--text-on-ink)' }}>
+    <div className="min-h-screen flex items-center justify-center px-5" style={{ background: 'var(--bg)', color: 'var(--text-on-ink)' }}>
       <div className="w-full max-w-sm space-y-4">
         <div
           className="p-6 rounded-sm border space-y-4"

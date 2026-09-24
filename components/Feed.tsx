@@ -41,7 +41,7 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
   return (
     <div
       className="flex flex-col rounded-sm border p-5"
-      style={{ borderColor: "var(--brand-soft)", background: "#132340" }}
+      style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}
     >
       <Link href="/off-lens" className="hover:opacity-90">
         <div className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
@@ -128,7 +128,7 @@ function HeroCard({ story }: { story: Story }) {
     <Link
       href={`/story/${story.slug}`}
       className="block rounded-sm border p-6 md:p-8 mb-3 hover:opacity-95"
-      style={{ background: "#152847", borderColor: "var(--brand-soft)" }}
+      style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}
     >
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         <CategoryBadge category={story.category} />
@@ -153,7 +153,7 @@ function CompactCard({ story }: { story: Story }) {
     <Link
       href={`/story/${story.slug}`}
       className="block rounded-sm border p-3.5"
-      style={{ background: "#0F1E38", borderColor: "rgba(255,255,255,0.08)" }}
+      style={{ background: "var(--surface)", borderColor: "var(--surface-border)" }}
     >
       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
         <CategoryBadge category={story.category} />
@@ -277,7 +277,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
       </div>
       <div
         className="flex gap-2 px-4 py-3 overflow-x-auto border-b backdrop-blur"
-        style={{ borderColor: "var(--border)", background: "rgba(10,17,42,0.92)" }}
+        style={{ borderColor: "var(--border)", background: "var(--overlay)" }}
       >
         <div className="flex gap-2 max-w-7xl mx-auto w-max min-w-full">
           {categories.map((cat) => (
@@ -294,7 +294,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
               style={
                 active === cat
                   ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
-                  : { color: "var(--text-on-ink)", borderColor: "rgba(255,255,255,0.18)", background: "transparent" }
+                  : { color: "var(--text-on-ink)", borderColor: "var(--border)", background: "transparent" }
               }
             >
               {cat}
@@ -349,7 +349,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
                 key={story.slug}
                 href={`/story/${story.slug}`}
                 className="block rounded-sm border p-3.5"
-                style={{ background: "#0F1E38", borderColor: "rgba(255,255,255,0.08)" }}
+                style={{ background: "var(--surface)", borderColor: "var(--surface-border)" }}
               >
                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                   <CategoryBadge category={story.category} />
@@ -357,7 +357,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
                 </div>
                 <h3 className="font-display font-semibold text-[0.95rem] leading-tight mb-2">{story.headline}</h3>
                 <div className="flex items-center pt-2 border-t" style={{ borderColor: "var(--border)" }}>
-                  <span className="font-mono text-[0.58rem] uppercase tracking-wide" style={{ color: "#7688B4" }}>Brief</span>
+                  <span className="font-mono text-[0.58rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Brief</span>
                   <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>{story.readTime}</span>
                 </div>
               </Link>
@@ -370,7 +370,7 @@ export default function Feed({ stories }: { stories: Story[] }) {
             </div>
           )}
 
-          <div className="mt-6 p-4 rounded-sm border border-dashed flex items-center justify-between gap-3" style={{ borderColor: "#2A3D74" }}>
+          <div className="mt-6 p-4 rounded-sm border border-dashed flex items-center justify-between gap-3" style={{ borderColor: "var(--border)" }}>
             <div className="text-[0.78rem]" style={{ color: "var(--text-on-ink-dim)" }}>
               <strong style={{ color: "var(--text-body)" }}>Not every story gets the full treatment.</strong> We only trace impact when the chain is real.
             </div>
