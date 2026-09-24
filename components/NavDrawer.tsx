@@ -1,9 +1,11 @@
 ﻿"use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import ThemeToggle from "@/components/ThemeToggle";
+import ThemeSegmentedControl from "@/components/ThemeSegmentedControl";
+import { HeaderSearchDesktop, HeaderSearchMobile } from "@/components/HeaderSearch";
 
 const ADMIN_EMAIL = "chanakya.lab1@gmail.com";
 const REGIONS = ["Asia", "Americas", "Europe", "Middle East", "Africa"];
@@ -44,7 +46,9 @@ export default function NavDrawer() {
     <div ref={ref}>
       <header className="sticky top-0 z-20 flex items-center justify-between md:grid md:grid-cols-[1fr_auto_1fr] border-b px-5 py-4 backdrop-blur"
         style={{ borderColor: "var(--border)", background: "var(--overlay)" }}>
-        <div className="w-8 justify-self-start hidden md:block" />
+        <div className="justify-self-start hidden md:block">
+          <ThemeSegmentedControl />
+        </div>
         <Link href="/" className="flex items-center gap-2 md:gap-3 md:justify-self-center">
           <Image src="/logo-mark.png" alt="Chanakya Lens" width={40} height={40} className="rounded-full w-8 h-8 md:w-10 md:h-10" />
           <span className="font-display text-lg md:text-2xl font-extrabold uppercase tracking-wide whitespace-nowrap">
@@ -52,7 +56,11 @@ export default function NavDrawer() {
           </span>
         </Link>
         <div className="flex items-center gap-3 justify-self-end">
-          <ThemeToggle />
+          <Suspense fallback={null}>
+            <div className="md:hidden"><HeaderSearchMobile /></div>
+            <div className="hidden md:block"><HeaderSearchDesktop /></div>
+          </Suspense>
+          <div className="md:hidden"><ThemeToggle /></div>
           <Link href="/account" className="font-mono text-[0.68rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
             Account
           </Link>

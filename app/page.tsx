@@ -1,7 +1,10 @@
-﻿import NavDrawer from "@/components/NavDrawer";
+﻿import { Suspense } from "react";
+import NavDrawer from "@/components/NavDrawer";
 import Feed from "@/components/Feed";
+import MarketTicker, { filterFreshRows } from "@/components/MarketTicker";
 import Link from "next/link";
 import { getAllStories, Story } from "@/lib/stories";
+import { getMarketRows } from "@/lib/marketData";
 export const revalidate = 300;
 
 function pickTodaysSignal(stories: Story[]): Story[] {
@@ -32,7 +35,7 @@ const websiteSchema = {
 };
 
 export default async function FeedPage() {
-  const stories = await getAllStories();
+  const [stories, marketRows] = await Promise.all([getAllStories(), getMarketRows()]);
   const signal = pickTodaysSignal(stories);
 
   return (
@@ -43,8 +46,10 @@ export default async function FeedPage() {
       />
       <NavDrawer />
 
+      <MarketTicker rows={filterFreshRows(marketRows)} />
+
       {signal.length > 0 && (
-        <div className="sticky top-[73px] z-10 border-b overflow-hidden" style={{ borderColor: "var(--border)", background: "var(--surface-strong)" }}>
+        <div className="border-b overflow-hidden" style={{ borderColor: "var(--border)", background: "var(--surface-strong)" }}>
           <div className="max-w-7xl mx-auto flex items-center gap-3 px-4 py-2">
             <span className="font-mono text-[0.62rem] uppercase tracking-widest shrink-0" style={{ color: "var(--brand-soft)" }}>
               Signal
@@ -70,7 +75,9 @@ export default async function FeedPage() {
         </div>
       )}
 
-      <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} />
+      <Suspense fallback={null}>
+        <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} />
+      </Suspense>
     </>
   );
 }

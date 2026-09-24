@@ -1,5 +1,6 @@
 ﻿"use client";
 import { useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Story } from "@/lib/stories";
@@ -230,7 +231,11 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
     [stories]
   );
   const [active, setActive] = useState("All");
-  const [query, setQuery] = useState("");
+  // Search now lives in the header (see HeaderSearch.tsx), which writes to
+  // the `q` URL param -- read it here reactively rather than owning local
+  // input state, since Feed no longer renders its own search box.
+  const searchParams = useSearchParams();
+  const query = searchParams.get("q") ?? "";
   const categoryFiltered = active === "All" ? stories : stories.filter((s) => s.category === active);
   const filtered = query.trim()
     ? categoryFiltered.filter((s) => {
@@ -270,33 +275,8 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
 
   return (
     <>
-      <div className="px-4 pt-3.5 pb-1 max-w-7xl mx-auto">
-        <div className="relative">
-          <svg viewBox="0 0 16 16" fill="none" className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: "var(--text-on-ink-dim)" }}>
-            <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3" />
-            <path d="M11.5 11.5L15 15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          </svg>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search stories..."
-            className="w-full md:max-w-sm rounded-full border pl-9 pr-9 py-2 text-sm outline-none"
-            style={{ background: "var(--ink-card)", borderColor: "var(--border)", color: "var(--text-on-ink)" }}
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-sm"
-              style={{ color: "var(--text-on-ink-dim)" }}
-            >   ✕
-            </button>
-          )}
-        </div>
-      </div>
       <div
-        className="flex gap-2 px-4 py-3 overflow-x-auto border-b backdrop-blur"
+        className="flex gap-2 py-3 px-[max(1rem,calc((100%-80rem)/2+1rem))] overflow-x-auto border-b backdrop-blur"
         style={{
           borderColor: "var(--border)",
           background: "var(--overlay)",
@@ -304,7 +284,7 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
           WebkitMaskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
         }}
       >
-        <div className="flex gap-2 max-w-7xl mx-auto w-max min-w-full">
+        <div className="flex gap-2 w-max">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -405,7 +385,7 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
             <OffLensTeaser stories={stories} />
           </div>
         </div>
-        <aside className="hidden lg:block mt-3 lg:sticky lg:top-[130px]">
+        <aside className="hidden lg:block mt-3">
           <OffLensTeaser stories={stories} />
         </aside>
       </main>

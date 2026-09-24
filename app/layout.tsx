@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from "next";
 import Footer from "@/components/Footer";
 import StickyDigestBar from "@/components/StickyDigestBar";
-import { THEME_INIT_SCRIPT } from "@/components/ThemeToggle";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { Barlow_Condensed, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 const barlow = Barlow_Condensed({
