@@ -176,7 +176,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         <h1 className="font-display font-bold text-3xl leading-tight mb-4">{story.headline}</h1>
         <p className="text-base mb-6" style={{ color: "var(--text-body)" }}>{story.dek}</p>
 
-        <p className="text-[0.95rem] leading-relaxed mb-8" style={{ color: "#C6D0E8" }}>{story.body}</p>
+        <p className="text-[0.95rem] leading-relaxed mb-8" style={{ color: "var(--text-body)" }}>{story.body}</p>
 
         {story.impactNodes && story.impactNodes.length > 0 && (
           <section className="mt-9">
@@ -196,7 +196,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                     {tagLabel[node.confidence]}
                   </span>
                   <div className="text-[0.92rem] font-semibold mb-1">{node.audience}</div>
-                  <div className="text-[0.86rem] leading-relaxed" style={{ color: "#B9B4A6" }}>{node.mechanism}</div>
+                  <div className="text-[0.86rem] leading-relaxed" style={{ color: "var(--text-body)" }}>{node.mechanism}</div>
                 </div>
               ))}
             </div>
