@@ -111,6 +111,10 @@ export async function POST(req: NextRequest) {
         fact_check_status: "done",
         fact_check_flags: { claims: results, overall_score: qualityScore },
         quality_score: qualityScore,
+        // Drafts are held out of the review queue (workflow_status=
+        // 'fact_checking') until this completes, so a reviewer never sees
+        // one that hasn't actually been checked yet.
+        workflow_status: "in_review",
       })
       .eq("id", draft_id);
 
@@ -118,10 +122,12 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     // Without this, a mid-run failure (e.g. Gemini erroring) leaves the
-    // draft stuck at "checking" forever instead of surfacing as failed.
+    // draft stuck at "checking" forever instead of surfacing as failed. It
+    // still needs to reach the review queue -- fact_check_status='failed'
+    // is what flags it as unverified there, not withholding it forever.
     await supabase
       .from("story_drafts")
-      .update({ fact_check_status: "failed" })
+      .update({ fact_check_status: "failed", workflow_status: "in_review" })
       .eq("id", draft_id);
     await sendAlert("fact-check", `Draft ${draft.slug}: ${message}`);
     return NextResponse.json({ error: message }, { status: 500 });
