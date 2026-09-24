@@ -1,8 +1,10 @@
 ﻿import { Suspense } from "react";
 import NavDrawer from "@/components/NavDrawer";
 import Feed from "@/components/Feed";
+import MarketTicker, { filterFreshRows } from "@/components/MarketTicker";
 import Link from "next/link";
 import { getAllStories, Story } from "@/lib/stories";
+import { getMarketRows } from "@/lib/marketData";
 export const revalidate = 300;
 
 function pickTodaysSignal(stories: Story[]): Story[] {
@@ -33,7 +35,7 @@ const websiteSchema = {
 };
 
 export default async function FeedPage() {
-  const stories = await getAllStories();
+  const [stories, marketRows] = await Promise.all([getAllStories(), getMarketRows()]);
   const signal = pickTodaysSignal(stories);
 
   return (
@@ -43,6 +45,8 @@ export default async function FeedPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
       <NavDrawer />
+
+      <MarketTicker rows={filterFreshRows(marketRows)} />
 
       {signal.length > 0 && (
         <div className="border-b overflow-hidden" style={{ borderColor: "var(--border)", background: "var(--surface-strong)" }}>
