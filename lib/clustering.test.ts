@@ -57,4 +57,14 @@ describe("suggestClusters", () => {
     expect(suggestions[0].candidateIds).toHaveLength(3);
     expect(suggestions[1].candidateIds).toHaveLength(2);
   });
+
+  it("does not throw on a candidate with a null/empty title (bad ingest row)", () => {
+    const candidates = [
+      candidate({ id: "a", title: "India refiners weigh retreat from Russian oil amid tariffs" }),
+      candidate({ id: "b", title: null }),
+      candidate({ id: "c", title: "" }),
+    ];
+
+    expect(() => suggestClusters(candidates)).not.toThrow();
+  });
 });

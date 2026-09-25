@@ -2,7 +2,11 @@
 // same story, so a reviewer can confirm/override rather than group by hand.
 export type Candidate = {
   id: string;
-  title: string;
+  // A handful of ingested rows have come through with a null/empty title
+  // (bad scrape) -- tokenize() must never crash the whole /review Server
+  // Component render over one malformed row, so this is typed loosely and
+  // handled defensively below rather than assumed non-null.
+  title: string | null | undefined;
   domain: string;
   source_country: string | null;
   seen_date: string;
@@ -24,9 +28,9 @@ const STOPWORDS = new Set([
 const SIMILARITY_THRESHOLD = 0.20;
 const MAX_HOURS_APART = 96;
 
-function tokenize(title: string): Set<string> {
+function tokenize(title: string | null | undefined): Set<string> {
   return new Set(
-    title
+    (title ?? '')
       .toLowerCase()
       .normalize('NFKD')
       .replace(/[^\p{L}\p{N}\s]/gu, ' ')
