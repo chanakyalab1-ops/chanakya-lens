@@ -55,7 +55,15 @@ export async function fetchQuote(symbol: string): Promise<QuoteResult> {
       `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`,
       { cache: "no-store" }
     );
-    if (!res.ok) return { ok: false, reason: `HTTP ${res.status}` };
+
+    if (!res.ok) {
+      // Twelve Data's error responses are JSON with a real `message` even
+      // on a non-2xx status (e.g. 404/429) -- reading only the status code
+      // and discarding the body was hiding the actual reason (plan
+      // restriction vs. bad symbol vs. rate limit) behind a bare "HTTP 404".
+      const body = await res.json().catch(() => null);
+      return { ok: false, reason: body?.message ? `HTTP ${res.status}: ${body.message}` : `HTTP ${res.status}` };
+    }
 
     const data = await res.json();
     // Twelve Data returns {code, message, status:"error"} on a bad symbol,

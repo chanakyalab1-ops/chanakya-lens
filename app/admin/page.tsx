@@ -3,25 +3,32 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { createClient } from "@supabase/supabase-js";
-import { MARKET_SYMBOLS, fetchQuote, getMarketRows } from "@/lib/marketData";
+import { MARKET_SYMBOLS, fetchQuote, getMarketRows, type MarketDataRow, type QuoteResult } from "@/lib/marketData";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 // Live-checks each ticker symbol against Twelve Data right now, so the real
 // reason a symbol isn't showing (bad plan tier, wrong symbol, missing key)
 // is visible on the page itself instead of requiring log/DB access to
-// diagnose. Runs on every /admin load (dynamic, no caching) -- fine at this
-// traffic level, and it's the same call the cron makes.
+// diagnose. Sequential with a small gap between calls -- firing all 5 at
+// once (as this originally did) tripped Twelve Data's rate limit itself and
+// produced misleading 429s that had nothing to do with the real, underlying
+// per-symbol issue. Runs on every /admin load (dynamic, no caching) -- fine
+// at this traffic level, and it's the same call the cron makes, just not
+// batched the way the diagnostic view was.
 async function getMarketDiagnostics() {
-  const [rows, checks] = await Promise.all([
-    getMarketRows(),
-    Promise.all(MARKET_SYMBOLS.map(async (s) => ({ ...s, result: await fetchQuote(s.symbol) }))),
-  ]);
+  const rows = await getMarketRows();
   const rowBySymbol = new Map(rows.map((r) => [r.symbol, r]));
-  return checks.map((c) => ({
-    symbol: c.symbol,
-    label: c.label,
-    cached: rowBySymbol.get(c.symbol) ?? null,
-    live: c.result,
-  }));
+
+  const checks: { symbol: string; label: string; cached: MarketDataRow | null; live: QuoteResult }[] = [];
+  for (const s of MARKET_SYMBOLS) {
+    const result = await fetchQuote(s.symbol);
+    checks.push({ symbol: s.symbol, label: s.label, cached: rowBySymbol.get(s.symbol) ?? null, live: result });
+    await sleep(500);
+  }
+  return checks;
 }
 
 async function getAnalyticsSummary() {
