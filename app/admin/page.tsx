@@ -38,6 +38,36 @@ async function getAnalyticsSummary() {
     .from("story_drafts")
     .select("*", { count: "exact", head: true })
     .eq("workflow_status", "in_review");
+
+  // Pipeline health: every status a candidate/batch/draft can sit in along
+  // the ingest -> auto-generate -> check-batches -> fact-check -> review
+  // path, so a stuck stage (e.g. drafts piling up at "fact_checking" because
+  // the fact-check callback never fired) is visible without querying the
+  // database by hand.
+  const [
+    { count: candidatesPending },
+    { count: candidatesBatchPending },
+    { count: batchesSubmitted },
+    { data: recentBatches },
+    { count: draftsFactChecking },
+    { count: draftsPublished },
+    { count: draftsRejected },
+    { count: factCheckFailed },
+  ] = await Promise.all([
+    supabase.from("story_candidates").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("story_candidates").select("*", { count: "exact", head: true }).eq("status", "batch_pending"),
+    supabase.from("generation_batches").select("*", { count: "exact", head: true }).eq("status", "submitted"),
+    supabase
+      .from("generation_batches")
+      .select("id, anthropic_batch_id, status, created_at, processed_at")
+      .order("id", { ascending: false })
+      .limit(5),
+    supabase.from("story_drafts").select("*", { count: "exact", head: true }).eq("workflow_status", "fact_checking"),
+    supabase.from("story_drafts").select("*", { count: "exact", head: true }).eq("workflow_status", "published"),
+    supabase.from("story_drafts").select("*", { count: "exact", head: true }).eq("workflow_status", "rejected"),
+    supabase.from("story_drafts").select("*", { count: "exact", head: true }).eq("fact_check_status", "failed"),
+  ]);
+
   const { count: totalFeedback } = await supabase
     .from("feedback_submissions")
     .select("*", { count: "exact", head: true });
@@ -69,6 +99,16 @@ async function getAnalyticsSummary() {
     totalFeedback: totalFeedback ?? 0,
     totalDigestSignups: totalDigestSignups ?? 0,
     recentFeedback: recentFeedback ?? [],
+    pipeline: {
+      candidatesPending: candidatesPending ?? 0,
+      candidatesBatchPending: candidatesBatchPending ?? 0,
+      batchesSubmitted: batchesSubmitted ?? 0,
+      recentBatches: recentBatches ?? [],
+      draftsFactChecking: draftsFactChecking ?? 0,
+      draftsPublished: draftsPublished ?? 0,
+      draftsRejected: draftsRejected ?? 0,
+      factCheckFailed: factCheckFailed ?? 0,
+    },
   };
 }
 
@@ -92,6 +132,51 @@ export default async function AdminPage() {
         <AdminLink href="/review" title="Review Queue" description="Generate and review story drafts from candidates." />
         <AdminLink href="/review/manage" title="Manage Published Stories" description="Edit or unpublish live stories." />
       </div>
+
+      <h2 className="font-display text-lg font-bold mb-4" style={{ color: "var(--text-on-ink)" }}>
+        Pipeline Health
+      </h2>
+      <p className="text-[0.8rem] mb-4" style={{ color: "var(--text-on-ink-dim)" }}>
+        Candidate (ingest) → batch (auto-generate) → draft (check-batches) → fact-check → review. A stage stuck
+        above zero for a while (especially &quot;Drafts awaiting fact-check&quot;) usually means the next stage
+        isn&apos;t firing.
+      </p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <StatCard label="Candidates Pending" value={stats.pipeline.candidatesPending} />
+        <StatCard label="Candidates in Batch" value={stats.pipeline.candidatesBatchPending} />
+        <StatCard label="Batches Submitted" value={stats.pipeline.batchesSubmitted} />
+        <StatCard label="Drafts Awaiting Fact-Check" value={stats.pipeline.draftsFactChecking} />
+        <StatCard label="Fact-Check Failed" value={stats.pipeline.factCheckFailed} />
+        <StatCard label="Drafts Published" value={stats.pipeline.draftsPublished} />
+        <StatCard label="Drafts Rejected" value={stats.pipeline.draftsRejected} />
+      </div>
+      {stats.pipeline.recentBatches.length > 0 && (
+        <div className="flex flex-col gap-2 mb-10">
+          <div className="font-mono text-[0.62rem] uppercase tracking-wide mb-1" style={{ color: "var(--text-on-ink-dim)" }}>
+            Recent Generation Batches
+          </div>
+          {stats.pipeline.recentBatches.map((b) => (
+            <div
+              key={b.id}
+              className="flex items-center justify-between gap-3 rounded-sm border p-3"
+              style={{ background: "var(--ink-card)", borderColor: "var(--border)" }}
+            >
+              <span className="font-mono text-[0.7rem] truncate" style={{ color: "var(--text-body)" }}>
+                {b.anthropic_batch_id}
+              </span>
+              <span
+                className="font-mono text-[0.68rem] shrink-0"
+                style={{ color: b.status === "submitted" ? "var(--developing)" : "var(--brand-soft)" }}
+              >
+                {b.status}
+              </span>
+              <span className="font-mono text-[0.6rem] shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>
+                {new Date(b.created_at).toLocaleString()}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <h2 className="font-display text-lg font-bold mb-4" style={{ color: "var(--text-on-ink)" }}>
         Top Stories (30 days)
