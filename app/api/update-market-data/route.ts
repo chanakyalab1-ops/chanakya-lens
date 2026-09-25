@@ -14,20 +14,20 @@ export async function GET(req: NextRequest) {
   const failures: string[] = [];
 
   for (const { symbol, label } of MARKET_SYMBOLS) {
-    const quote = await fetchQuote(symbol);
-    if (!quote) {
+    const result = await fetchQuote(symbol);
+    if (!result.ok) {
       // Leave the cached row untouched -- a stale ticker is caught by
       // comparing updated_at client-side, never by overwriting good data
       // with a bad/missing fetch.
-      failures.push(symbol);
+      failures.push(`${symbol}: ${result.reason}`);
       continue;
     }
 
     const { error } = await supabase.from("market_data").upsert({
       symbol,
       label,
-      price: quote.price,
-      change_percent: quote.changePercent,
+      price: result.quote.price,
+      change_percent: result.quote.changePercent,
       updated_at: new Date().toISOString(),
     });
 

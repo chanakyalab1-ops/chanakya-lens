@@ -21,7 +21,7 @@ export function filterFreshRows(rows: MarketRow[]): MarketRow[] {
 
 function formatValue(label: string, price: number): string {
   if (label === "GOLD") return `$${Math.round(price).toLocaleString()}`;
-  if (label === "BRENT") return `$${price.toFixed(2)}`;
+  if (label === "BRENT" || label === "SILVER" || label === "COPPER") return `$${price.toFixed(2)}`;
   return price.toFixed(2); // USD/INR is a plain exchange rate, no currency symbol
 }
 
