@@ -126,6 +126,59 @@ function ImpactDots({ story }: { story: Story }) {
   );
 }
 
+function truncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  return text.slice(0, max - 1).trimEnd() + "…";
+}
+
+// Chanakya's Move is a full strategic-read paragraph -- the card only has
+// room for a teaser, so pull just the first sentence rather than truncating
+// mid-thought.
+function firstSentence(text: string): string {
+  const match = text.match(/^.*?[.!?](?:\s|$)/);
+  return (match ? match[0] : text).trim();
+}
+
+function MoveLine({ analysis }: { analysis: string }) {
+  return (
+    <p className="flex items-start gap-1.5 text-[0.78rem] leading-snug mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
+      <span aria-hidden className="shrink-0" style={{ color: "var(--brand-soft)" }}>♟</span>
+      <span>
+        <span className="font-mono text-[0.6rem] uppercase tracking-wide mr-1.5" style={{ color: "var(--brand-soft)" }}>
+          Move
+        </span>
+        {truncate(firstSentence(analysis), 120)}
+      </span>
+    </p>
+  );
+}
+
+const CONFIDENCE_PRIORITY: Record<string, number> = { direct: 0, likely: 1, possible: 2 };
+
+// Top 2-3 impact nodes, most-certain first -- a card has room for a
+// glanceable summary, not the full "How Could This Affect You" list.
+function ImpactChips({ nodes }: { nodes: Story["impactNodes"] }) {
+  const top = [...nodes!].sort((a, b) => CONFIDENCE_PRIORITY[a.confidence] - CONFIDENCE_PRIORITY[b.confidence]).slice(0, 3);
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap mb-2">
+      <span className="font-mono text-[0.58rem] uppercase tracking-wide shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>
+        Affects:
+      </span>
+      {top.map((n, i) => (
+        <span
+          key={i}
+          title={n.mechanism}
+          className="inline-flex items-center gap-1 font-mono text-[0.62rem] rounded-full border px-2 py-0.5 max-w-full"
+          style={{ color: dotColor[n.confidence], borderColor: dotColor[n.confidence], background: "transparent" }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: dotColor[n.confidence] }} />
+          <span className="truncate">{truncate(n.audience, 32)}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function HeroCard({ story }: { story: Story }) {
   return (
     <Link
@@ -145,6 +198,8 @@ function HeroCard({ story }: { story: Story }) {
       </div>
       <h2 className="font-display font-bold text-2xl md:text-3xl leading-tight mb-3">{story.headline}</h2>
       <p className="text-[0.95rem] mb-4 max-w-2xl line-clamp-2" style={{ color: "var(--text-body)" }}>{story.dek}</p>
+      {story.chanakyaAnalysis && <MoveLine analysis={story.chanakyaAnalysis} />}
+      {story.impactNodes && story.impactNodes.length > 0 && <ImpactChips nodes={story.impactNodes} />}
       <div className="flex items-center gap-2.5 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
         <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if —</span>
         <ImpactDots story={story} />
@@ -174,6 +229,8 @@ function CompactCard({ story }: { story: Story }) {
         {story.offLens && <OffLensBadge />}
       </div>
       <h3 className="font-display font-bold text-[0.98rem] leading-tight mb-2">{story.headline}</h3>
+      {story.chanakyaAnalysis && <MoveLine analysis={story.chanakyaAnalysis} />}
+      {story.impactNodes && story.impactNodes.length > 0 && <ImpactChips nodes={story.impactNodes} />}
       <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
         <ImpactDots story={story} />
         <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>
@@ -358,6 +415,7 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
                   {story.offLens && <OffLensBadge />}
                 </div>
                 <h3 className="font-display font-bold text-[0.95rem] leading-tight mb-2">{story.headline}</h3>
+                {story.chanakyaAnalysis && <MoveLine analysis={story.chanakyaAnalysis} />}
                 <div className="flex items-center pt-2 border-t" style={{ borderColor: "var(--border)" }}>
                   <span className="font-mono text-[0.58rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Brief</span>
                   <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>{story.readTime}</span>
