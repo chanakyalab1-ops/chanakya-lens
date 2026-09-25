@@ -34,6 +34,7 @@ export type Story = {
   subjectCountries?: string[];
   imageUrl?: string;
   publishedAt: string; // ISO timestamp from stories.created_at
+  qualityScore?: number | null;
 };
 
 // Supabase rows use snake_case; map to the camelCase Story type used across the UI
@@ -53,6 +54,7 @@ type StoryRow = {
   subject_countries: string[] | null;
   image_url: string | null;
   created_at: string;
+  quality_score: number | null;
 };
 
 function mapRow(row: StoryRow): Story {
@@ -74,13 +76,21 @@ function mapRow(row: StoryRow): Story {
     subjectCountries: row.subject_countries && row.subject_countries.length > 0 ? row.subject_countries : undefined,
     imageUrl: row.image_url ?? undefined,
     publishedAt: row.created_at,
+    qualityScore: row.quality_score,
   };
 }
 
 export async function getAllStories(): Promise<Story[]> {
+  // Ranked by quality_score (best-fact-checked first), falling back to
+  // recency. Stories published before fact-check scores existed carry
+  // quality_score=null, which nullsFirst:false sends to the bottom of that
+  // tier -- so today, with no real scores populated yet, this sorts
+  // identically to created_at DESC, and starts ranking by score the moment
+  // scores start landing without needing a separate code path later.
   const { data, error } = await supabase
     .from("stories")
     .select("*")
+    .order("quality_score", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
   if (error) {
     console.error("Failed to fetch stories:", error.message);

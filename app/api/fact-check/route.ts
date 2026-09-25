@@ -28,9 +28,18 @@ async function checkClaimWithGemini(claim: string): Promise<{
   confidence: number;
   sources: string[];
   note?: string;
+  // Distinguishes "the API call itself failed" from "we asked Gemini and it
+  // said this claim is unverified" -- these must never be scored the same
+  // way. Conflating them is how this whole pipeline previously turned a
+  // retired-model 404 into a hardcoded 0 on every single story.
+  errored?: boolean;
 }> {
+  // "-latest" tracks Google's current supported model instead of pinning a
+  // dated version -- gemini-1.5-flash was retired and every call to it 404'd
+  // silently (see errored handling below), which is what caused every
+  // quality_score to be 0 regardless of the actual story content.
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -49,9 +58,25 @@ async function checkClaimWithGemini(claim: string): Promise<{
     }
   );
 
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => "");
+    return {
+      claim,
+      verified: false,
+      confidence: 0,
+      sources: [],
+      note: `Gemini API error ${response.status}: ${errBody.slice(0, 200)}`,
+      errored: true,
+    };
+  }
+
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-  
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+
+  if (!text) {
+    return { claim, verified: false, confidence: 0, sources: [], note: "Empty Gemini response", errored: true };
+  }
+
   try {
     const parsed = JSON.parse(text);
     return {
@@ -62,7 +87,7 @@ async function checkClaimWithGemini(claim: string): Promise<{
       note: parsed.note,
     };
   } catch {
-    return { claim, verified: false, confidence: 0, sources: [], note: "Parse error" };
+    return { claim, verified: false, confidence: 0, sources: [], note: "Parse error", errored: true };
   }
 }
 
@@ -97,19 +122,38 @@ export async function POST(req: NextRequest) {
       await sleep(4500);
     }
 
-    const verifiedCount = results.filter((r) => r.verified).length;
-    const avgConfidence = results.length
-      ? Math.round(results.reduce((sum, r) => sum + r.confidence, 0) / results.length)
+    // Only claims Gemini actually returned a verdict on count toward the
+    // score -- an errored call (bad model, rate limit, malformed response)
+    // is "unknown", not "confirmed false", and must not drag the score down
+    // as if it were real negative evidence.
+    const evaluated = results.filter((r) => !r.errored);
+    const verifiedCount = evaluated.filter((r) => r.verified).length;
+    const avgConfidence = evaluated.length
+      ? Math.round(evaluated.reduce((sum, r) => sum + r.confidence, 0) / evaluated.length)
       : 0;
-    const qualityScore = results.length
-      ? Math.round((verifiedCount / results.length) * 100 * 0.5 + avgConfidence * 0.5)
-      : 0;
+
+    let qualityScore: number;
+    if (evaluated.length > 0) {
+      qualityScore = Math.round((verifiedCount / evaluated.length) * 100 * 0.5 + avgConfidence * 0.5);
+    } else {
+      // Nothing could actually be checked (no extractable claims, or every
+      // Gemini call errored) -- fall back to a score derived from the flags
+      // we do have: sources checked is the base, each confirmed red flag
+      // (a claim explicitly noted as unverified/disputed) is a penalty.
+      const sourcesChecked = results.length;
+      const confirmedFlags = results.filter((r) => !!r.note).length;
+      qualityScore = Math.max(0, Math.min(100, sourcesChecked * 20 - confirmedFlags * 15));
+    }
+
+    if (results.length > 0 && evaluated.length === 0) {
+      await sendAlert("fact-check", `Draft ${draft.slug}: all ${results.length} Gemini calls errored -- check GEMINI_API_KEY and model name`);
+    }
 
     await supabase
       .from("story_drafts")
       .update({
         fact_check_status: "done",
-        fact_check_flags: { claims: results, overall_score: qualityScore },
+        fact_check_flags: { claims: results, overall_score: qualityScore, evaluated_count: evaluated.length },
         quality_score: qualityScore,
         // Drafts are held out of the review queue (workflow_status=
         // 'fact_checking') until this completes, so a reviewer never sees

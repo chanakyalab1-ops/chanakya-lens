@@ -166,7 +166,7 @@ export async function publishDraft(slug: string, feedback?: PublishFeedback) {
   const { data: draft, error: fetchError } = await supabase
     .from('story_drafts')
     .select(
-      'slug, category, status, headline, dek, body, read_time, has_video, impact_nodes, articles, chanakya_analysis, off_lens, subject_countries',
+      'slug, category, status, headline, dek, body, read_time, has_video, impact_nodes, articles, chanakya_analysis, off_lens, subject_countries, quality_score',
     )
     .eq('slug', slug)
     .single();
@@ -225,6 +225,7 @@ export async function publishDraft(slug: string, feedback?: PublishFeedback) {
     subject_countries: draft.subject_countries ?? null,
     sources,
     image_url: image?.imageUrl ?? null,
+    quality_score: draft.quality_score ?? null,
   });
 
   if (insertError) {
