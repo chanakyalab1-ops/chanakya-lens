@@ -140,7 +140,8 @@ export function ReviewBoard({
     setError(null);
     startTransition(async () => {
       try {
-        await dismissCandidates(ids);
+        const result = await dismissCandidates(ids);
+        if (!result.ok) throw new Error(result.error);
         ids.forEach((id) => selected.delete(id));
         setSelected(new Set(selected));
         router.refresh();
@@ -154,7 +155,8 @@ export function ReviewBoard({
     setError(null);
     startTransition(async () => {
       try {
-        await generateDraft(ids);
+        const result = await generateDraft(ids);
+        if (!result.ok) throw new Error(result.error);
         clearSelection();
         router.refresh();
       } catch (e) {
@@ -194,7 +196,8 @@ export function ReviewBoard({
     setError(null);
     startTransition(async () => {
       try {
-        await publishDraft(slug, feedback);
+        const result = await publishDraft(slug, feedback);
+        if (!result.ok) throw new Error(result.error);
         router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to publish.');
@@ -216,7 +219,8 @@ export function ReviewBoard({
     setError(null);
     startTransition(async () => {
       try {
-        await rejectDraft(slug, reason);
+        const result = await rejectDraft(slug, reason);
+        if (!result.ok) throw new Error(result.error);
         router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to reject.");
@@ -306,10 +310,9 @@ export function ReviewBoard({
               startTransition(async () => {
                 try {
                   const result = await triggerAutoGenerateBatch(5);
+                  if (!result.ok) throw new Error(result.error);
                   router.refresh();
-                  setError(`Batch submitted: ${result.groupCount} queued (${result.batchId.slice(0, 8)}…)`);
-
-
+                  setError(`Batch submitted: ${result.data.groupCount} queued (${result.data.batchId.slice(0, 8)}…)`);
                 } catch (e) {
                   setError(e instanceof Error ? e.message : 'Failed to run batch generate.');
                 }
@@ -694,11 +697,8 @@ function StoryEditor({
           (n) => n.audience.trim().length > 0 && n.mechanism.trim().length > 0,
         ),
       };
-      if (existingSlug) {
-        await updateDraft(existingSlug, payload);
-      } else {
-        await createDraft(payload);
-      }
+      const result = existingSlug ? await updateDraft(existingSlug, payload) : await createDraft(payload);
+      if (!result.ok) throw new Error(result.error);
       onSaved();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save draft.');

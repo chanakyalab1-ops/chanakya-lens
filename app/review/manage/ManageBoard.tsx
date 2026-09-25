@@ -60,7 +60,8 @@ export function ManageBoard({ stories }: { stories: PublishedStory[] }) {
     setError(null);
     startTransition(async () => {
       try {
-        await unpublishStory(slug);
+        const result = await unpublishStory(slug);
+        if (!result.ok) throw new Error(result.error);
         setConfirmingUnpublish(null);
         router.refresh();
       } catch (e) {
@@ -199,7 +200,7 @@ function EditPublishedModal({
     setError(null);
     setSaving(true);
     try {
-      await updatePublishedStory(story.slug, {
+      const result = await updatePublishedStory(story.slug, {
         headline,
         dek,
         body,
@@ -211,6 +212,7 @@ function EditPublishedModal({
         chanakyaAnalysis,
         offLens,
       });
+      if (!result.ok) throw new Error(result.error);
       onSaved();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save.');
