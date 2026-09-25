@@ -1,20 +1,26 @@
-// Market ticker: Brent, Silver, Copper, USD/INR, Gold -- editorial context
-// for a site that covers oil geopolitics and India-Russia energy trade
-// heavily, not financial decoration. Confirmed against Twelve Data's own
-// listings (twelvedata.com/markets/874865/commodity/xbr-usd for Brent,
-// twelvedata.com's XAU/USD gold spot page) since a wrong symbol here is
-// worse than not shipping the feature at all. These are spot/CFD-style
-// commodity prices, not exchange futures contracts -- true continuous
-// futures (e.g. ICE Brent front-month) aren't available on Twelve Data's
-// individual API plans, only its separate business/futures product.
+// Market ticker: Copper, USD/INR, Gold -- editorial context for a site that
+// covers oil geopolitics and India-Russia energy trade heavily, not
+// financial decoration.
+//
+// Brent (XBR/USD) and Silver (XAG/USD) are confirmed-real Twelve Data
+// symbols but return "This symbol is available starting with the Grow or
+// Venture plan" on the current (free Basic) API key -- a paid-plan
+// restriction, not a code bug. They're commented out rather than deleted so
+// they're one uncomment away from working if the plan is ever upgraded; see
+// https://twelvedata.com/pricing.
+//
+// Copper's symbol was simply wrong: XCU/USD doesn't exist on Twelve Data at
+// all ("symbol or figi parameter is missing or invalid"). Their actual
+// symbol is HG1 (Copper Spot, price per pound), confirmed via
+// twelvedata.com/markets/662294/commodity/hg1.
 import { supabaseServer } from "./supabase-server";
 
 export type MarketSymbolConfig = { symbol: string; label: string };
 
 export const MARKET_SYMBOLS: MarketSymbolConfig[] = [
-  { symbol: "XBR/USD", label: "BRENT" },
-  { symbol: "XAG/USD", label: "SILVER" },
-  { symbol: "XCU/USD", label: "COPPER" },
+  // { symbol: "XBR/USD", label: "BRENT" },  -- needs Twelve Data Grow/Venture plan
+  // { symbol: "XAG/USD", label: "SILVER" }, -- needs Twelve Data Grow/Venture plan
+  { symbol: "HG1", label: "COPPER" },
   { symbol: "USD/INR", label: "USD/INR" },
   { symbol: "XAU/USD", label: "GOLD" },
 ];
