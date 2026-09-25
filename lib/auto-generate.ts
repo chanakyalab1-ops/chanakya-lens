@@ -9,13 +9,17 @@ const TOPIC_KEYWORDS = [
   "summit", "embargo", "nuclear", "troops", "ceasefire", "negotiat",
 ];
 
-type ScorableCandidate = { title: string; domain: string; seen_date: string | null };
+type ScorableCandidate = { title: string | null; domain: string; seen_date: string | null };
 
 function scoreCandidate(c: ScorableCandidate): number {
   let score = 0;
   if (TRUSTED_DOMAINS.has(c.domain)) score += 30;
 
-  const titleLower = c.title.toLowerCase();
+  // A null/empty title (bad ingest row) must never throw here -- one
+  // malformed candidate out of hundreds previously killed the entire batch
+  // before anything got submitted, which is why nothing was generating at
+  // all, not even for the clean candidates.
+  const titleLower = (c.title ?? '').toLowerCase();
   const keywordMatches = TOPIC_KEYWORDS.filter((k) => titleLower.includes(k)).length;
   score += Math.min(keywordMatches * 15, 45);
 
@@ -58,8 +62,8 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
     )
   );
 
-  function isDuplicate(title: string): boolean {
-    const words = title.toLowerCase().split(/\s+/).filter((w) => w.length > 4);
+  function isDuplicate(title: string | null): boolean {
+    const words = (title ?? '').toLowerCase().split(/\s+/).filter((w) => w.length > 4);
     const matches = words.filter((w) => recentHeadlineWords.has(w)).length;
     return matches >= 4;
   }
@@ -67,6 +71,11 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
   const SCORE_FLOOR = 35;
 
   const all = (candidates ?? []).filter((c) => {
+    // A candidate with no usable title can't be scored or clustered
+    // meaningfully -- drop it here (once, cleanly) rather than let it reach
+    // scoreCandidate/isDuplicate/suggestClusters where a crash would take
+    // down the whole batch instead of just this one row.
+    if (!c.title || !c.title.trim()) return false;
     if (isDuplicate(c.title)) return false;
     if (scoreCandidate(c) < SCORE_FLOOR) return false;
     return true;
