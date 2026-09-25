@@ -96,13 +96,16 @@ function sleep(ms: number) {
 }
 
 export async function POST(req: NextRequest) {
-  const { draft_id } = await req.json();
-  if (!draft_id) return NextResponse.json({ error: "draft_id required" }, { status: 400 });
+  // story_drafts has no `id` column -- slug is its identifier everywhere
+  // else in this codebase (publishDraft, rejectDraft, updateDraft), so this
+  // route takes one too.
+  const { slug } = await req.json();
+  if (!slug) return NextResponse.json({ error: "slug required" }, { status: 400 });
 
   const { data: draft, error } = await supabase
     .from("story_drafts")
     .select("slug, headline, body, category, subject_countries")
-    .eq("id", draft_id)
+    .eq("slug", slug)
     .single();
 
   if (error || !draft) return NextResponse.json({ error: "Draft not found" }, { status: 404 });
@@ -110,7 +113,7 @@ export async function POST(req: NextRequest) {
   await supabase
     .from("story_drafts")
     .update({ fact_check_status: "checking" })
-    .eq("id", draft_id);
+    .eq("slug", slug);
 
   try {
     const claims = await extractClaims(draft.body);
@@ -160,7 +163,7 @@ export async function POST(req: NextRequest) {
         // one that hasn't actually been checked yet.
         workflow_status: "in_review",
       })
-      .eq("id", draft_id);
+      .eq("slug", slug);
 
     return NextResponse.json({ success: true, quality_score: qualityScore, claims: results });
   } catch (err) {
@@ -172,7 +175,7 @@ export async function POST(req: NextRequest) {
     await supabase
       .from("story_drafts")
       .update({ fact_check_status: "failed", workflow_status: "in_review" })
-      .eq("id", draft_id);
+      .eq("slug", slug);
     await sendAlert("fact-check", `Draft ${draft.slug}: ${message}`);
     return NextResponse.json({ error: message }, { status: 500 });
   }

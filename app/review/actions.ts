@@ -12,13 +12,16 @@ import { selectImageForStory } from '@/lib/imageSelection';
 // a draft that hasn't actually been fact-checked yet. /api/fact-check flips
 // it to 'in_review' when done (or failed -- it still needs to surface, just
 // flagged as unverified rather than withheld forever).
-function triggerFactCheck(draftId: string) {
+// story_drafts has no `id` column -- slug is its identifier everywhere else
+// in this codebase (publishDraft, rejectDraft, updateDraft all key off it),
+// so this does too.
+function triggerFactCheck(slug: string) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://chanakyalens.com';
   after(async () => {
     await fetch(`${baseUrl}/api/fact-check`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ draft_id: draftId }),
+      body: JSON.stringify({ slug }),
     }).catch(() => {});
   });
 }
@@ -86,7 +89,7 @@ export async function createDraft(input: CreateDraftInput): Promise<ActionResult
       slug = `${baseSlug}-${attempt + 2}`;
     }
 
-    const { data: newDraft, error: draftError } = await supabase.from('story_drafts').insert({
+    const { error: draftError } = await supabase.from('story_drafts').insert({
       slug,
       category: input.category || null,
       status: input.statusTag,
@@ -100,7 +103,7 @@ export async function createDraft(input: CreateDraftInput): Promise<ActionResult
       workflow_status: 'fact_checking',
       chanakya_analysis: input.chanakyaAnalysis.trim() || null,
       off_lens: input.offLens.trim() || null,
-    }).select('id').single();
+    });
 
     if (draftError) {
       throw new Error(`Failed to create draft: ${draftError.message}`);
@@ -117,7 +120,7 @@ export async function createDraft(input: CreateDraftInput): Promise<ActionResult
       throw new Error(`Failed to update candidate status: ${candidateError.message}`);
     }
 
-    if (newDraft?.id) triggerFactCheck(newDraft.id);
+    triggerFactCheck(slug);
 
     revalidatePath('/review');
     return { ok: true, data: { slug } };
@@ -380,7 +383,7 @@ export async function generateDraft(candidateIds: string[]): Promise<ActionResul
       slug = `${baseSlug}-${attempt + 2}`;
     }
 
-    const { data: newDraft, error: draftError } = await supabase.from('story_drafts').insert({
+    const { error: draftError } = await supabase.from('story_drafts').insert({
       slug,
       category: generated.category || null,
       status: generated.statusTag,
@@ -398,7 +401,7 @@ export async function generateDraft(candidateIds: string[]): Promise<ActionResul
       off_lens: generated.offLens,
       subject_countries: generated.subjectCountries ?? [],
       workflow_status: 'fact_checking',
-    }).select('id').single();
+    });
 
     if (draftError) {
       throw new Error(`Failed to save generated draft: ${draftError.message}`);
@@ -412,7 +415,7 @@ export async function generateDraft(candidateIds: string[]): Promise<ActionResul
       throw new Error(`Failed to update candidate status: ${candidateError.message}`);
     }
 
-    if (newDraft?.id) triggerFactCheck(newDraft.id);
+    triggerFactCheck(slug);
 
     revalidatePath('/review');
     return { ok: true, data: { slug } };

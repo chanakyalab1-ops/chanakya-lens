@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   let draftsCreated = 0;
   let draftsFailed = 0;
   const errors: string[] = [];
-  const draftIdsToFactCheck: string[] = [];
+  const draftSlugsToFactCheck: string[] = [];
 
   for (const batch of pendingBatches) {
     try {
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
           slug = `${baseSlug}-${attempt + 2}`;
         }
 
-        const { data: newDraft, error: draftError } = await supabase.from("story_drafts").insert({
+        const { error: draftError } = await supabase.from("story_drafts").insert({
           slug,
           category: generated.category || null,
           status: generated.statusTag,
@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
           // Held out of the review queue until fact-check completes (see
           // /api/fact-check, which flips this to "in_review").
           workflow_status: "fact_checking",
-        }).select("id").single();
+        });
 
         if (draftError) {
           draftsFailed++;
@@ -120,10 +120,9 @@ export async function GET(req: NextRequest) {
           .in("id", candidateIds);
 
         draftsCreated++;
-
-        if (newDraft?.id) {
-          draftIdsToFactCheck.push(newDraft.id);
-        }
+        // story_drafts has no `id` column -- slug is its identifier
+        // everywhere in this codebase, so /api/fact-check takes a slug too.
+        draftSlugsToFactCheck.push(slug);
       }
 
       // Anthropic's batch response can omit a customId entirely (not even a
@@ -167,18 +166,18 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  if (draftIdsToFactCheck.length > 0) {
+  if (draftSlugsToFactCheck.length > 0) {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://chanakyalens.com";
     // Vercel freezes the function runtime as soon as the response above is sent,
     // which kills any unawaited fetch before it reaches the fact-check endpoint.
     // after() keeps the runtime alive until these requests actually complete.
     after(async () => {
       await Promise.allSettled(
-        draftIdsToFactCheck.map((draft_id) =>
+        draftSlugsToFactCheck.map((slug) =>
           fetch(`${baseUrl}/api/fact-check`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ draft_id }),
+            body: JSON.stringify({ slug }),
           })
         )
       );
