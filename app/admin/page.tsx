@@ -3,6 +3,26 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { createClient } from "@supabase/supabase-js";
+import { MARKET_SYMBOLS, fetchQuote, getMarketRows } from "@/lib/marketData";
+
+// Live-checks each ticker symbol against Twelve Data right now, so the real
+// reason a symbol isn't showing (bad plan tier, wrong symbol, missing key)
+// is visible on the page itself instead of requiring log/DB access to
+// diagnose. Runs on every /admin load (dynamic, no caching) -- fine at this
+// traffic level, and it's the same call the cron makes.
+async function getMarketDiagnostics() {
+  const [rows, checks] = await Promise.all([
+    getMarketRows(),
+    Promise.all(MARKET_SYMBOLS.map(async (s) => ({ ...s, result: await fetchQuote(s.symbol) }))),
+  ]);
+  const rowBySymbol = new Map(rows.map((r) => [r.symbol, r]));
+  return checks.map((c) => ({
+    symbol: c.symbol,
+    label: c.label,
+    cached: rowBySymbol.get(c.symbol) ?? null,
+    live: c.result,
+  }));
+}
 
 async function getAnalyticsSummary() {
   const supabase = createClient(
@@ -113,7 +133,7 @@ async function getAnalyticsSummary() {
 }
 
 export default async function AdminPage() {
-  const stats = await getAnalyticsSummary();
+  const [stats, marketDiagnostics] = await Promise.all([getAnalyticsSummary(), getMarketDiagnostics()]);
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
       <h1 className="font-display text-2xl font-bold mb-8" style={{ color: "var(--text-on-ink)" }}>
@@ -177,6 +197,36 @@ export default async function AdminPage() {
           ))}
         </div>
       )}
+
+      <h2 className="font-display text-lg font-bold mb-4" style={{ color: "var(--text-on-ink)" }}>
+        Market Ticker
+      </h2>
+      <p className="text-[0.8rem] mb-4" style={{ color: "var(--text-on-ink-dim)" }}>
+        &quot;Live check&quot; calls Twelve Data right now, on this page load -- if a symbol shows an error here,
+        that&apos;s the exact reason it isn&apos;t appearing in the homepage ticker.
+      </p>
+      <div className="flex flex-col gap-2 mb-10">
+        {marketDiagnostics.map((m) => (
+          <div
+            key={m.symbol}
+            className="flex items-center justify-between gap-3 rounded-sm border p-3 flex-wrap"
+            style={{ background: "var(--ink-card)", borderColor: "var(--border)" }}
+          >
+            <span className="font-mono text-[0.75rem] shrink-0" style={{ color: "var(--brand-soft)" }}>
+              {m.label} <span style={{ color: "var(--text-on-ink-dim)" }}>({m.symbol})</span>
+            </span>
+            <span className="font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+              cached: {m.cached ? `${m.cached.price} @ ${new Date(m.cached.updated_at).toLocaleString()}` : "no row yet"}
+            </span>
+            <span
+              className="font-mono text-[0.68rem]"
+              style={{ color: m.live.ok ? "var(--possible)" : "var(--developing)" }}
+            >
+              {m.live.ok ? `✓ live: ${m.live.quote.price}` : `✗ ${m.live.reason}`}
+            </span>
+          </div>
+        ))}
+      </div>
 
       <h2 className="font-display text-lg font-bold mb-4" style={{ color: "var(--text-on-ink)" }}>
         Top Stories (30 days)
