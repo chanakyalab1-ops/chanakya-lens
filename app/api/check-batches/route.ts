@@ -59,10 +59,24 @@ export async function GET(req: NextRequest) {
         if (!result.draft) {
           draftsFailed++;
           errors.push(`${result.customId}: ${result.error}`);
-          // Rejected, not pending -- otherwise a permanently-failing group
-          // (e.g. content the model refuses) gets resubmitted every cycle
-          // forever instead of ever leaving the queue.
-          await supabase.from("story_candidates").update({ status: "rejected" }).in("id", candidateIds);
+          if (result.failureReason === "json_parse_error" || result.failureReason === "no_json_found") {
+            // The model's response existed but couldn't be parsed as JSON
+            // (most commonly: it hit max_tokens mid-generation and the
+            // closing brace never arrived). Tracked distinctly from a
+            // content refusal/API error, and never retried -- a prompt that
+            // truncates once will truncate the same way every time it's
+            // resubmitted, so resubmitting just burns tokens for the same
+            // failure.
+            await supabase
+              .from("story_candidates")
+              .update({ status: "failed", failure_reason: "json_parse_error" })
+              .in("id", candidateIds);
+          } else {
+            // Rejected, not pending -- otherwise a permanently-failing group
+            // (e.g. content the model refuses) gets resubmitted every cycle
+            // forever instead of ever leaving the queue.
+            await supabase.from("story_candidates").update({ status: "rejected" }).in("id", candidateIds);
+          }
           continue;
         }
 
