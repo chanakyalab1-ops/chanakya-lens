@@ -93,13 +93,27 @@ function buildUserPrompt(articles: { title: string; domain: string; sourceCountr
   return `Source articles for this story:\n${articleList}\n\nSearch for and read the actual reporting on this story first, then draft it. Respond with ONLY the final JSON object once you're done researching.`;
 }
 
-function tryParseJson(raw: string): GeneratedDraft | null {
+// Distinguishes "never found anything JSON-shaped" from "found something
+// that looked like JSON but didn't parse" -- the latter is what a
+// mid-generation truncation (hitting max_tokens before the closing brace)
+// looks like, and needs to be tracked separately so it isn't silently
+// resubmitted forever alongside genuine content refusals.
+export class DraftParseError extends Error {
+  reason: "no_json_found" | "json_parse_error";
+  constructor(reason: "no_json_found" | "json_parse_error", raw: string) {
+    super(`Failed to parse generated draft (${reason}). Raw output length: ${raw.length}. First 200 chars: ${raw.slice(0, 200)}`);
+    this.name = "DraftParseError";
+    this.reason = reason;
+  }
+}
+
+function tryParseJson(raw: string): GeneratedDraft {
   const withoutFences = raw.replace(/```json|```/g, "").trim();
   const firstBrace = withoutFences.indexOf("{");
   const lastBrace = withoutFences.lastIndexOf("}");
 
   if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
-    return null;
+    throw new DraftParseError("no_json_found", raw);
   }
 
   const candidate = withoutFences.slice(firstBrace, lastBrace + 1);
@@ -111,7 +125,14 @@ function tryParseJson(raw: string): GeneratedDraft | null {
     try {
       return JSON.parse(repaired);
     } catch {
-      return null;
+      // The model's output got cut off mid-JSON (hit max_tokens before the
+      // real closing brace ever arrived) -- lastIndexOf("}") then grabs a
+      // premature brace from inside a nested object/array instead of the
+      // top-level one, producing a string that looks JSON-shaped but never
+      // actually parses. Log enough of the raw output to diagnose which
+      // case this was without dumping the entire (possibly huge) response.
+      console.error(`Draft JSON parse failed. Raw output length: ${raw.length}. First 200 chars: ${raw.slice(0, 200)}`);
+      throw new DraftParseError("json_parse_error", raw);
     }
   }
 }
@@ -148,10 +169,6 @@ function extractDraftFromTextBlocks(content: { type: string; text?: string }[]):
   }
 
   const parsed = tryParseJson(textBlock.text);
-  if (!parsed) {
-    throw new Error("Failed to parse generated draft as JSON. Raw output: " + textBlock.text.slice(0, 1500));
-  }
-
   return cleanParsedDraft(parsed);
 }
 
@@ -173,7 +190,12 @@ export async function generateStoryDraft(input: {
     },
     body: JSON.stringify({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 6000,
+      // Web search results and the model's research turns count against
+      // this budget too, not just the final JSON -- a story needing a lot
+      // of searching can hit the ceiling mid-output with no closing brace
+      // ever arriving (seen in production: the France/Yanbu story cut off
+      // mid-sentence at 6000). Raised for headroom.
+      max_tokens: 8000,
       system: buildSystemPrompt(),
       messages: [{ role: "user", content: buildUserPrompt(input.articles) }],
       cache_control: { type: "ephemeral" },
@@ -204,7 +226,8 @@ export async function submitBatchGeneration(
     custom_id: g.customId,
     params: {
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 6000,
+      // See generateStoryDraft for why this is 8000, not 6000.
+      max_tokens: 8000,
       system: buildSystemPrompt(),
       messages: [{ role: "user", content: buildUserPrompt(g.articles) }],
       tools: [{ type: "web_search_20250305", name: "web_search" }],
@@ -254,7 +277,18 @@ export async function getBatchStatus(batchId: string): Promise<BatchStatus> {
   return data.processing_status as BatchStatus;
 }
 
-export async function getBatchResults(batchId: string): Promise<{ customId: string; draft: GeneratedDraft | null; error: string | null }[]> {
+export type BatchResultEntry = {
+  customId: string;
+  draft: GeneratedDraft | null;
+  error: string | null;
+  // Set only for an unparseable-but-present model response, so the caller
+  // can record it distinctly from a content refusal or transport error and
+  // never auto-retry it (a prompt that truncates once will truncate the
+  // same way every time it's resubmitted).
+  failureReason?: "json_parse_error" | "no_json_found";
+};
+
+export async function getBatchResults(batchId: string): Promise<BatchResultEntry[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("Missing ANTHROPIC_API_KEY env var.");
@@ -292,6 +326,9 @@ export async function getBatchResults(batchId: string): Promise<{ customId: stri
       const draft = extractDraftFromTextBlocks(entry.result.message.content ?? []);
       return { customId, draft, error: null };
     } catch (err) {
+      if (err instanceof DraftParseError) {
+        return { customId, draft: null, error: err.message, failureReason: err.reason };
+      }
       return { customId, draft: null, error: err instanceof Error ? err.message : "Parse error" };
     }
   });
