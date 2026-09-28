@@ -35,8 +35,8 @@ const JSON_LD = JSON.stringify([
     "logo": "https://chanakyalens.com/favicon.ico",
     "description": "Geopolitics traced to you. Global moves. Local math.",
     "sameAs": [
-      "https://www.instagram.com/chanakyalens",
-      "https://www.youtube.com/@chanakyalens",
+      "https://www.instagram.com/chanakya.lab",
+      "https://www.youtube.com/@chanakya_lab",
     ],
   },
   {
