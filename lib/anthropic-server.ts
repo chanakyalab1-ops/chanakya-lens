@@ -1,4 +1,6 @@
-﻿export type GeneratedImpactNode = {
+﻿import { fetchGdeltCoverage, groupByCountry, type GdeltArticle } from "./gdelt";
+
+export type GeneratedImpactNode = {
   audience: string;
   mechanism: string;
   confidence: "direct" | "likely" | "possible";
@@ -42,11 +44,12 @@ You draft content for Chanakya Lens, a geopolitical news analysis platform. Ever
    - likely: a plausible mechanism with real but less certain connection
    - possible: a speculative but reasonable connection
 3. "Chanakya's Move" -- a strategic read: whose move this was, what they're betting on, what could counter it. Named after Kautilya (Chanakya), the ancient strategist.
-4. "Off-Lens" -- a note on the coverage itself, not the event. This section exists ONLY when the sourcing you actually reviewed reveals a real gap. Two kinds of gap qualify:
-   - Coverage gap: heavy reporting from one country/region and conspicuous silence from another that has an obvious stake in the outcome.
-   - Framing gap: the same facts told as a meaningfully different story depending on the outlet's national vantage point -- not left/right bias, but whose interest the framing quietly serves.
-   Off-Lens is NOT a bias score and is NOT about whether reporting is accurate. A story reported accurately by every outlet involved can still be Off-Lens if it's only being told from one vantage point.
-   - Narrative inversion: when sources from different countries frame the causal chain of the same event in opposite directions -- e.g. one side covers X attacked Y while another covers Y provoked X which retaliated. If your sources reveal this inversion, name it explicitly: which outlets frame it which way, and whose interest each framing serves. This is the most powerful form of Off-Lens and should be flagged whenever your sources show it.
+4. "Off-Lens" -- a coverage map, not an opinion. You will be given a GDELT source list showing which countries covered this story. Your job is to report what you can see in that list -- not to infer, speculate, or generate a coverage opinion.
+   Two things to report when the sources show them:
+   - Coverage gap: which countries or regions are present in the source list vs conspicuously absent, given their obvious stake in the outcome.
+   - Framing divergence: where sources from different countries frame the same facts as meaningfully different stories -- not left/right bias, but whose interest the framing serves. The strongest form is narrative inversion: one side covers "X attacked Y" while another covers "Y provoked X which retaliated."
+   CRITICAL: Only write Off-Lens if the GDELT sources you were given actually show a gap or divergence. Do not infer what Chinese or Pakistani outlets "probably think." Do not assume silence from a country just because you didn't see them in the list -- only flag absence when the country has an obvious direct stake and multiple sources from similar countries ARE present. If the source list is thin or shows no real divergence, return offLens as null.
+   Off-Lens is NOT a bias score and is NOT about whether reporting is accurate.
 5. subjectCountries -- the country or countries this story is substantively ABOUT, not the countries of the outlets reporting it. A story about Morocco covered by a Spanish outlet is about Morocco (and possibly Spain, if Spain is also a real party to the events, e.g. Ceuta). List 1-3 country names, using standard English names (e.g. "United States", "South Korea", "United Kingdom"). This drives regional categorization, so get it right based on what the story is actually about, not who wrote about it.
 
 RESEARCH PROCESS -- this is critical:
@@ -82,7 +85,10 @@ After you finish researching, your FINAL message must contain NOTHING except the
 }`;
 }
 
-function buildUserPrompt(articles: { title: string; domain: string; sourceCountry: string | null; url: string }[]) {
+function buildUserPrompt(
+  articles: { title: string; domain: string; sourceCountry: string | null; url: string }[],
+  gdeltArticles: GdeltArticle[] = [],
+) {
   const articleList = articles
     .map(
       (a, i) =>
@@ -90,7 +96,25 @@ function buildUserPrompt(articles: { title: string; domain: string; sourceCountr
     )
     .join("\n");
 
-  return `Source articles for this story:\n${articleList}\n\nSearch for and read the actual reporting on this story first, then draft it. Respond with ONLY the final JSON object once you're done researching.`;
+  let gdeltBlock = "";
+  if (gdeltArticles.length > 0) {
+    const byCountry = groupByCountry(gdeltArticles);
+    const countryLines = [...byCountry.entries()]
+      .sort((a, b) => b[1].length - a[1].length)
+      .map(
+        ([country, arts]) =>
+          `  ${country || "Unknown"} (${arts.length} article${arts.length === 1 ? "" : "s"}):\n` +
+          arts.map((a) => `    - "${a.title}" [${a.domain}] ${a.url}`).join("\n"),
+      )
+      .join("\n");
+
+    gdeltBlock =
+      `\n\nGDELT coverage map — ${gdeltArticles.length} articles from ${byCountry.size} countries:\n${countryLines}\n\n` +
+      `For Off-Lens: map what you can see above. Which countries covered this? Which are absent despite a clear stake? Where does framing diverge? ` +
+      `Report only what is visible in the source list — do not infer.`;
+  }
+
+  return `Source articles for this story:\n${articleList}${gdeltBlock}\n\nSearch for and read the actual reporting on this story first, then draft it. Respond with ONLY the final JSON object once you're done researching.`;
 }
 
 // Distinguishes "never found anything JSON-shaped" from "found something
@@ -181,6 +205,9 @@ export async function generateStoryDraft(input: {
     throw new Error("Missing ANTHROPIC_API_KEY env var.");
   }
 
+  const gdeltQuery = input.articles[0]?.title ?? "";
+  const gdeltArticles = await fetchGdeltCoverage(gdeltQuery);
+
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -197,7 +224,7 @@ export async function generateStoryDraft(input: {
       // mid-sentence at 6000). Raised for headroom.
       max_tokens: 8000,
       system: buildSystemPrompt(),
-      messages: [{ role: "user", content: buildUserPrompt(input.articles) }],
+      messages: [{ role: "user", content: buildUserPrompt(input.articles, gdeltArticles) }],
       cache_control: { type: "ephemeral" },
       tools: [{ type: "web_search_20250305", name: "web_search" }],
     }),
@@ -222,14 +249,19 @@ export async function submitBatchGeneration(
     throw new Error("Missing ANTHROPIC_API_KEY env var.");
   }
 
-  const requests = groups.map((g) => ({
+  // Fetch GDELT coverage for all groups in parallel before submitting.
+  const gdeltResults = await Promise.all(
+    groups.map((g) => fetchGdeltCoverage(g.articles[0]?.title ?? "")),
+  );
+
+  const requests = groups.map((g, i) => ({
     custom_id: g.customId,
     params: {
       model: "claude-haiku-4-5-20251001",
       // See generateStoryDraft for why this is 8000, not 6000.
       max_tokens: 8000,
       system: buildSystemPrompt(),
-      messages: [{ role: "user", content: buildUserPrompt(g.articles) }],
+      messages: [{ role: "user", content: buildUserPrompt(g.articles, gdeltResults[i]) }],
       tools: [{ type: "web_search_20250305", name: "web_search" }],
     },
   }));
