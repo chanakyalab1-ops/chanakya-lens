@@ -1,4 +1,4 @@
-﻿import { fetchGdeltCoverage, groupByCountry, type GdeltArticle } from "./gdelt";
+﻿import { fetchGdeltCoverage, groupByCountry, countByCountry, type GdeltArticle } from "./gdelt";
 
 export type GeneratedImpactNode = {
   audience: string;
@@ -16,6 +16,7 @@ export type GeneratedDraft = {
   impactNodes: GeneratedImpactNode[];
   chanakyaAnalysis: string | null;
   offLens: string | null;
+  offLensCountries: Record<string, number>;
   subjectCountries: string[];
 };
 
@@ -168,6 +169,9 @@ function cleanParsedDraft(parsed: GeneratedDraft): GeneratedDraft {
   if (!Array.isArray(parsed.impactNodes)) {
     parsed.impactNodes = [];
   }
+  if (!parsed.offLensCountries || typeof parsed.offLensCountries !== "object") {
+    parsed.offLensCountries = {};
+  }
 
   const stripCitations = (text: string) => text.replace(/<\/?cite[^>]*>/g, "").trim();
   parsed.headline = stripCitations(parsed.headline ?? "");
@@ -207,6 +211,7 @@ export async function generateStoryDraft(input: {
 
   const gdeltQuery = input.articles[0]?.title ?? "";
   const gdeltArticles = await fetchGdeltCoverage(gdeltQuery);
+  const gdeltCountries = countByCountry(gdeltArticles);
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -236,7 +241,8 @@ export async function generateStoryDraft(input: {
   }
 
   const data = await response.json();
-  return extractDraftFromTextBlocks(data.content ?? []);
+  const draft = extractDraftFromTextBlocks(data.content ?? []);
+  return { ...draft, offLensCountries: gdeltCountries };
 }
 
 // Batch generation -- submits many stories at once for ~50% lower cost.

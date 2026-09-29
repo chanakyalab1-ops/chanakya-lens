@@ -33,20 +33,26 @@ export function OffLensSection({
   sources,
   subjectCountries,
   offLens,
+  offLensCountries,
 }: {
   sources?: { sourceCountry: string | null; domain: string; title: string; url: string }[];
   subjectCountries?: string[];
   offLens?: string;
+  offLensCountries?: Record<string, number>;
 }) {
   const validSources = (sources ?? []).filter((s) => s.sourceCountry && s.sourceCountry !== "unknown" && s.sourceCountry !== "");
-  const total = validSources.length;
 
-  const sourceCounts: Record<string, number> = {};
-  validSources.forEach((s) => {
-    const c = s.sourceCountry!;
-    sourceCounts[c] = (sourceCounts[c] ?? 0) + 1;
-  });
+  // Prefer GDELT country counts (richer, multi-source) over ingested sources
+  const sourceCounts: Record<string, number> =
+    offLensCountries && Object.keys(offLensCountries).length > 0
+      ? offLensCountries
+      : (() => {
+          const counts: Record<string, number> = {};
+          validSources.forEach((s) => { counts[s.sourceCountry!] = (counts[s.sourceCountry!] ?? 0) + 1; });
+          return counts;
+        })();
 
+  const total = Object.values(sourceCounts).reduce((a, b) => a + b, 0);
   const sorted = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]);
   const subjectSet = new Set((subjectCountries ?? []).filter((c) => !NON_COUNTRIES.has(c)));
   const coveredSet = new Set(Object.keys(sourceCounts));
@@ -67,7 +73,11 @@ export function OffLensSection({
       {total > 0 && (
         <div className="mb-6">
           <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "var(--text-on-ink-dim)" }}>
-            <span>{total} source{total !== 1 ? "s" : ""} reviewed</span>
+            <span>
+              {offLensCountries && Object.keys(offLensCountries).length > 0
+                ? `${total} articles · ${sorted.length} countries · via GDELT`
+                : `${total} source${total !== 1 ? "s" : ""} reviewed`}
+            </span>
           </div>
           <div className="space-y-2.5">
             {sorted.map(([country, count]) => {

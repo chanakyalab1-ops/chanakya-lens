@@ -223,7 +223,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </div>
         )}
 
-        {(story.offLens || (story.sources && story.sources.length > 0)) && (() => {
+        {(story.offLens || story.offLensCountries || (story.sources && story.sources.length > 0)) && (() => {
           const COUNTRY_FLAGS: Record<string, string> = {
             "AF": "🇦🇫", "AU": "🇦🇺", "AZ": "🇦🇿", "BD": "🇧🇩",
             "CN": "🇨🇳", "DE": "🇩🇪", "ES": "🇪🇸", "FR": "🇫🇷",
@@ -242,11 +242,18 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             "United Arab Emirates": "🇦🇪", "United Kingdom": "🇬🇧",
             "United States": "🇺🇸", "Vietnam": "🇻🇳",
           };
-          const sourceCounts: Record<string, number> = {};
-          (story.sources ?? []).forEach((s) => {
-            const c = s.sourceCountry ?? "unknown";
-            if (c && c !== "unknown") sourceCounts[c] = (sourceCounts[c] ?? 0) + 1;
-          });
+          // Prefer GDELT country counts (richer) over ingested source countries
+          const usingGdelt = story.offLensCountries && Object.keys(story.offLensCountries).length > 0;
+          const sourceCounts: Record<string, number> = usingGdelt
+            ? story.offLensCountries!
+            : (() => {
+                const counts: Record<string, number> = {};
+                (story.sources ?? []).forEach((s) => {
+                  const c = s.sourceCountry ?? "unknown";
+                  if (c && c !== "unknown") counts[c] = (counts[c] ?? 0) + 1;
+                });
+                return counts;
+              })();
           const total = Object.values(sourceCounts).reduce((a, b) => a + b, 0);
           const sorted = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]);
           const subjectSet = new Set(story.subjectCountries ?? []);
@@ -261,6 +268,11 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
               <div className="text-[0.78rem] mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
                 Who is covering this — and who is not.
               </div>
+              {usingGdelt && sorted.length > 0 && (
+                <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3" style={{ color: "var(--text-on-ink-dim)" }}>
+                  {total} articles · {sorted.length} countries · via GDELT
+                </div>
+              )}
               {sorted.length > 0 && (
                 <div className="mb-5 space-y-2">
                   {sorted.map(([country, count]) => {

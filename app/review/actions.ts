@@ -399,6 +399,7 @@ export async function generateDraft(candidateIds: string[]): Promise<ActionResul
       })),
       chanakya_analysis: generated.chanakyaAnalysis,
       off_lens: generated.offLens,
+      off_lens_countries: Object.keys(generated.offLensCountries ?? {}).length > 0 ? generated.offLensCountries : null,
       subject_countries: generated.subjectCountries ?? [],
       workflow_status: 'fact_checking',
     });
