@@ -1,13 +1,14 @@
-﻿// GDELT DOC 2.0 API client -- free, no key required.
-// Docs: https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/
-
+// GdeltArticle: shared article type used by newscatcher, thenewsapi, and the
+// GDELT DOC search below. sourcecountry is snake_case to match the raw API
+// field name used in those files.
 export type GdeltArticle = {
-  url: string;
   title: string;
+  url: string;
   domain: string;
   sourcecountry: string;
-  seendate: string;
-  tone: number;
+  seendate?: string;
+  tone?: number;
+  queryTag?: string;
 };
 
 export type GdeltFetchResult = {
@@ -18,152 +19,59 @@ export type GdeltFetchResult = {
   failureDetails: string[];
 };
 
-const QUERIES = [
-  'tariff (import OR bilateral OR retaliation) -"sales tax" -"property tax"',
-  "export controls sanctions",
-  "border (conflict OR skirmish)",
-  '("joint military exercise" OR "naval drills" OR "arms sale" OR "defense pact" OR "bilateral security")',
-];
+// Fetches up to 25 deduplicated articles (one per domain) from GDELT DOC 2.0.
+// Used as a pre-generation enrichment step in anthropic-server.ts.
+// Returns [] on any error so callers never need to handle failures.
+export async function fetchGdeltCoverage(query: string): Promise<GdeltArticle[]> {
+  if (!query.trim()) return [];
 
-const GDELT_ENDPOINT = "https://api.gdeltproject.org/api/v2/doc/doc";
+  try {
+    const encoded = encodeURIComponent(query.trim());
+    const url =
+      `https://api.gdeltproject.org/api/v2/doc/doc?query=${encoded}&mode=artlist&maxrecords=75&format=json`;
 
-const BASE_DELAY_MS = 6000;
-const INITIAL_429_BACKOFF_MS = 20000;
-const MAX_429_BACKOFF_MS = 60000;
-const NETWORK_RETRY_BACKOFF_MS = 5000;
-const MAX_RETRIES_PER_QUERY = 1;
-const CONNECT_TIMEOUT_MS = 10000;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return [];
 
-const GLOBAL_DEADLINE_MS = 90000;
+    const data = await res.json();
+    const raw: Array<{
+      title?: string;
+      url?: string;
+      domain?: string;
+      sourcecountry?: string;
+      seendate?: string;
+    }> = data?.articles ?? [];
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+    const seenDomains = new Set<string>();
+    const articles: GdeltArticle[] = [];
 
-type QueryOutcome =
-  | { status: "success"; articles: GdeltArticle[] }
-  | { status: "failed"; reason: string };
-
-async function fetchOneQuery(query: string): Promise<QueryOutcome> {
-  const params = new URLSearchParams({
-    query: `${query} sourcelang:eng`,
-    mode: "artlist",
-    format: "json",
-    maxrecords: "20",
-    timespan: "24h",
-    sort: "datedesc",
-  });
-
-  let lastReason = "unknown error";
-
-  for (let attempt = 0; attempt <= MAX_RETRIES_PER_QUERY; attempt++) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), CONNECT_TIMEOUT_MS);
-
-    try {
-      const res = await fetch(`${GDELT_ENDPOINT}?${params.toString()}`, {
-        headers: { "User-Agent": "ChanakyaLens/1.0 (+https://chanakyalens.com)" },
-        signal: controller.signal,
+    for (const a of raw) {
+      if (!a.url || !a.title || !a.domain) continue;
+      if (seenDomains.has(a.domain)) continue;
+      seenDomains.add(a.domain);
+      articles.push({
+        title: a.title,
+        url: a.url,
+        domain: a.domain,
+        sourcecountry: a.sourcecountry ?? "",
+        seendate: a.seendate,
       });
-      clearTimeout(timeoutId);
-
-      if (res.status === 429) {
-        lastReason = "rate_limited_429";
-        if (attempt < MAX_RETRIES_PER_QUERY) {
-          const retryAfterHeader = res.headers.get("retry-after");
-          let backoff: number;
-          if (retryAfterHeader && Number.isFinite(Number(retryAfterHeader))) {
-            backoff = Number(retryAfterHeader) * 1000;
-          } else {
-            const jitter = Math.floor(Math.random() * 2000);
-            backoff = Math.min(INITIAL_429_BACKOFF_MS * Math.pow(2, attempt) + jitter, MAX_429_BACKOFF_MS);
-          }
-          console.warn(`GDELT 429 for query "${query}" -- backing off ${backoff}ms`);
-          await sleep(backoff);
-          continue;
-        }
-        console.error(`GDELT still 429 for query "${query}" after retries -- giving up`);
-        return { status: "failed", reason: lastReason };
-      }
-
-      if (!res.ok) {
-        console.error(`GDELT HTTP ${res.status} for query "${query}"`);
-        return { status: "failed", reason: `http_${res.status}` };
-      }
-
-      const text = await res.text();
-      let data: { articles?: GdeltArticle[] };
-      try {
-        data = JSON.parse(text);
-      } catch {
-        console.error(`GDELT non-JSON response for query "${query}": ${text.slice(0, 200)}`);
-        return { status: "failed", reason: "non_json_response" };
-      }
-
-      return { status: "success", articles: data?.articles ?? [] };
-    } catch (err) {
-      clearTimeout(timeoutId);
-      const isAbort = err instanceof Error && err.name === "AbortError";
-      const message = err instanceof Error ? err.message : String(err);
-      lastReason = isAbort ? "connect_timeout" : `network_error: ${message}`;
-      console.error(`GDELT fetch failed for query "${query}": ${lastReason}`);
-
-      if (attempt < MAX_RETRIES_PER_QUERY) {
-        console.warn(`Backing off ${NETWORK_RETRY_BACKOFF_MS}ms before retry`);
-        await sleep(NETWORK_RETRY_BACKOFF_MS);
-        continue;
-      }
-      return { status: "failed", reason: lastReason };
+      if (articles.length >= 25) break;
     }
-  }
 
-  return { status: "failed", reason: lastReason };
+    return articles;
+  } catch {
+    return [];
+  }
 }
 
-export async function fetchGdeltCandidates(): Promise<GdeltFetchResult> {
-  const runStart = Date.now();
-  console.log(`[GDELT] fetchGdeltCandidates START ${new Date().toISOString()}`);
-
-  const articles: Array<GdeltArticle & { queryTag: string }> = [];
-  let queriesSucceeded = 0;
-  let queriesFailed = 0;
-  const failureDetails: string[] = [];
-  let queriesSkippedForDeadline = 0;
-
-  for (const query of QUERIES) {
-    if (Date.now() - runStart > GLOBAL_DEADLINE_MS) {
-      console.warn(`[GDELT] Global deadline (${GLOBAL_DEADLINE_MS}ms) reached -- skipping remaining queries`);
-      queriesSkippedForDeadline++;
-      failureDetails.push(`"${query}": skipped_global_deadline`);
-      continue;
-    }
-
-    const outcome = await fetchOneQuery(query);
-
-    if (outcome.status === "success") {
-      queriesSucceeded++;
-      for (const a of outcome.articles) {
-        articles.push({ ...a, queryTag: query });
-      }
-    } else {
-      queriesFailed++;
-      failureDetails.push(`"${query}": ${outcome.reason}`);
-    }
-
-    if (Date.now() - runStart < GLOBAL_DEADLINE_MS) {
-      await sleep(BASE_DELAY_MS);
-    }
+// Groups a list of articles by sourcecountry for display in prompts.
+export function groupByCountry(articles: GdeltArticle[]): Map<string, GdeltArticle[]> {
+  const map = new Map<string, GdeltArticle[]>();
+  for (const a of articles) {
+    const country = a.sourcecountry || "Unknown";
+    if (!map.has(country)) map.set(country, []);
+    map.get(country)!.push(a);
   }
-
-  console.log(
-    `[GDELT] fetchGdeltCandidates END ${new Date().toISOString()} -- succeeded: ${queriesSucceeded}, failed: ${queriesFailed}, skipped_for_deadline: ${queriesSkippedForDeadline}, elapsed: ${Date.now() - runStart}ms`
-  );
-
-  return {
-    articles,
-    queriesAttempted: QUERIES.length,
-    queriesSucceeded,
-    queriesFailed,
-    failureDetails,
-  };
+  return map;
 }
