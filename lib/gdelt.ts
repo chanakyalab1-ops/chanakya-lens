@@ -75,3 +75,13 @@ export function groupByCountry(articles: GdeltArticle[]): Map<string, GdeltArtic
   }
   return map;
 }
+
+// Returns a plain { country: count } record suitable for storing in Supabase JSONB.
+export function countByCountry(articles: GdeltArticle[]): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const a of articles) {
+    const country = a.sourcecountry || "Unknown";
+    result[country] = (result[country] ?? 0) + 1;
+  }
+  return result;
+}
