@@ -26,9 +26,41 @@ export const metadata: Metadata = {
     icon: "/logo-mark.png",
   },
 };
+const JSON_LD = JSON.stringify([
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Chanakya Lens",
+    "url": "https://chanakyalens.com",
+    "logo": "https://chanakyalens.com/favicon.ico",
+    "description": "Geopolitics traced to you. Global moves. Local math.",
+    "sameAs": [
+      "https://www.instagram.com/chanakya.lab",
+      "https://www.youtube.com/@chanakya_lab",
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Chanakya Lens",
+    "url": "https://chanakyalens.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://chanakyalens.com/?q={search_term_string}",
+      },
+      "query-input": "required name=search_term_string",
+    },
+  },
+]);
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${barlow.variable} ${plexSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON_LD }} />
+      </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {children}

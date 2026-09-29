@@ -5,7 +5,7 @@ import MarketTicker, { filterFreshRows } from "@/components/MarketTicker";
 import Link from "next/link";
 import { getAllStories, Story } from "@/lib/stories";
 import { getMarketRows } from "@/lib/marketData";
-export const revalidate = 300;
+export const revalidate = 3600;
 
 function pickTodaysSignal(stories: Story[]): Story[] {
   const rank = (s: Story) => {
