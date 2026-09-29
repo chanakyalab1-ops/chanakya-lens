@@ -85,11 +85,17 @@ export function ReviewBoard({
   suggestions,
   drafts,
   draftCandidates,
+  draftPage,
+  draftTotal,
+  draftsPerPage,
 }: {
   candidates: Candidate[];
   suggestions: ClusterSuggestion[];
   drafts: Draft[];
   draftCandidates: Candidate[];
+  draftPage: number;
+  draftTotal: number;
+  draftsPerPage: number;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -261,7 +267,7 @@ export function ReviewBoard({
           <h1 className="font-serif text-2xl tracking-tight">Review queue</h1>
           <p className="font-mono text-xs text-[#8A93A6] mt-1">
             {candidates.length} pending · {suggestions.length} suggested groups ·{' '}
-            {drafts.length} drafts in review
+            {draftTotal} drafts in review
           </p>
         </div>
 
@@ -405,6 +411,31 @@ export function ReviewBoard({
                 </div>
               ))}
             </div>
+            {draftTotal > draftsPerPage && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
+                <span className="font-mono text-xs text-[#8A93A6]">
+                  Page {draftPage} of {Math.ceil(draftTotal / draftsPerPage)} · {draftTotal} total
+                </span>
+                <div className="flex gap-2">
+                  {draftPage > 1 && (
+                    <a
+                      href={`/review?draftPage=${draftPage - 1}`}
+                      className="text-sm px-3 py-1.5 rounded border border-white/15 hover:bg-white/5"
+                    >
+                      ← Prev
+                    </a>
+                  )}
+                  {draftPage < Math.ceil(draftTotal / draftsPerPage) && (
+                    <a
+                      href={`/review?draftPage=${draftPage + 1}`}
+                      className="text-sm px-3 py-1.5 rounded border border-white/15 hover:bg-white/5"
+                    >
+                      Next →
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </section>
         )}
 
