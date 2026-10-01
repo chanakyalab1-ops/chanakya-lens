@@ -30,32 +30,34 @@ export async function GET(req: Request) {
   if (allRows.length === 0) return NextResponse.json({ updated: 0, total: 0 });
 
   const limitParam = new URL(req.url).searchParams.get("limit");
-  const limit = Math.min(parseInt(limitParam ?? "1", 10), 10);
+  const limit = Math.min(parseInt(limitParam ?? "5", 10), 20);
   const batch = allRows.slice(0, limit);
 
   let updated = 0;
   const failures: string[] = [];
 
-  for (const row of batch) {
-    const articles = await fetchGdeltCoverage(row.headline);
-    const countries = countByCountry(articles);
+  await Promise.all(
+    batch.map(async (row) => {
+      const articles = await fetchGdeltCoverage(row.headline);
+      const countries = countByCountry(articles);
 
-    if (Object.keys(countries).length === 0) {
-      failures.push(`${row.table}:${row.slug}`);
-      continue;
-    }
+      if (Object.keys(countries).length === 0) {
+        failures.push(`${row.table}:${row.slug}`);
+        return;
+      }
 
-    const { error: updateError } = await supabase
-      .from(row.table)
-      .update({ off_lens_countries: countries })
-      .eq("slug", row.slug);
+      const { error: updateError } = await supabase
+        .from(row.table)
+        .update({ off_lens_countries: countries })
+        .eq("slug", row.slug);
 
-    if (updateError) {
-      failures.push(`${row.table}:${row.slug}`);
-    } else {
-      updated++;
-    }
-  }
+      if (updateError) {
+        failures.push(`${row.table}:${row.slug}`);
+      } else {
+        updated++;
+      }
+    })
+  );
 
   return NextResponse.json({ total: allRows.length, processed: batch.length, updated, failures, remaining: allRows.length - batch.length });
 }
