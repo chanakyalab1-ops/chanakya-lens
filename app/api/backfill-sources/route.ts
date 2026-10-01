@@ -58,7 +58,10 @@ export async function GET(req: Request) {
     const room = MAX_SOURCES_FOR_STORY - existing.length;
     const existingDomains = new Set(existing.map((s) => canonicalDomain(s.domain)));
 
-    const hits = await searchGoogleNews(buildQuery(story.headline, story.created_at));
+    let hits = await searchGoogleNews(buildQuery(story.headline, story.created_at));
+    // Every extra term narrows a Google search, so a niche headline can match
+    // nothing at all. Retry once with just the two strongest terms.
+    if (hits.length === 0) hits = await searchGoogleNews(buildQuery(story.headline, story.created_at, 2));
     const matches = matchHits(story.headline, story.created_at, hits, existingDomains, room);
     // A story with no sources yet needs a lead one for its photo credit.
     const added: BackfillSource[] = matches.map((m, i) => ({

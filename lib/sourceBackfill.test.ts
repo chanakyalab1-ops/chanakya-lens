@@ -10,6 +10,36 @@ function hit(partial: Partial<NewsHit> & Pick<NewsHit, "title" | "domain">): New
   return { url: `https://news.google.com/rss/articles/${partial.domain}`, outlet: partial.domain, publishedAt: "2026-10-01T12:00:00.000Z", ...partial };
 }
 
+describe("title-case headlines and false matches", () => {
+  it("picks countries, not every capitalised word, from a Title Case headline", () => {
+    const q = headlineKeywords("Pakistan Pitches Its War Legacy to US Afghanistan Commission");
+    expect(q).toContain("Pakistan");
+    expect(q).toContain("Afghanistan");
+    expect(q).not.toContain("Pitches Its");
+  });
+  it("no longer matches on a country plus a filler word", () => {
+    const headline = "Pakistan Pitches Its War Legacy to US Afghanistan Commission";
+    const hits = [
+      hit({ title: "Pakistan At UN: Credibility Gap Exposes Hollowness Of Its Peace Pitch", domain: "news18.com" }),
+      hit({ title: "J-10CE in Azerbaijani Colours: China Pitches Its Fighter at ADEX 2026", domain: "migflug.com" }),
+    ];
+    expect(matchHits(headline, CREATED, hits, new Set(), 10)).toEqual([]);
+  });
+  it("uses acronyms as search terms in Title Case headlines", () => {
+    expect(headlineKeywords("Trump Announces $54B South Korean Alaska LNG Investment Ahead of Midterms")).toContain("LNG");
+  });
+  it("can narrow a query to fewer terms", () => {
+    expect(buildQuery(HEADLINE, CREATED, 2).split(" after:")[0].split(" ")).toHaveLength(2);
+  });
+  it("does not treat .co as Colombia", () => {
+    expect(countryForDomain("briefs.co")).toBe("");
+  });
+  it("knows outlets that showed up unmapped in the first dry run", () => {
+    expect(countryForDomain("time.com")).toBe("United States");
+    expect(countryForDomain("wionews.com")).toBe("India");
+  });
+});
+
 describe("headlineKeywords / buildQuery", () => {
   it("searches on names and places", () => {
     expect(headlineKeywords("Pakistan launches deadly strikes on Afghanistan after Taliban border clash")).toBe("Pakistan Afghanistan Taliban");

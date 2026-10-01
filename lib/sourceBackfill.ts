@@ -1,11 +1,14 @@
 import { jaccard, tokenize, pickSources, MAX_SOURCES_FOR_STORY, type Candidate } from "./clustering";
 import type { NewsHit } from "./googleNews";
 import { canonicalDomain, countryForDomain, isAggregator } from "./outletCountries";
+import { COUNTRY_NAMES } from "./regions";
 
 export const WINDOW_DAYS_BEFORE = 4;
 export const WINDOW_DAYS_AFTER = 5;
 const MIN_SIMILARITY = 0.12;
-const MIN_SHARED_WORDS = 2;
+// Two shared words is easy to hit by accident ("Pakistan" + a stray filler
+// word); three means the articles really overlap.
+const MIN_SHARED_WORDS = 3;
 
 const SKIP_WORDS = new Set(["The", "A", "An", "As", "After", "Amid", "Over", "With", "For", "And", "But", "Why", "How", "What", "Will", "Could", "Says"]);
 
@@ -13,16 +16,34 @@ const SKIP_WORDS = new Set(["The", "A", "An", "As", "After", "Amid", "Over", "Wi
 // to the longest plain words when there are fewer than two.
 export function headlineKeywords(headline: string, max = 4): string {
   const words = headline.replace(/[^\p{L}\p{N}\s'-]/gu, " ").split(/\s+/).filter(Boolean);
+  const long = words.filter((w) => w.length > 3);
+  // In a Title Case headline every word is capitalised, so capitals say
+  // nothing about which words are names -- use known countries instead.
+  const titleCase = long.length > 0 && long.filter((w) => /^[A-Z]/.test(w)).length / long.length > 0.6;
+  const lower = headline.toLowerCase();
+
+  if (titleCase) {
+    const countries = COUNTRY_NAMES.filter((c) => new RegExp(`\\b${c.toLowerCase()}\\b`).test(lower)).slice(0, 2);
+    // Acronyms (LNG, POW, IRGC) identify a story as well as a country does.
+    const acronyms = [...new Set(words.filter((w) => /^[A-Z]{3,}$/.test(w)))].slice(0, 2);
+    const used = new Set([...countries, ...acronyms].map((w) => w.toLowerCase()));
+    const rest = [...new Set(long)]
+      .filter((w) => !SKIP_WORDS.has(w) && !used.has(w.toLowerCase()) && !countries.some((c) => c.toLowerCase().includes(w.toLowerCase())))
+      .sort((a, b) => b.length - a.length)
+      .slice(0, Math.max(0, max - countries.length - acronyms.length));
+    return [...countries, ...acronyms, ...rest].join(" ");
+  }
+
   const proper = [...new Set(words.filter((w) => /^[A-Z]/.test(w) && !SKIP_WORDS.has(w)))];
   if (proper.length >= 2) return proper.slice(0, max).join(" ");
-  return [...new Set(words.filter((w) => w.length > 4))].sort((a, b) => b.length - a.length).slice(0, 3).join(" ");
+  return [...new Set(long.filter((w) => w.length > 4))].sort((a, b) => b.length - a.length).slice(0, 3).join(" ");
 }
 
 const day = (t: number) => new Date(t).toISOString().slice(0, 10);
 
-export function buildQuery(headline: string, createdAt: string): string {
+export function buildQuery(headline: string, createdAt: string, maxTerms = 4): string {
   const t = new Date(createdAt).getTime();
-  return `${headlineKeywords(headline)} after:${day(t - WINDOW_DAYS_BEFORE * 864e5)} before:${day(t + WINDOW_DAYS_AFTER * 864e5)}`;
+  return `${headlineKeywords(headline, maxTerms)} after:${day(t - WINDOW_DAYS_BEFORE * 864e5)} before:${day(t + WINDOW_DAYS_AFTER * 864e5)}`;
 }
 
 export type BackfillSource = {
