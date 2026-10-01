@@ -23,6 +23,9 @@ const STOPWORDS = new Set([
   'the', 'a', 'an', 'of', 'to', 'in', 'on', 'and', 'or', 'for', 'with', 'as',
   'by', 'at', 'is', 'are', 'was', 'were', 'be', 'it', 'this', 'that', 'from',
   'has', 'have', 'will', 'after', 'over', 'amid', 'says', 'say', 'said',
+  // Pronouns and filler: two headlines sharing "its" are not about the same thing.
+  'its', 'his', 'her', 'their', 'our', 'your', 'who', 'how', 'why', 'what',
+  'new', 'not', 'but', 'more', 'than', 'about', 'into', 'out', 'up',
 ]);
 
 const SIMILARITY_THRESHOLD = 0.22;

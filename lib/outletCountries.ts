@@ -11,11 +11,28 @@ const EXTRA: Record<string, string> = {
   "axios.com": "United States",
   "foreignaffairs.com": "United States",
   "aljazeera.com": "Qatar",
+  "time.com": "United States",
+  "energyintel.com": "United States",
+  "wionews.com": "India",
+  "outlookindia.com": "India",
+  "nationalheraldindia.com": "India",
+  "newsbytesapp.com": "India",
+  "kashmirobserver.net": "India",
+  "telesurenglish.net": "Venezuela",
+  "slguardian.org": "Sri Lanka",
+  "worldisraelnews.com": "Israel",
+  "wanaen.com": "Iran",
+  "mbiz.heraldcorp.com": "South Korea",
+  "heraldcorp.com": "South Korea",
+  "news.sbs.co.kr": "South Korea",
+  "hrw.org": "United States",
 };
 
 const FEED_COUNTRY = new Map(RSS_FEEDS.map((f) => [f.domain, f.country]));
 
 // Country-code TLDs only -- a .com says nothing about where an outlet is.
+// .co is left out on purpose: sites use it as a generic "company" domain far
+// more often than as Colombia's.
 const TLD: Record<string, string> = {
   pk: "Pakistan", in: "India", uk: "United Kingdom", au: "Australia", ca: "Canada",
   za: "South Africa", ng: "Nigeria", ke: "Kenya", jp: "Japan", kr: "South Korea",
@@ -26,7 +43,7 @@ const TLD: Record<string, string> = {
   vn: "Vietnam", bd: "Bangladesh", lk: "Sri Lanka", np: "Nepal", nz: "New Zealand",
   ie: "Ireland", pl: "Poland", ch: "Switzerland", be: "Belgium", nl: "Netherlands",
   se: "Sweden", no: "Norway", gr: "Greece", ma: "Morocco", tz: "Tanzania", ug: "Uganda",
-  gh: "Ghana", et: "Ethiopia", co: "Colombia", pe: "Peru", cl: "Chile", ve: "Venezuela",
+  gh: "Ghana", et: "Ethiopia", pe: "Peru", cl: "Chile", ve: "Venezuela",
   tw: "Taiwan", hk: "Hong Kong", af: "Afghanistan", jo: "Jordan", lb: "Lebanon", kz: "Kazakhstan",
 };
 
