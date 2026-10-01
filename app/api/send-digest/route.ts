@@ -25,7 +25,7 @@ function pickDigestStories(stories: DigestStory[], limit: number): DigestStory[]
   return [...stories].sort((a, b) => rank(b) - rank(a)).slice(0, limit);
 }
 
-function buildDigestHtml(stories: DigestStory[], topicLabel: string): string {
+function buildDigestHtml(stories: DigestStory[], topicLabel: string, email: string): string {
   const items = stories
     .map(
       (s) => `
@@ -57,6 +57,14 @@ function buildDigestHtml(stories: DigestStory[], topicLabel: string): string {
       ${items}
       <div style="text-align: center; margin-top: 32px;">
         <a href="https://chanakyalens.com" style="color: #5FA8B5; font-size: 13px;">Read more at chanakyalens.com →</a>
+      </div>
+      <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #2A3D74;">
+        <p style="font-size: 11px; color: #7688B4; margin: 0 0 6px 0;">
+          You're receiving this because you subscribed at chanakyalens.com.
+        </p>
+        <a href="https://chanakyalens.com/unsubscribe?email=${encodeURIComponent(email)}" style="font-size: 11px; color: #7688B4;">
+          Unsubscribe
+        </a>
       </div>
     </div>
   `;
@@ -134,7 +142,7 @@ export async function GET(req: NextRequest) {
 
     const digestStories = pickDigestStories(relevantStories, 6);
     const topicLabel = hasPreference ? subTopics.join(", ") : "All Topics";
-    const html = buildDigestHtml(digestStories, topicLabel);
+    const html = buildDigestHtml(digestStories, topicLabel, sub.email);
 
     try {
       const result = await resend.emails.send({
