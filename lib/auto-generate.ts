@@ -4,9 +4,20 @@ import { submitBatchGeneration } from '@/lib/anthropic-server';
 import { TRUSTED_DOMAINS } from '@/lib/trustedDomains';
 
 const TOPIC_KEYWORDS = [
+  // Geopolitics & conflict
   "tariff", "sanction", "military", "strait", "defense", "diplomatic",
   "trade deal", "treaty", "alliance", "strike", "border", "conflict",
   "summit", "embargo", "nuclear", "troops", "ceasefire", "negotiat",
+  // Economics & politics (surface non-conflict stories)
+  "election", "protest", "economy", "investment", "inflation", "energy",
+  "coup", "government", "opposition", "parliament", "referendum",
+  // Geographic signals for underrepresented regions
+  "africa", "nigeria", "kenya", "ethiopia", "ghana", "senegal",
+  "brazil", "mexico", "colombia", "argentina", "venezuela",
+  "indonesia", "vietnam", "philippines", "thailand", "myanmar",
+  "pakistan", "bangladesh", "sri lanka",
+  "saudi", "qatar", "gulf", "asean",
+  "kazakhstan", "uzbekistan",
 ];
 
 type ScorableCandidate = { title: string | null; domain: string; seen_date: string | null };
