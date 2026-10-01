@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Story } from "@/lib/stories";
 import { REGIONS, Region, inferStoryRegion } from "@/lib/regions";
+import { formatStoryDate } from "@/lib/formatDate";
 
 const TABS: Region[] = ["International", ...REGIONS];
 
@@ -62,7 +63,7 @@ export default function RegionsBrowser({ stories }: { stories: Story[] }) {
               <p className="text-[0.83rem] mb-3" style={{ color: "var(--text-body)" }}>{story.dek}</p>
               <div className="flex items-center pt-2.5 border-t" style={{ borderColor: "var(--border)" }}>
                 <span className="ml-auto font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
-                  {story.readTime}
+                  {formatStoryDate(story.publishedAt)}
                 </span>
               </div>
             </Link>

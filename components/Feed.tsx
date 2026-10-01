@@ -204,7 +204,7 @@ function HeroCard({ story }: { story: Story }) {
         <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if —</span>
         <ImpactDots story={story} />
         <span className="ml-auto font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
-          {formatStoryDate(story.publishedAt)} · {story.readTime}
+          {formatStoryDate(story.publishedAt)}
         </span>
       </div>
     </Link>
@@ -234,7 +234,7 @@ function CompactCard({ story }: { story: Story }) {
       <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
         <ImpactDots story={story} />
         <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>
-          {story.readTime}
+          {formatStoryDate(story.publishedAt)}
         </span>
       </div>
     </Link>
@@ -418,7 +418,7 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
                 {story.chanakyaAnalysis && <MoveLine analysis={story.chanakyaAnalysis} />}
                 <div className="flex items-center pt-2 border-t" style={{ borderColor: "var(--border)" }}>
                   <span className="font-mono text-[0.58rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Brief</span>
-                  <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>{story.readTime}</span>
+                  <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(story.publishedAt)}</span>
                 </div>
               </Link>
             ))}
