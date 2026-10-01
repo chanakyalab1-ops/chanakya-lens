@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export function ShareButtons({ slug, headline }: { slug: string; headline: string }) {
+export function ShareButtons({ slug, headline, compact }: { slug: string; headline: string; compact?: boolean }) {
   const [copied, setCopied] = useState(false);
   const url = `https://chanakyalens.com/story/${slug}`;
   const cardUrl = `https://chanakyalens.com/api/story-card/${slug}`;
@@ -14,6 +14,28 @@ export function ShareButtons({ slug, headline }: { slug: string; headline: strin
     await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  // Phone top bar: a single button -- native share sheet when the device has
+  // one, copy-link otherwise.
+  if (compact) {
+    return (
+      <button
+        type="button"
+        aria-label={copied ? 'Link copied' : 'Share this story'}
+        onClick={async () => {
+          if (typeof navigator !== 'undefined' && navigator.share) {
+            try { await navigator.share({ title: headline, url }); } catch {}
+          } else {
+            await handleCopy();
+          }
+        }}
+        className="inline-flex items-center justify-center w-9 h-9"
+        style={{ color: copied ? 'var(--brand-soft)' : 'var(--text-on-ink)' }}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="20" height="20"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>
+      </button>
+    );
   }
 
   return (
