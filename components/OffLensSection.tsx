@@ -45,9 +45,12 @@ export function OffLensSection({
   headline?: string;
 }) {
   const [liveCountries, setLiveCountries] = useState<Record<string, number> | null>(null);
+  const [fetching, setFetching] = useState(false);
+  const [fetchedEmpty, setFetchedEmpty] = useState(false);
 
   useEffect(() => {
     if (!headline) return;
+    setFetching(true);
     fetch(`/api/gdelt-coverage?q=${encodeURIComponent(headline)}`)
       .then((r) => r.ok ? r.json() : {})
       .then((data: Record<string, number>) => {
@@ -55,9 +58,14 @@ export function OffLensSection({
         for (const [k, v] of Object.entries(data)) {
           if (k && k !== "Unknown" && !NON_COUNTRIES.has(k)) filtered[k] = v;
         }
-        if (Object.keys(filtered).length > 0) setLiveCountries(filtered);
+        if (Object.keys(filtered).length > 0) {
+          setLiveCountries(filtered);
+        } else {
+          setFetchedEmpty(true);
+        }
       })
-      .catch(() => {});
+      .catch(() => { setFetchedEmpty(true); })
+      .finally(() => setFetching(false));
   }, [headline]);
 
   const validSources = (sources ?? []).filter(
@@ -99,6 +107,18 @@ export function OffLensSection({
       <div className="text-[0.78rem] mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
         Who is covering this — and who is not.
       </div>
+
+      {fetching && total === 0 && (
+        <div className="mb-5 font-mono text-[0.6rem] uppercase tracking-widest animate-pulse" style={{ color: "var(--text-on-ink-dim)" }}>
+          Fetching coverage data…
+        </div>
+      )}
+
+      {!fetching && fetchedEmpty && total === 0 && (
+        <div className="mb-5 font-mono text-[0.6rem] uppercase tracking-widest" style={{ color: "var(--text-on-ink-dim)" }}>
+          Coverage data unavailable for this story
+        </div>
+      )}
 
       {total > 0 && (
         <div className="mb-6">
