@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 
 const COUNTRY_FLAGS: Record<string, string> = {
   "Afghanistan": "AF", "Australia": "AU", "Azerbaijan": "AZ",
@@ -31,50 +30,18 @@ const NON_COUNTRIES = new Set([
   "Unknown",
 ]);
 
-type GdeltStatus = "loading" | "empty" | "has_data" | "error";
-
 export function OffLensSection({
   sources,
   subjectCountries,
   offLens,
   offLensCountries,
-  headline,
 }: {
   sources?: { sourceCountry: string | null; domain: string; title: string; url: string }[];
   subjectCountries?: string[];
   offLens?: string;
   offLensCountries?: Record<string, number>;
-  headline?: string;
+  headline?: string; // kept in props for back-compat, no longer used
 }) {
-  const [liveCountries, setLiveCountries] = useState<Record<string, number> | null>(null);
-  const [gdeltStatus, setGdeltStatus] = useState<GdeltStatus>("loading");
-
-  useEffect(() => {
-    if (!headline) {
-      setGdeltStatus("empty");
-      return;
-    }
-    fetch(`/api/gdelt-coverage?q=${encodeURIComponent(headline)}`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data: Record<string, number>) => {
-        // Filter out "Unknown" — articles GDELT couldn't geolocate
-        const filtered: Record<string, number> = {};
-        for (const [k, v] of Object.entries(data)) {
-          if (k !== "Unknown" && k !== "" && !NON_COUNTRIES.has(k)) filtered[k] = v;
-        }
-        if (Object.keys(filtered).length > 0) {
-          setLiveCountries(filtered);
-          setGdeltStatus("has_data");
-        } else {
-          setGdeltStatus("empty");
-        }
-      })
-      .catch(() => setGdeltStatus("error"));
-  }, [headline]);
-
   const validSources = (sources ?? []).filter(
     (s) => s.sourceCountry && s.sourceCountry !== "unknown" && s.sourceCountry !== "" && !NON_COUNTRIES.has(s.sourceCountry)
   );
@@ -84,17 +51,16 @@ export function OffLensSection({
     ingestedCounts[s.sourceCountry!] = (ingestedCounts[s.sourceCountry!] ?? 0) + 1;
   });
 
-  // Filter stored GDELT counts too
+  // Filter stored GDELT counts
   const storedCounts = offLensCountries
     ? Object.fromEntries(
-        Object.entries(offLensCountries).filter(([k]) => k !== "Unknown" && k !== "" && !NON_COUNTRIES.has(k))
+        Object.entries(offLensCountries).filter(([k]) => k && k !== "Unknown" && !NON_COUNTRIES.has(k))
       )
     : null;
 
-  // Prefer live GDELT > stored GDELT > ingested sources
-  const usingGdelt = !!(liveCountries || (storedCounts && Object.keys(storedCounts).length > 0));
+  // Prefer stored GDELT counts > ingested source counts
+  const usingGdelt = !!(storedCounts && Object.keys(storedCounts).length > 0);
   const sourceCounts: Record<string, number> =
-    liveCountries ??
     (storedCounts && Object.keys(storedCounts).length > 0 ? storedCounts : null) ??
     ingestedCounts;
 
@@ -104,25 +70,8 @@ export function OffLensSection({
   const coveredSet = new Set(Object.keys(sourceCounts));
   const missing = [...subjectSet].filter((c) => !coveredSet.has(c));
 
-  // Always show the section if there's offLens text, subject countries, or any data
   const hasAnything = total > 0 || missing.length > 0 || offLens || subjectSet.size > 0;
   if (!hasAnything) return null;
-
-  // Reason shown when bar has no data
-  function coverageReason(): string | null {
-    if (gdeltStatus === "loading") return null;
-    if (total > 0) return null;
-    if (gdeltStatus === "error") return "GDELT unreachable — could not fetch live coverage data.";
-    if (gdeltStatus === "empty" && validSources.length === 0) {
-      return "No country data found. GDELT found no current coverage and sources have no country tags.";
-    }
-    if (gdeltStatus === "empty" && validSources.length > 0) {
-      return "GDELT found no current coverage for this headline. Source country data was incomplete.";
-    }
-    return null;
-  }
-
-  const reason = coverageReason();
 
   return (
     <section className="mt-9 mb-9 p-5 rounded-sm border" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
@@ -132,12 +81,6 @@ export function OffLensSection({
       <div className="text-[0.78rem] mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
         Who is covering this — and who is not.
       </div>
-
-      {gdeltStatus === "loading" && (
-        <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4 animate-pulse" style={{ color: "var(--text-on-ink-dim)" }}>
-          Fetching live coverage…
-        </div>
-      )}
 
       {total > 0 && (
         <div className="mb-6">
@@ -181,11 +124,10 @@ export function OffLensSection({
         </div>
       )}
 
-      {reason && (
-        <div className="mb-4 flex items-start gap-2">
-          <span className="font-mono text-[0.58rem] mt-0.5" style={{ color: "var(--text-on-ink-dim)" }}>⚠</span>
-          <p className="font-mono text-[0.62rem] leading-relaxed" style={{ color: "var(--text-on-ink-dim)" }}>{reason}</p>
-        </div>
+      {total === 0 && subjectSet.size > 0 && !offLens && (
+        <p className="font-mono text-[0.62rem] mb-4" style={{ color: "var(--text-on-ink-dim)" }}>
+          Coverage data not yet available for this story.
+        </p>
       )}
 
       {missing.length > 0 && (
