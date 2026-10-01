@@ -29,10 +29,14 @@ export async function GET(req: Request) {
 
   if (allRows.length === 0) return NextResponse.json({ updated: 0, total: 0 });
 
+  const limitParam = new URL(req.url).searchParams.get("limit");
+  const limit = limitParam ? Math.min(parseInt(limitParam, 10), 50) : allRows.length;
+  const batch = allRows.slice(0, limit);
+
   let updated = 0;
   const failures: string[] = [];
 
-  for (const row of allRows) {
+  for (const row of batch) {
     const articles = await fetchGdeltCoverage(row.headline);
     const countries = countByCountry(articles);
 
@@ -53,5 +57,5 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ total: allRows.length, updated, failures });
+  return NextResponse.json({ total: allRows.length, processed: batch.length, updated, failures, remaining: allRows.length - batch.length });
 }
