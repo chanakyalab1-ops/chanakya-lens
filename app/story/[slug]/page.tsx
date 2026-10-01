@@ -98,7 +98,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
       />
       <PageViewBeacon path={`/story/${slug}`} />
       <NavDrawer />
-      <div className="max-w-7xl mx-auto px-5 pt-7 pb-16">
+      <div className="max-w-7xl mx-auto px-4 md:px-5 pt-4 md:pt-7 pb-16">
       <article className="max-w-2xl mx-auto md:max-w-none md:grid md:grid-cols-[1fr_380px] md:gap-10">
         <div className="flex flex-col">
         <Link
@@ -111,7 +111,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
         {story.imageUrl && (
           <div className="mb-6">
-            <div className="relative w-full h-56 md:h-72 rounded-sm overflow-hidden">
+            <div className="relative -mx-4 md:mx-0 w-[calc(100%+2rem)] md:w-full h-56 md:h-72 md:rounded-sm overflow-hidden">
               <Image
                 src={story.imageUrl}
                 alt={story.headline}
@@ -174,22 +174,22 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             ))}
           </div>
         )}
-        <h1 className="font-display font-bold text-3xl leading-tight mb-4">{story.headline}</h1>
+        <h1 className="font-display font-bold text-[1.75rem] md:text-3xl leading-[1.15] mb-3 md:mb-4">{story.headline}</h1>
         <p className="text-base mb-6" style={{ color: "var(--text-body)" }}>{story.dek}</p>
 
         <p className="text-[0.95rem] leading-relaxed mb-8" style={{ color: "var(--text-body)" }}>{story.body}</p>
 
         {story.impactNodes && story.impactNodes.length > 0 && (
-          <section className="mt-9">
+          <section className="mt-6 md:mt-9">
             <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
               How could this affect you
             </div>
             <div className="text-[0.78rem] mb-6" style={{ color: "var(--text-on-ink-dim)" }}>
               Traced by who&apos;s actually in the path of this — not everyone is.
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               {story.impactNodes.map((node, i) => (
-                <div key={i} className="p-4 rounded-sm border" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
+                <div key={i} className="p-3.5 md:p-4 rounded-sm border" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
                   <span
                     className="inline-block font-mono text-[0.6rem] uppercase tracking-wide rounded px-1.5 py-0.5 mb-2"
                     style={{ color: tagColor[node.confidence], background: `${tagColor[node.confidence]}20` }}
@@ -197,7 +197,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                     {tagLabel[node.confidence]}
                   </span>
                   <div className="text-[0.92rem] font-semibold mb-1">{node.audience}</div>
-                  <div className="text-[0.86rem] leading-relaxed" style={{ color: "var(--text-body)" }}>{node.mechanism}</div>
+                  <div className="text-[0.84rem] md:text-[0.86rem] leading-snug md:leading-relaxed" style={{ color: "var(--text-body)" }}>{node.mechanism}</div>
                 </div>
               ))}
             </div>
@@ -234,7 +234,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
         {story.chanakyaAnalysis && (
           <section
-            className="mt-2 mb-9 p-5 rounded-sm border-2"
+            className="mt-2 mb-6 md:mb-9 p-4 md:p-5 rounded-sm border-2"
             style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}
           >
             <div className="font-display font-bold uppercase tracking-wide text-xl mb-1.5" style={{ color: "var(--brand-soft)" }}>
@@ -252,7 +252,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
       </article>
 
       {/* Full width below grid — Impact, Sources, Related */}
-      <div className="mt-10 space-y-10 max-w-screen-xl mx-auto px-8">
+      <div className="mt-8 md:mt-10 space-y-8 md:space-y-10 max-w-screen-xl mx-auto md:px-8">
         
 
         {story.sources && story.sources.length > 0 && (
