@@ -98,12 +98,24 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
       />
       <PageViewBeacon path={`/story/${slug}`} />
       <NavDrawer />
+      {/* Phones: sticky back / category / share bar */}
+      <div
+        className="md:hidden sticky top-0 z-20 flex items-center justify-between gap-2 border-b pl-2 pr-1 h-11 backdrop-blur"
+        style={{ borderColor: "var(--border)", background: "var(--overlay)" }}
+      >
+        <Link href="/" aria-label="Back to feed" className="flex items-center gap-1 h-9 pr-3 font-mono text-[0.7rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink)" }}>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M15 18l-6-6 6-6" /></svg>
+          Feed
+        </Link>
+        <span className="font-mono text-[0.62rem] uppercase tracking-widest truncate" style={{ color: "var(--brand-soft)" }}>{story.category}</span>
+        <ShareButtons slug={slug} headline={story.headline} compact />
+      </div>
       <div className="max-w-7xl mx-auto px-4 md:px-5 pt-4 md:pt-7 pb-16">
-      <article className="max-w-2xl mx-auto md:max-w-none md:grid md:grid-cols-[1fr_380px] md:gap-10">
-        <div className="flex flex-col">
+      <article className="max-w-2xl mx-auto md:max-w-none flex flex-col md:grid md:grid-cols-[1fr_380px] md:gap-10">
+        <div className="contents md:flex md:flex-col">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide mb-5 hover:opacity-80"
+          className="hidden md:inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide mb-5 hover:opacity-80"
           style={{ color: "var(--text-on-ink-dim)" }}
         >
           ← Back to feed
@@ -136,12 +148,12 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
         <div className="flex items-center justify-between gap-3 mb-3.5 flex-wrap">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+            <span className="hidden md:inline font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
               {story.category}
             </span>
             {story.status && (
               <>
-                <span className="text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>·</span>
+                <span className="hidden md:inline text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>·</span>
                 <span
                   className="font-mono text-[0.62rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1.5"
                   style={
@@ -156,7 +168,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
               </>
             )}
           </div>
-          <ShareButtons slug={slug} headline={story.headline} />
+          <div className="hidden md:block"><ShareButtons slug={slug} headline={story.headline} /></div>
         </div>
         <div className="font-mono text-[0.68rem] mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
           {formatStoryDate(story.publishedAt)}
@@ -175,12 +187,12 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </div>
         )}
         <h1 className="font-display font-bold text-[1.75rem] md:text-3xl leading-[1.15] mb-3 md:mb-4">{story.headline}</h1>
-        <p className="text-base mb-6" style={{ color: "var(--text-body)" }}>{story.dek}</p>
+        <p className="text-[1.02rem] md:text-base mb-5 md:mb-6 leading-snug md:leading-normal" style={{ color: "var(--text-on-ink-dim)" }}>{story.dek}</p>
 
-        <p className="text-[0.95rem] leading-relaxed mb-8" style={{ color: "var(--text-body)" }}>{story.body}</p>
+        <p className="max-md:order-2 text-[1rem] md:text-[0.95rem] leading-[1.7] md:leading-relaxed mb-6 md:mb-8" style={{ color: "var(--text-body)" }}>{story.body}</p>
 
         {story.impactNodes && story.impactNodes.length > 0 && (
-          <section className="mt-6 md:mt-9">
+          <section className="max-md:order-4 mt-2 md:mt-9">
             <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
               How could this affect you
             </div>
@@ -206,11 +218,11 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         </div>
 
         {/* RIGHT SIDEBAR */}
-        <aside className="space-y-6 md:sticky md:top-20 md:self-start">
+        <aside className="contents md:block md:space-y-6 md:sticky md:top-20 md:self-start">
 
         {story.hasVideo && (
           <div
-            className="flex gap-3 items-center p-3.5 rounded-sm border mb-8"
+            className="max-md:order-1 flex gap-3 items-center p-3.5 rounded-sm border mb-6 md:mb-8"
             style={{ borderColor: "var(--border)", background: "linear-gradient(135deg, rgba(95,168,181,0.08), transparent)" }}
           >
             <div className="h-8.5 w-8.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--brand)" }}>
@@ -234,7 +246,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
         {story.chanakyaAnalysis && (
           <section
-            className="mt-2 mb-6 md:mb-9 p-4 md:p-5 rounded-sm border-2"
+            className="max-md:order-3 mt-2 mb-6 md:mb-9 p-4 md:p-5 rounded-sm border-2"
             style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}
           >
             <div className="font-display font-bold uppercase tracking-wide text-xl mb-1.5" style={{ color: "var(--brand-soft)" }}>

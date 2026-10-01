@@ -92,7 +92,7 @@ export function OffLensSection({
   if (!hasAnything) return null;
 
   return (
-    <section className="mt-6 md:mt-9 mb-6 md:mb-9 p-4 md:p-5 rounded-sm border" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
+    <section className="max-md:order-1 mt-1 md:mt-9 mb-6 md:mb-9 p-4 md:p-5 rounded-sm border" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
       <div className="font-display font-bold uppercase tracking-wide text-xl mb-1" style={{ color: "var(--brand-soft)" }}>
         Off-Lens
       </div>
