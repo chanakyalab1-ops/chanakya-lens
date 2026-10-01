@@ -7,14 +7,29 @@ import type { GdeltArticle, GdeltFetchResult } from "./gdelt";
 const NEWSCATCHER_ENDPOINT = "https://v3-api.newscatcherapi.com/api/search";
 
 const QUERIES = [
-  "tariff",
+  // Global geopolitics (kept from before)
   "sanctions export controls",
-  "border conflict",
-  "military exercise defense pact",
+  "border conflict territorial dispute",
+  // Trade & economy — broadened beyond US/China
+  "trade deal investment economic agreement",
+  // Africa
+  "Africa election Nigeria Ethiopia Kenya",
+  // Latin America
+  "Latin America Brazil Mexico Argentina Colombia",
+  // Southeast Asia
+  "ASEAN Southeast Asia Indonesia Vietnam Philippines",
+  // Gulf & Middle East
+  "Gulf Saudi Arabia UAE Qatar energy diplomacy",
+  // Europe & post-Soviet
+  "Europe NATO Ukraine security Poland",
+  // South Asia beyond India
+  "Pakistan Bangladesh Sri Lanka Myanmar",
+  // Central Asia
+  "Central Asia Kazakhstan Uzbekistan Kyrgyzstan",
 ];
 
 const REQUEST_TIMEOUT_MS = 15000;
-const DELAY_BETWEEN_QUERIES_MS = 3000;
+const DELAY_BETWEEN_QUERIES_MS = 2000;
 const MAX_ARTICLES_PER_QUERY = 10;
 
 function sleep(ms: number) {

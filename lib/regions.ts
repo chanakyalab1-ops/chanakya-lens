@@ -28,13 +28,18 @@ const COUNTRY_TO_REGION: Record<string, Region> = {
   // Middle East
   "Israel": "Middle East", "Iran": "Middle East", "Saudi Arabia": "Middle East",
   "Iraq": "Middle East", "Turkey": "Middle East", "UAE": "Middle East",
+  "United Arab Emirates": "Middle East", "Bahrain": "Middle East",
   "Qatar": "Middle East", "Jordan": "Middle East", "Lebanon": "Middle East",
   "Syria": "Middle East", "Yemen": "Middle East", "Oman": "Middle East", "Kuwait": "Middle East",
 
   // Africa
   "Morocco": "Africa", "South Africa": "Africa", "Nigeria": "Africa", "Egypt": "Africa",
   "Kenya": "Africa", "Ethiopia": "Africa", "Algeria": "Africa", "Ghana": "Africa",
-  "Somalia": "Africa",
+  "Somalia": "Africa", "Sudan": "Africa", "Libya": "Africa", "Tanzania": "Africa",
+  "Uganda": "Africa", "Angola": "Africa", "Mozambique": "Africa", "Zambia": "Africa",
+  "Zimbabwe": "Africa", "Senegal": "Africa", "Mali": "Africa", "Niger": "Africa",
+  "Cameroon": "Africa", "Ivory Coast": "Africa", "Democratic Republic of Congo": "Africa",
+  "Congo": "Africa", "Tunisia": "Africa", "Rwanda": "Africa",
 };
 
 function regionFromCountryNames(countries: string[]): Region {
