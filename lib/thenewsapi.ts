@@ -108,7 +108,7 @@ const DOMAIN_TO_COUNTRY: Record<string, string> = {
   "brasilwire.com": "Brazil",
 };
 
-function inferCountryFromDomain(domain: string): string {
+export function inferCountryFromDomain(domain: string): string {
   const cleaned = domain.replace(/^www\./, "");
   return DOMAIN_TO_COUNTRY[cleaned] ?? "";
 }
@@ -255,7 +255,7 @@ const RELATED_STOPWORDS = new Set([
 // together; fall back to the longest plain words for headlines without any.
 function relatedSearchTerms(title: string): string {
   const words = title.replace(/[^\p{L}\p{N}\s'-]/gu, " ").split(/\s+/).filter(Boolean);
-  const proper = words.filter((w, i) => i > 0 && /^[A-Z]/.test(w) && !RELATED_STOPWORDS.has(w));
+  const proper = words.filter((w) => /^[A-Z]/.test(w) && !RELATED_STOPWORDS.has(w));
   const picks = [...new Set(proper)].slice(0, 3);
   if (picks.length >= 2) return picks.join(" + ");
   return [...new Set(words.filter((w) => w.length > 4))]
