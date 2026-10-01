@@ -2,7 +2,7 @@ import { supabaseServer } from "@/lib/supabase-server";
 import { fetchGdeltCoverage, countByCountry } from "@/lib/gdelt";
 import { NextResponse } from "next/server";
 
-// One-time backfill: populates off_lens_countries for drafts that have off_lens but no country data.
+// One-time backfill: populates off_lens_countries for published stories and drafts.
 // Hit GET /api/backfill-off-lens-countries once after deploying, then delete this file.
 // Protected by BACKFILL_SECRET env var — set it in Vercel, pass as ?secret=<value>.
 export async function GET(req: Request) {
@@ -13,38 +13,45 @@ export async function GET(req: Request) {
 
   const supabase = supabaseServer();
 
-  const { data: drafts, error } = await supabase
-    .from("story_drafts")
-    .select("slug, headline")
-    .not("off_lens", "is", null)
-    .is("off_lens_countries", null);
+  const [{ data: published, error: pubError }, { data: drafts, error: draftError }] =
+    await Promise.all([
+      supabase.from("stories").select("slug, headline").is("off_lens_countries", null),
+      supabase.from("story_drafts").select("slug, headline").not("off_lens", "is", null).is("off_lens_countries", null),
+    ]);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!drafts || drafts.length === 0) return NextResponse.json({ updated: 0 });
+  if (pubError) return NextResponse.json({ error: pubError.message }, { status: 500 });
+  if (draftError) return NextResponse.json({ error: draftError.message }, { status: 500 });
+
+  const allRows = [
+    ...(published ?? []).map((r) => ({ ...r, table: "stories" as const })),
+    ...(drafts ?? []).map((r) => ({ ...r, table: "story_drafts" as const })),
+  ];
+
+  if (allRows.length === 0) return NextResponse.json({ updated: 0, total: 0 });
 
   let updated = 0;
   const failures: string[] = [];
 
-  for (const draft of drafts) {
-    const articles = await fetchGdeltCoverage(draft.headline);
+  for (const row of allRows) {
+    const articles = await fetchGdeltCoverage(row.headline);
     const countries = countByCountry(articles);
 
     if (Object.keys(countries).length === 0) {
-      failures.push(draft.slug);
+      failures.push(`${row.table}:${row.slug}`);
       continue;
     }
 
     const { error: updateError } = await supabase
-      .from("story_drafts")
+      .from(row.table)
       .update({ off_lens_countries: countries })
-      .eq("slug", draft.slug);
+      .eq("slug", row.slug);
 
     if (updateError) {
-      failures.push(draft.slug);
+      failures.push(`${row.table}:${row.slug}`);
     } else {
       updated++;
     }
   }
 
-  return NextResponse.json({ total: drafts.length, updated, failures });
+  return NextResponse.json({ total: allRows.length, updated, failures });
 }
