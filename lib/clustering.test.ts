@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { suggestClusters, attachRelated, type Candidate } from "./clustering";
+import { suggestClusters, attachRelated, coverageOf, pickSources, type Candidate } from "./clustering";
 
 function candidate(overrides: Partial<Candidate> & Pick<Candidate, "id" | "title">): Candidate {
   return {
@@ -100,5 +100,29 @@ describe("attachRelated", () => {
   it("respects the per-group cap", () => {
     const [group] = attachRelated([["a"]], pool, { maxPerGroup: 2 });
     expect(group).toHaveLength(2);
+  });
+});
+
+
+describe("coverageOf / pickSources", () => {
+  const many = [
+    candidate({ id: "1", domain: "a.com", source_country: "India", title: "x" }),
+    candidate({ id: "2", domain: "a.com", source_country: "India", title: "x2" }),
+    candidate({ id: "3", domain: "b.com", source_country: "India", title: "x3" }),
+    candidate({ id: "4", domain: "c.com", source_country: "Pakistan", title: "x4" }),
+    candidate({ id: "5", domain: "d.com", source_country: "Israel", title: "x5" }),
+  ];
+
+  it("counts distinct outlets and countries, not articles", () => {
+    expect(coverageOf(many)).toEqual({ outlets: 4, countries: 3 });
+  });
+
+  it("keeps one article per outlet", () => {
+    expect(pickSources(many).map((m) => m.id)).not.toContain("2");
+  });
+
+  it("keeps country spread when trimming", () => {
+    const ids = pickSources(many, 3).map((m) => m.id);
+    expect(ids).toEqual(["1", "4", "5"]);
   });
 });

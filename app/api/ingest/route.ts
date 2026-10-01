@@ -2,12 +2,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { fetchTheNewsApiCandidates } from "@/lib/thenewsapi";
 import { sendAlert } from "@/lib/alerts";
+import { isExcluded } from "@/lib/ingestFilters";
 
-const EXCLUDED_KEYWORDS = [
-  "immigration and customs enforcement",
-  "supreme court nomination",
-  "election campaign rally",
-];
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -33,8 +29,7 @@ export async function GET(req: NextRequest) {
 
     const rows = result.articles
       .filter((article) => {
-        const titleLower = article.title?.toLowerCase() ?? "";
-        if (EXCLUDED_KEYWORDS.some((kw) => titleLower.includes(kw))) {
+        if (isExcluded(article.title ?? "")) {
           skipped++;
           return false;
         }
