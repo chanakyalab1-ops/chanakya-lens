@@ -108,7 +108,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           Feed
         </Link>
         <span className="font-mono text-[0.62rem] uppercase tracking-widest truncate" style={{ color: "var(--brand-soft)" }}>{story.category}</span>
-        <ShareButtons slug={slug} headline={story.headline} compact />
+        <span className="w-[52px]" aria-hidden />
       </div>
       <div className="max-w-7xl mx-auto px-4 md:px-5 pt-4 md:pt-7 pb-16">
       <article className="max-w-2xl mx-auto md:max-w-none flex flex-col md:grid md:grid-cols-[1fr_380px] md:gap-10">
@@ -170,8 +170,9 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </div>
           <div className="hidden md:block"><ShareButtons slug={slug} headline={story.headline} /></div>
         </div>
-        <div className="font-mono text-[0.68rem] mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
-          {formatStoryDate(story.publishedAt)}
+        <div className="flex items-center justify-between mb-2 font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+          <span>{formatStoryDate(story.publishedAt)}</span>
+          <span className="md:hidden -mr-2"><ShareButtons slug={slug} headline={story.headline} compact /></span>
         </div>
         {story.subjectCountries && story.subjectCountries.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
