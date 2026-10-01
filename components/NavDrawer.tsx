@@ -44,7 +44,7 @@ export default function NavDrawer() {
 
   return (
     <div ref={ref}>
-      <header className="sticky top-0 z-20 flex items-center justify-between md:grid md:grid-cols-[1fr_auto_1fr] border-b px-5 py-4 backdrop-blur"
+      <header className="sticky top-0 z-20 flex items-center justify-between md:grid md:grid-cols-[1fr_auto_1fr] border-b px-4 md:px-5 py-3 md:py-4 backdrop-blur"
         style={{ borderColor: "var(--border)", background: "var(--overlay)" }}>
         <div className="justify-self-start hidden md:block">
           <ThemeSegmentedControl />
@@ -55,13 +55,13 @@ export default function NavDrawer() {
             Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
           </span>
         </Link>
-        <div className="flex items-center gap-3 justify-self-end">
+        <div className="flex items-center gap-2.5 md:gap-3 justify-self-end">
           <Suspense fallback={null}>
             <div className="md:hidden"><HeaderSearchMobile /></div>
             <div className="hidden md:block"><HeaderSearchDesktop /></div>
           </Suspense>
           <div className="md:hidden"><ThemeToggle /></div>
-          <Link href="/account" className="font-mono text-[0.68rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
+          <Link href="/account" className="hidden md:inline-block font-mono text-[0.68rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
             Account
           </Link>
           <button
@@ -78,8 +78,8 @@ export default function NavDrawer() {
 
       {open && (
         <div
-          className="fixed left-0 right-0 z-30 border-b shadow-2xl"
-          style={{ top: "73px", background: "var(--overlay)", borderColor: "var(--border)" }}
+          className="fixed left-0 right-0 top-[57px] md:top-[73px] z-30 border-b shadow-2xl max-h-[calc(100vh-57px)] overflow-y-auto"
+          style={{ background: "var(--overlay)", borderColor: "var(--border)" }}
         >
           <div className="max-w-7xl mx-auto px-5 py-6 grid grid-cols-2 md:grid-cols-5 gap-6">
             <div>

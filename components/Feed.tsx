@@ -181,33 +181,58 @@ function ImpactChips({ nodes }: { nodes: Story["impactNodes"] }) {
 
 function HeroCard({ story }: { story: Story }) {
   return (
-    <Link
-      href={`/story/${story.slug}`}
-      className="block rounded-sm border p-5 md:p-6 mb-3 hover:opacity-95"
-      style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}
-    >
-      {story.imageUrl && (
-        <div className="relative w-full aspect-[3/1] rounded-sm overflow-hidden mb-3 -mt-1">
-          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 1023px) 100vw, 944px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+    <>
+      {/* Phones: edge-to-edge image, big headline, no card chrome */}
+      <Link href={`/story/${story.slug}`} className="md:hidden block -mx-4 mb-1">
+        {story.imageUrl && (
+          <div className="relative w-full aspect-[16/10] overflow-hidden">
+            <Image src={story.imageUrl} alt={story.headline} fill priority sizes="100vw" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+          </div>
+        )}
+        <div className="px-4 pt-3 pb-4 border-b" style={{ borderColor: "var(--border)" }}>
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <CategoryBadge category={story.category} />
+            {story.status === "developing" && <DevelopingBadge />}
+            {story.offLens && <OffLensBadge />}
+          </div>
+          <h2 className="font-display font-bold text-[1.7rem] leading-[1.12] mb-2">{story.headline}</h2>
+          <p className="text-[0.9rem] line-clamp-2 mb-3" style={{ color: "var(--text-body)" }}>{story.dek}</p>
+          <div className="flex items-center gap-2.5">
+            {story.impactNodes && story.impactNodes.length > 0 && <ImpactDots story={story} />}
+            <span className="font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+              {formatStoryDate(story.publishedAt)}
+            </span>
+          </div>
         </div>
-      )}
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <CategoryBadge category={story.category} />
-        {story.status === "developing" && <DevelopingBadge />}
-        {story.offLens && <OffLensBadge />}
-      </div>
-      <h2 className="font-display font-bold text-2xl md:text-3xl leading-tight mb-3">{story.headline}</h2>
-      <p className="text-[0.95rem] mb-4 max-w-2xl line-clamp-2" style={{ color: "var(--text-body)" }}>{story.dek}</p>
-      {story.chanakyaAnalysis && <MoveLine analysis={story.chanakyaAnalysis} />}
-      {story.impactNodes && story.impactNodes.length > 0 && <ImpactChips nodes={story.impactNodes} />}
-      <div className="flex items-center gap-2.5 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
-        <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if —</span>
-        <ImpactDots story={story} />
-        <span className="ml-auto font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
-          {formatStoryDate(story.publishedAt)}
-        </span>
-      </div>
-    </Link>
+      </Link>
+      <Link
+        href={`/story/${story.slug}`}
+        className="hidden md:block rounded-sm border p-5 md:p-6 mb-3 hover:opacity-95"
+        style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}
+      >
+        {story.imageUrl && (
+          <div className="relative w-full aspect-[3/1] rounded-sm overflow-hidden mb-3 -mt-1">
+            <Image src={story.imageUrl} alt={story.headline} fill sizes="944px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+          </div>
+        )}
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <CategoryBadge category={story.category} />
+          {story.status === "developing" && <DevelopingBadge />}
+          {story.offLens && <OffLensBadge />}
+        </div>
+        <h2 className="font-display font-bold text-3xl leading-tight mb-3">{story.headline}</h2>
+        <p className="text-[0.95rem] mb-4 max-w-2xl line-clamp-2" style={{ color: "var(--text-body)" }}>{story.dek}</p>
+        {story.chanakyaAnalysis && <MoveLine analysis={story.chanakyaAnalysis} />}
+        {story.impactNodes && story.impactNodes.length > 0 && <ImpactChips nodes={story.impactNodes} />}
+        <div className="flex items-center gap-2.5 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
+          <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if —</span>
+          <ImpactDots story={story} />
+          <span className="ml-auto font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+            {formatStoryDate(story.publishedAt)}
+          </span>
+        </div>
+      </Link>
+    </>
   );
 }
 
@@ -241,6 +266,48 @@ function CompactCard({ story }: { story: Story }) {
   );
 }
 
+// Ground News-style list row for phones: headline + meta on the left,
+// square thumbnail on the right. Desktop keeps CompactCard.
+function MobileRow({ story }: { story: Story }) {
+  return (
+    <Link
+      href={`/story/${story.slug}`}
+      className="flex gap-3 py-3.5 border-b"
+      style={{ borderColor: "var(--border)" }}
+    >
+      <div className="flex-1 min-w-0 flex flex-col">
+        <div className="flex items-center gap-2 mb-1.5 font-mono text-[0.58rem] uppercase tracking-wide">
+          <span style={{ color: "var(--brand-soft)" }}>{story.category}</span>
+          {story.status === "developing" && (
+            <span className="flex items-center gap-1" style={{ color: "var(--developing)" }}>
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />
+              Developing
+            </span>
+          )}
+          {story.offLens && (
+            <span className="flex items-center gap-1" style={{ color: "var(--brand-soft)" }}>
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />
+              Off-Lens
+            </span>
+          )}
+        </div>
+        <h3 className="font-display font-bold text-[1.08rem] leading-[1.2] line-clamp-4">{story.headline}</h3>
+        <div className="mt-auto pt-2 flex items-center gap-2">
+          {story.impactNodes && story.impactNodes.length > 0 && <ImpactDots story={story} />}
+          <span className="font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+            {formatStoryDate(story.publishedAt)}
+          </span>
+        </div>
+      </div>
+      {story.imageUrl && (
+        <div className="relative shrink-0 w-[104px] h-[104px] rounded-md overflow-hidden self-start">
+          <Image src={story.imageUrl} alt="" fill sizes="104px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+        </div>
+      )}
+    </Link>
+  );
+}
+
 const CATEGORY_ROW_LIMIT = 6;
 
 // Groups stories by category, in the order categories first appear, and
@@ -260,7 +327,7 @@ function CategoryRail({
   return (
     <section id={`cat-${category}`} className="mb-7 scroll-mt-24">
       <div className="flex items-center justify-between mb-2.5">
-        <h2 className="font-display font-bold text-base" style={{ color: "var(--text-on-ink)" }}>
+        <h2 className="font-display font-bold text-xl md:text-base" style={{ color: "var(--text-on-ink)" }}>
           {category}
         </h2>
         {hasMore && (
@@ -273,7 +340,12 @@ function CategoryRail({
           </button>
         )}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+      <div className="md:hidden">
+        {shown.map((story) => (
+          <MobileRow key={story.slug} story={story} />
+        ))}
+      </div>
+      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-2.5">
         {shown.map((story) => (
           <CompactCard key={story.slug} story={story} />
         ))}
@@ -333,7 +405,7 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
   return (
     <>
       <div
-        className="flex gap-2 py-3 px-[max(1rem,calc((100%-80rem)/2+1rem))] overflow-x-auto border-b backdrop-blur"
+        className="flex gap-2 py-2.5 md:py-3 px-[max(1rem,calc((100%-80rem)/2+1rem))] overflow-x-auto border-b backdrop-blur no-scrollbar sticky top-0 md:static z-10"
         style={{
           borderColor: "var(--border)",
           background: "var(--overlay)",
@@ -365,7 +437,7 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
         </div>
       </div>
       {treated.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 pt-3">
+        <div className="hidden md:block max-w-7xl mx-auto px-4 pt-3">
           <ImpactLegend />
         </div>
       )}
@@ -389,11 +461,18 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 mt-3">
-              {rest.map((story) => (
-                <CompactCard key={story.slug} story={story} />
-              ))}
-            </div>
+            <>
+              <div className="md:hidden mt-1">
+                {rest.map((story) => (
+                  <MobileRow key={story.slug} story={story} />
+                ))}
+              </div>
+              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-2.5 mt-3">
+                {rest.map((story) => (
+                  <CompactCard key={story.slug} story={story} />
+                ))}
+              </div>
+            </>
           )}
 
           {briefs.length > 0 && (
@@ -402,7 +481,12 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
               <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
             </div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 mt-3">
+          <div className="md:hidden">
+            {briefs.map((story) => (
+              <MobileRow key={story.slug} story={story} />
+            ))}
+          </div>
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-2.5 mt-3">
             {briefs.map((story) => (
               <Link
                 key={story.slug}
