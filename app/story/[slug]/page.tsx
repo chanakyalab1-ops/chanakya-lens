@@ -7,6 +7,7 @@ import { formatStoryDate } from "@/lib/formatDate";
 import { PageViewBeacon } from "@/components/PageViewBeacon";
 import { ShareButtons } from "@/components/ShareButtons";
 import { OffLensSection } from "@/components/OffLensSection";
+import { fetchGdeltCoverage, countByCountry } from "@/lib/gdelt";
 const tagColor: Record<ConfidenceLevel, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
@@ -47,7 +48,14 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
   const story = await getStoryBySlug(slug);
   if (!story) return notFound();
 
-  const allStories = await getAllStories();
+  const [allStories, gdeltArticles] = await Promise.all([
+    getAllStories(),
+    fetchGdeltCoverage(story.headline),
+  ]);
+  const liveGdeltCountries = Object.keys(countByCountry(gdeltArticles)).length > 0
+    ? countByCountry(gdeltArticles)
+    : story.offLensCountries;
+
   const related = allStories
     .filter((s) => s.slug !== slug)
     .map((s) => ({
@@ -223,7 +231,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </div>
         )}
 
-        {(story.offLens || story.offLensCountries || (story.sources && story.sources.length > 0)) && (() => {
+        {(story.offLens || liveGdeltCountries || (story.sources && story.sources.length > 0)) && (() => {
           const COUNTRY_FLAGS: Record<string, string> = {
             "AF": "🇦🇫", "AU": "🇦🇺", "AZ": "🇦🇿", "BD": "🇧🇩",
             "CN": "🇨🇳", "DE": "🇩🇪", "ES": "🇪🇸", "FR": "🇫🇷",
@@ -242,10 +250,10 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             "United Arab Emirates": "🇦🇪", "United Kingdom": "🇬🇧",
             "United States": "🇺🇸", "Vietnam": "🇻🇳",
           };
-          // Prefer GDELT country counts (richer) over ingested source countries
-          const usingGdelt = story.offLensCountries && Object.keys(story.offLensCountries).length > 0;
+          // Prefer live GDELT counts, fall back to stored, then ingested sources
+          const usingGdelt = liveGdeltCountries && Object.keys(liveGdeltCountries).length > 0;
           const sourceCounts: Record<string, number> = usingGdelt
-            ? story.offLensCountries!
+            ? liveGdeltCountries!
             : (() => {
                 const counts: Record<string, number> = {};
                 (story.sources ?? []).forEach((s) => {
