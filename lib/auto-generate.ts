@@ -1,5 +1,5 @@
 ﻿import { supabaseServer } from '@/lib/supabase-server';
-import { suggestClusters, attachRelated, jaccard, tokenize } from '@/lib/clustering';
+import { suggestClusters, attachRelated, coverageOf, pickSources, jaccard, tokenize, type Candidate } from '@/lib/clustering';
 import { fetchRelatedArticles } from '@/lib/thenewsapi';
 import { submitBatchGeneration } from '@/lib/anthropic-server';
 import { TRUSTED_DOMAINS } from '@/lib/trustedDomains';
@@ -55,8 +55,9 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
     .from('story_candidates')
     .select('id, url, title, source_country, domain, seen_date, tone, query_tag')
     .eq('status', 'pending')
+    .or(`seen_date.gte.${new Date(Date.now() - 96 * 60 * 60 * 1000).toISOString()},seen_date.is.null`)
     .order('seen_date', { ascending: false })
-    .limit(300);
+    .limit(1000);
 
   if (candidatesError) {
     throw new Error(`Failed to load candidates: ${candidatesError.message}`);
@@ -98,17 +99,50 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
   // their own, but they are fair game as extra sources for one.
   const pool = (candidates ?? []).filter((c) => c.title && c.title.trim() && !isDuplicate(c.title));
 
-  const clusters = suggestClusters(all);
-  const clusteredIds = new Set(clusters.flatMap((c) => c.candidateIds));
+  // Cluster the whole pool, not just the high-scoring articles: a story's
+  // source count is how many outlets covered it, and regional outlets score
+  // low on their own. A cluster qualifies if any member clears the floor,
+  // and clusters are ranked by how widely they are covered.
+  const poolCandidates = pool as unknown as (Candidate & { id: string })[];
+  const poolMap = new Map(pool.map((c) => [c.id, c]));
+  const allClusters = suggestClusters(poolCandidates);
+  // Which cluster each article belongs to, including clusters filtered out
+  // below -- so leftovers of a rejected cluster (say, one outlet publishing
+  // five pieces on the same event) can become at most one story, not five.
+  const clusterOf = new Map<string, string>(allClusters.flatMap((c) => c.candidateIds.map((id) => [id, c.key] as const)));
+  const clusters = allClusters
+    .map((c) => {
+      const members = c.candidateIds.map((id) => poolMap.get(id)!).filter(Boolean);
+      return {
+        members,
+        ...coverageOf(members),
+        best: Math.max(...members.map((m) => scoreCandidate(m))),
+      };
+    })
+    .filter((c) => c.best >= SCORE_FLOOR && c.outlets >= 2)
+    .sort((a, b) => b.outlets - a.outlets || b.countries - a.countries || b.best - a.best);
+  const clusteredIds = new Set(clusters.flatMap((c) => c.members.map((m) => m.id)));
 
-  const groups: string[][] = clusters.map((c) => c.candidateIds).slice(0, limit);
+  const groups: string[][] = clusters.slice(0, limit).map((c) =>
+    pickSources(c.members as unknown as (Candidate & { id: string })[])
+      // Trusted outlets first: the first article is the story's primary
+      // source (its photo credit and headline lead).
+      .sort((a, b) => Number(TRUSTED_DOMAINS.has(b.domain)) - Number(TRUSTED_DOMAINS.has(a.domain)))
+      .map((m) => m.id),
+  );
 
   if (groups.length < limit) {
+    const usedClusters = new Set<string>();
     const singles = all
       .filter((c) => !clusteredIds.has(c.id))
-      .sort((a, b) => scoreCandidate(b) - scoreCandidate(a))
-      .slice(0, limit - groups.length);
+      .sort((a, b) => scoreCandidate(b) - scoreCandidate(a));
     for (const single of singles) {
+      if (groups.length >= limit) break;
+      const key = clusterOf.get(single.id);
+      if (key) {
+        if (usedClusters.has(key)) continue;
+        usedClusters.add(key);
+      }
       groups.push([single.id]);
     }
   }

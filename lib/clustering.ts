@@ -25,7 +25,7 @@ const STOPWORDS = new Set([
   'has', 'have', 'will', 'after', 'over', 'amid', 'says', 'say', 'said',
 ]);
 
-const SIMILARITY_THRESHOLD = 0.20;
+const SIMILARITY_THRESHOLD = 0.22;
 const MAX_HOURS_APART = 96;
 
 export function tokenize(title: string | null | undefined): Set<string> {
@@ -143,4 +143,40 @@ export function attachRelated<T extends Candidate>(
     }
     return out;
   });
+}
+
+
+export const MAX_SOURCES_FOR_STORY = 15;
+
+// Distinct outlets and countries in a cluster -- "how widely is this covered",
+// which is what ranks a cluster, not how many articles it holds (one outlet
+// can publish a dozen pieces on the same event).
+export function coverageOf(members: Pick<Candidate, 'domain' | 'source_country'>[]) {
+  return {
+    outlets: new Set(members.map((m) => m.domain)).size,
+    countries: new Set(members.map((m) => m.source_country).filter(Boolean)).size,
+  };
+}
+
+// Reduces a cluster to the sources a story should carry: one article per
+// outlet, countries not yet represented first so a 40-outlet cluster keeps
+// its geographic spread when trimmed to `max`.
+export function pickSources<T extends Candidate>(members: T[], max = MAX_SOURCES_FOR_STORY): T[] {
+  const byDomain = new Map<string, T>();
+  for (const m of members) if (!byDomain.has(m.domain)) byDomain.set(m.domain, m);
+  const unique = [...byDomain.values()];
+
+  const seenCountries = new Set<string>();
+  const firstPass: T[] = [];
+  const rest: T[] = [];
+  for (const m of unique) {
+    const country = m.source_country ?? '';
+    if (country && !seenCountries.has(country)) {
+      seenCountries.add(country);
+      firstPass.push(m);
+    } else {
+      rest.push(m);
+    }
+  }
+  return [...firstPass, ...rest].slice(0, max);
 }
