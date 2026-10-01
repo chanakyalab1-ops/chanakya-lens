@@ -30,7 +30,7 @@ export async function GET(req: Request) {
   if (allRows.length === 0) return NextResponse.json({ updated: 0, total: 0 });
 
   const limitParam = new URL(req.url).searchParams.get("limit");
-  const limit = limitParam ? Math.min(parseInt(limitParam, 10), 50) : allRows.length;
+  const limit = Math.min(parseInt(limitParam ?? "1", 10), 10);
   const batch = allRows.slice(0, limit);
 
   let updated = 0;
