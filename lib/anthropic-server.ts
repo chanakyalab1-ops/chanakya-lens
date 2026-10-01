@@ -256,9 +256,11 @@ export async function submitBatchGeneration(
   }
 
   // Fetch GDELT coverage for all groups in parallel before submitting.
-  const gdeltResults = await Promise.all(
+  // allSettled so a single GDELT timeout doesn't abort the whole batch.
+  const gdeltSettled = await Promise.allSettled(
     groups.map((g) => fetchGdeltCoverage(g.articles[0]?.title ?? "")),
   );
+  const gdeltResults = gdeltSettled.map((r) => r.status === "fulfilled" ? r.value : []);
 
   const requests = groups.map((g, i) => ({
     custom_id: g.customId,
