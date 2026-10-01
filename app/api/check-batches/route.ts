@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getBatchStatus, getBatchResults } from "@/lib/anthropic-server";
+import { fetchGdeltCoverage, countByCountry } from "@/lib/gdelt";
 import { slugify } from "@/lib/slug";
 import { sendAlert } from "@/lib/alerts";
 
@@ -49,6 +50,30 @@ export async function GET(req: NextRequest) {
       const results = await getBatchResults(batch.anthropic_batch_id);
       const groups: string[][] = batch.candidate_groups;
       const handledGroupIndexes = new Set<number>();
+
+      // Fetch GDELT coverage for all successful drafts in parallel.
+      // Stories are still current news when the batch finishes (usually a few
+      // hours after submit), so GDELT should have them. This is the only
+      // point where we can attach off_lens_countries to batch-generated drafts.
+      const successfulResults = results.filter((r) => r.draft?.headline);
+      const gdeltFetches = await Promise.allSettled(
+        successfulResults.map((r) => fetchGdeltCoverage(r.draft!.headline))
+      );
+      const gdeltCountsByCustomId: Record<string, Record<string, number>> = {};
+      successfulResults.forEach((r, i) => {
+        const settled = gdeltFetches[i];
+        if (settled.status === "fulfilled") {
+          const counts = countByCountry(settled.value);
+          // Filter out unlocatable entries
+          const filtered: Record<string, number> = {};
+          for (const [k, v] of Object.entries(counts)) {
+            if (k && k !== "Unknown") filtered[k] = v;
+          }
+          if (Object.keys(filtered).length > 0) {
+            gdeltCountsByCustomId[r.customId] = filtered;
+          }
+        }
+      });
 
       for (const result of results) {
         const groupIndex = parseInt(result.customId.replace("group-", ""), 10);
@@ -115,6 +140,7 @@ export async function GET(req: NextRequest) {
           })),
           chanakya_analysis: generated.chanakyaAnalysis,
           off_lens: generated.offLens,
+          off_lens_countries: gdeltCountsByCustomId[result.customId] ?? null,
           subject_countries: generated.subjectCountries ?? [],
           // Held out of the review queue until fact-check completes (see
           // /api/fact-check, which flips this to "in_review").
