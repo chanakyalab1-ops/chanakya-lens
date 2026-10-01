@@ -60,9 +60,8 @@ export async function fetchGdeltCoverage(query: string): Promise<GdeltArticle[]>
     }
 
     return articles;
-  } catch (err) {
-    console.error("[gdelt] fetchGdeltCoverage failed:", err);
-    throw err;
+  } catch {
+    return [];
   }
 }
 

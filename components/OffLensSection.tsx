@@ -16,32 +16,6 @@ const COUNTRY_FLAGS: Record<string, string> = {
   "United States": "US", "Vietnam": "VN", "Yemen": "YE",
 };
 
-// GDELT sourcecountry codes → display names
-const GDELT_CODE_TO_NAME: Record<string, string> = {
-  "US": "United States", "GB": "United Kingdom", "IN": "India",
-  "CN": "China", "RU": "Russia", "DE": "Germany", "FR": "France",
-  "AU": "Australia", "CA": "Canada", "JP": "Japan", "PK": "Pakistan",
-  "IL": "Israel", "IR": "Iran", "SA": "Saudi Arabia", "TR": "Turkey",
-  "UA": "Ukraine", "AE": "United Arab Emirates", "QA": "Qatar",
-  "EG": "Egypt", "NG": "Nigeria", "ZA": "South Africa", "KE": "Kenya",
-  "BR": "Brazil", "MX": "Mexico", "AR": "Argentina", "SG": "Singapore",
-  "MY": "Malaysia", "ID": "Indonesia", "TH": "Thailand", "VN": "Vietnam",
-  "PH": "Philippines", "KR": "South Korea", "TW": "Taiwan", "HK": "Hong Kong",
-  "BD": "Bangladesh", "LB": "Lebanon", "JO": "Jordan", "IQ": "Iraq",
-  "SY": "Syria", "YE": "Yemen", "MA": "Morocco", "PL": "Poland",
-  "IT": "Italy", "ES": "Spain", "NL": "Netherlands", "SE": "Sweden",
-  "CH": "Switzerland", "KZ": "Kazakhstan", "AF": "Afghanistan",
-  "MM": "Myanmar", "ET": "Ethiopia", "GH": "Ghana",
-};
-
-function normaliseCountry(raw: string): string | null {
-  if (!raw || raw === "Unknown") return null;
-  // If it's already a full name (e.g. from stored off_lens_countries), keep it
-  if (raw.length > 3) return raw;
-  // Otherwise it's a 2-letter GDELT code
-  return GDELT_CODE_TO_NAME[raw.toUpperCase()] ?? null;
-}
-
 function countryToEmoji(country: string): string {
   const code = COUNTRY_FLAGS[country];
   if (!code) return "🌐";
@@ -74,24 +48,16 @@ export function OffLensSection({
 
   useEffect(() => {
     if (!headline) return;
-    // Call GDELT directly from the browser — bypasses Vercel's server network
-    // which blocks api.gdeltproject.org. GDELT supports CORS.
-    const encoded = encodeURIComponent(headline.trim());
-    const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encoded}&mode=artlist&maxrecords=75&format=json`;
-
-    fetch(url, { signal: AbortSignal.timeout(10000) })
-      .then((r) => r.json())
-      .then((data) => {
-        const raw: Array<{ sourcecountry?: string }> = data?.articles ?? [];
-        const counts: Record<string, number> = {};
-        for (const a of raw) {
-          const name = normaliseCountry(a.sourcecountry ?? "");
-          if (!name || NON_COUNTRIES.has(name)) continue;
-          counts[name] = (counts[name] ?? 0) + 1;
+    fetch(`/api/gdelt-coverage?q=${encodeURIComponent(headline)}`)
+      .then((r) => r.ok ? r.json() : {})
+      .then((data: Record<string, number>) => {
+        const filtered: Record<string, number> = {};
+        for (const [k, v] of Object.entries(data)) {
+          if (k && k !== "Unknown" && !NON_COUNTRIES.has(k)) filtered[k] = v;
         }
-        if (Object.keys(counts).length > 0) setLiveCountries(counts);
+        if (Object.keys(filtered).length > 0) setLiveCountries(filtered);
       })
-      .catch(() => {}); // silent — stored data is the fallback
+      .catch(() => {});
   }, [headline]);
 
   const validSources = (sources ?? []).filter(
@@ -109,7 +75,7 @@ export function OffLensSection({
       )
     : null;
 
-  // Prefer live browser GDELT > stored GDELT > ingested source counts
+  // Prefer live GDELT > stored GDELT > ingested source counts
   const usingGdelt = !!(liveCountries || (storedCounts && Object.keys(storedCounts).length > 0));
   const sourceCounts: Record<string, number> =
     liveCountries ??
