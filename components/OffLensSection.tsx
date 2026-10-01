@@ -92,7 +92,7 @@ export function OffLensSection({
   if (!hasAnything) return null;
 
   return (
-    <section className="mt-9 mb-9 p-5 rounded-sm border" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
+    <section className="mt-6 md:mt-9 mb-6 md:mb-9 p-4 md:p-5 rounded-sm border" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
       <div className="font-display font-bold uppercase tracking-wide text-xl mb-1" style={{ color: "var(--brand-soft)" }}>
         Off-Lens
       </div>
@@ -113,7 +113,7 @@ export function OffLensSection({
               return (
                 <div key={country} className="flex items-center gap-3">
                   <span className="text-base w-6 shrink-0">{countryToEmoji(country)}</span>
-                  <span className="font-mono text-[0.68rem] w-28 shrink-0 truncate" style={{ color: "var(--text-body)" }}>{country}</span>
+                  <span className="font-mono text-[0.68rem] w-20 md:w-28 shrink-0 truncate" style={{ color: "var(--text-body)" }}>{country}</span>
                   <div className="flex-1 rounded-full overflow-hidden h-1.5" style={{ background: "var(--border)" }}>
                     <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: "var(--brand-soft)" }} />
                   </div>

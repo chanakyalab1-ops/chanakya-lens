@@ -1,5 +1,6 @@
-﻿import type { Metadata } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import Footer from "@/components/Footer";
+import MobileTabBar from "@/components/MobileTabBar";
 import StickyDigestBar from "@/components/StickyDigestBar";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { Barlow_Condensed, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
@@ -25,6 +26,11 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo-mark.png",
   },
+};
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 const JSON_LD = JSON.stringify([
   {
@@ -66,6 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Footer />
         <StickyDigestBar />
+        <MobileTabBar />
       </body>
     </html>
   );

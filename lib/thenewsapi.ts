@@ -243,3 +243,71 @@ export async function fetchTheNewsApiCandidates(): Promise<GdeltFetchResult> {
   };
 }
 
+
+
+const RELATED_STOPWORDS = new Set([
+  "The", "A", "An", "As", "After", "Amid", "Over", "With", "For", "And", "But",
+  "Why", "How", "What", "Will", "Could", "Says", "Report", "Reports",
+]);
+
+// Search terms for "who else is covering this": capitalised words (names,
+// places) are the strongest signal in a headline, so AND the first few
+// together; fall back to the longest plain words for headlines without any.
+function relatedSearchTerms(title: string): string {
+  const words = title.replace(/[^\p{L}\p{N}\s'-]/gu, " ").split(/\s+/).filter(Boolean);
+  const proper = words.filter((w, i) => i > 0 && /^[A-Z]/.test(w) && !RELATED_STOPWORDS.has(w));
+  const picks = [...new Set(proper)].slice(0, 3);
+  if (picks.length >= 2) return picks.join(" + ");
+  return [...new Set(words.filter((w) => w.length > 4))]
+    .sort((a, b) => b.length - a.length)
+    .slice(0, 3)
+    .join(" + ");
+}
+
+// Up to `limit` extra articles on the same story from the last few days,
+// one per domain. Returns [] on any failure -- enrichment is best-effort and
+// must never block generation. One request per call (free tier caps a page
+// at 3 articles).
+export async function fetchRelatedArticles(
+  title: string,
+  options: { limit?: number; days?: number } = {},
+): Promise<GdeltArticle[]> {
+  const apiKey = process.env.THENEWSAPI_API_KEY;
+  const search = relatedSearchTerms(title);
+  if (!apiKey || !search) return [];
+
+  const days = options.days ?? 3;
+  const params = new URLSearchParams({
+    api_token: apiKey,
+    search,
+    language: "en",
+    published_after: new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    limit: String(options.limit ?? ARTICLES_PER_PAGE),
+    sort: "relevance_score",
+  });
+
+  try {
+    const res = await fetch(`${THENEWSAPI_ENDPOINT}?${params.toString()}`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const seen = new Set<string>();
+    const out: GdeltArticle[] = [];
+    for (const a of (data?.data ?? []) as TheNewsApiArticle[]) {
+      if (!a.url || !a.title || !a.source || seen.has(a.source)) continue;
+      seen.add(a.source);
+      out.push({
+        url: a.url,
+        title: a.title,
+        domain: a.source,
+        sourcecountry: inferCountryFromDomain(a.source),
+        seendate: a.published_at ?? "",
+        tone: 0,
+      });
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}

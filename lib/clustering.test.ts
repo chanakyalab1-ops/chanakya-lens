@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { suggestClusters, type Candidate } from "./clustering";
+import { suggestClusters, attachRelated, type Candidate } from "./clustering";
 
 function candidate(overrides: Partial<Candidate> & Pick<Candidate, "id" | "title">): Candidate {
   return {
@@ -66,5 +66,39 @@ describe("suggestClusters", () => {
     ];
 
     expect(() => suggestClusters(candidates)).not.toThrow();
+  });
+});
+
+
+describe("attachRelated", () => {
+  const pool = [
+    candidate({ id: "a", domain: "jpost.com", title: "Pakistan rejects commission report on Afghan war role" }),
+    candidate({ id: "b", domain: "dawn.com", title: "Pakistan rejects Afghan war commission report findings" }),
+    candidate({ id: "c", domain: "aljazeera.com", title: "Commission report on Pakistan role in Afghan war draws reaction" }),
+    candidate({ id: "d", domain: "dw.com", title: "Germany faces winter with lowest gas storage in 15 years" }),
+    candidate({ id: "e", domain: "dawn.com", title: "Pakistan Afghan war commission report second take" }),
+  ];
+
+  it("tops up a single-article group with related articles from other domains", () => {
+    const [group] = attachRelated([["a"]], pool);
+    expect(group[0]).toBe("a");
+    expect(group).toContain("b");
+    expect(group).toContain("c");
+    expect(group).not.toContain("d");
+  });
+
+  it("adds at most one article per domain", () => {
+    const [group] = attachRelated([["a"]], pool);
+    expect(group.filter((id) => id === "b" || id === "e")).toHaveLength(1);
+  });
+
+  it("never gives the same article to two groups", () => {
+    const groups = attachRelated([["a"], ["d"]], pool);
+    expect(new Set(groups.flat()).size).toBe(groups.flat().length);
+  });
+
+  it("respects the per-group cap", () => {
+    const [group] = attachRelated([["a"]], pool, { maxPerGroup: 2 });
+    expect(group).toHaveLength(2);
   });
 });

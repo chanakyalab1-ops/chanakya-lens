@@ -1,5 +1,6 @@
 ﻿import { supabaseServer } from '@/lib/supabase-server';
-import { suggestClusters } from '@/lib/clustering';
+import { suggestClusters, attachRelated, jaccard, tokenize } from '@/lib/clustering';
+import { fetchRelatedArticles } from '@/lib/thenewsapi';
 import { submitBatchGeneration } from '@/lib/anthropic-server';
 import { TRUSTED_DOMAINS } from '@/lib/trustedDomains';
 
@@ -92,6 +93,11 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
     return true;
   });
 
+  // Everything with a usable title that isn't a repeat of a recent story --
+  // including articles below the score floor. They can't seed a story on
+  // their own, but they are fair game as extra sources for one.
+  const pool = (candidates ?? []).filter((c) => c.title && c.title.trim() && !isDuplicate(c.title));
+
   const clusters = suggestClusters(all);
   const clusteredIds = new Set(clusters.flatMap((c) => c.candidateIds));
 
@@ -111,7 +117,66 @@ export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResu
     throw new Error('No pending candidates above score threshold available.');
   }
 
-  const candidateById = new Map(all.map((c) => [c.id, c]));
+  // Free-tier TheNewsAPI is ~100 requests/day, so the extra lookups are
+  // budgeted: one request per still-thin story, best-scoring stories first.
+  const MIN_SOURCES = 3;
+  const lookupBudget = Number(process.env.ENRICH_MAX_LOOKUPS ?? 15);
+  const poolById = new Map(pool.map((c) => [c.id, c]));
+
+  // 1) Free: attach related articles we have already ingested.
+  const grouped = attachRelated(groups, pool);
+  groups.length = 0;
+  groups.push(...grouped);
+
+  // 2) Budgeted: ask TheNewsAPI about stories that are still under-sourced.
+  const thin = groups
+    .map((ids, index) => ({ ids, index }))
+    .filter(({ ids }) => new Set(ids.map((id) => poolById.get(id)?.domain)).size < MIN_SOURCES)
+    .sort((a, b) => scoreCandidate(poolById.get(b.ids[0])!) - scoreCandidate(poolById.get(a.ids[0])!))
+    .slice(0, Math.max(0, lookupBudget));
+
+  const extraByGroup = new Map<number, string[]>();
+  const claimed = new Set(groups.flat());
+  for (let i = 0; i < thin.length; i += 3) {
+    await Promise.all(
+      thin.slice(i, i + 3).map(async ({ ids, index }) => {
+        const lead = poolById.get(ids[0]);
+        if (!lead) return;
+        const have = new Set(ids.map((id) => poolById.get(id)?.domain));
+        const leadTokens = tokenize(lead.title);
+        const found = (await fetchRelatedArticles(lead.title!)).filter(
+          (a) => !have.has(a.domain) && jaccard(leadTokens, tokenize(a.title)) >= 0.1,
+        );
+        if (found.length === 0) return;
+        const rows = found.map((a) => ({
+          url: a.url,
+          title: a.title,
+          domain: a.domain,
+          source_country: a.sourcecountry,
+          seen_date: a.seendate || new Date().toISOString(),
+          tone: 0,
+          query_tag: 'enrich',
+        }));
+        await supabase.from('story_candidates').upsert(rows, { onConflict: 'url', ignoreDuplicates: true });
+        // Only claim rows that are still unassigned (a URL we already had may
+        // belong to another story).
+        const { data: stored } = await supabase
+          .from('story_candidates')
+          .select('id, url, title, source_country, domain, seen_date, status')
+          .in('url', rows.map((r) => r.url))
+          .eq('status', 'pending');
+        const fresh = (stored ?? []).filter((r) => !claimed.has(r.id));
+        for (const r of fresh) claimed.add(r.id);
+        for (const r of fresh) poolById.set(r.id, r as never);
+        extraByGroup.set(index, fresh.map((r) => r.id));
+      }),
+    );
+  }
+  for (const [index, ids] of extraByGroup) {
+    groups[index] = [...groups[index], ...ids].slice(0, 8);
+  }
+
+  const candidateById = poolById;
 
   const batchRequests = groups.map((candidateIds, i) => ({
     customId: `group-${i}`,
