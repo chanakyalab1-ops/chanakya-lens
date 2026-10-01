@@ -1,4 +1,5 @@
-﻿import type { Source } from "@/lib/stories";
+"use client";
+import { useEffect, useState } from "react";
 
 const COUNTRY_FLAGS: Record<string, string> = {
   "Afghanistan": "AF", "Australia": "AU", "Azerbaijan": "AZ",
@@ -34,23 +35,39 @@ export function OffLensSection({
   subjectCountries,
   offLens,
   offLensCountries,
+  headline,
 }: {
   sources?: { sourceCountry: string | null; domain: string; title: string; url: string }[];
   subjectCountries?: string[];
   offLens?: string;
   offLensCountries?: Record<string, number>;
+  headline?: string;
 }) {
-  const validSources = (sources ?? []).filter((s) => s.sourceCountry && s.sourceCountry !== "unknown" && s.sourceCountry !== "");
+  const [liveCountries, setLiveCountries] = useState<Record<string, number> | null>(null);
 
-  // Prefer GDELT country counts (richer, multi-source) over ingested sources
+  useEffect(() => {
+    if (!headline) return;
+    fetch(`/api/gdelt-coverage?q=${encodeURIComponent(headline)}`)
+      .then((r) => r.json())
+      .then((data) => { if (Object.keys(data).length > 0) setLiveCountries(data); })
+      .catch(() => {});
+  }, [headline]);
+
+  const validSources = (sources ?? []).filter(
+    (s) => s.sourceCountry && s.sourceCountry !== "unknown" && s.sourceCountry !== ""
+  );
+
+  const ingestedCounts: Record<string, number> = {};
+  validSources.forEach((s) => {
+    ingestedCounts[s.sourceCountry!] = (ingestedCounts[s.sourceCountry!] ?? 0) + 1;
+  });
+
+  // Prefer live GDELT > stored GDELT > ingested sources
+  const usingGdelt = !!(liveCountries || (offLensCountries && Object.keys(offLensCountries).length > 0));
   const sourceCounts: Record<string, number> =
-    offLensCountries && Object.keys(offLensCountries).length > 0
-      ? offLensCountries
-      : (() => {
-          const counts: Record<string, number> = {};
-          validSources.forEach((s) => { counts[s.sourceCountry!] = (counts[s.sourceCountry!] ?? 0) + 1; });
-          return counts;
-        })();
+    liveCountries ??
+    (offLensCountries && Object.keys(offLensCountries).length > 0 ? offLensCountries : null) ??
+    ingestedCounts;
 
   const total = Object.values(sourceCounts).reduce((a, b) => a + b, 0);
   const sorted = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]);
@@ -72,12 +89,10 @@ export function OffLensSection({
 
       {total > 0 && (
         <div className="mb-6">
-          <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "var(--text-on-ink-dim)" }}>
-            <span>
-              {offLensCountries && Object.keys(offLensCountries).length > 0
-                ? `${total} articles · ${sorted.length} countries · via GDELT`
-                : `${total} source${total !== 1 ? "s" : ""} reviewed`}
-            </span>
+          <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3" style={{ color: "var(--text-on-ink-dim)" }}>
+            {usingGdelt
+              ? `${total} articles · ${sorted.length} countries · via GDELT`
+              : `${total} source${total !== 1 ? "s" : ""} reviewed`}
           </div>
           <div className="space-y-2.5">
             {sorted.map(([country, count]) => {
