@@ -1,0 +1,96 @@
+import { describe, expect, it } from "vitest";
+import { buildQuery, headlineKeywords, matchHits, countryCounts } from "./sourceBackfill";
+import { parseGoogleNews, type NewsHit } from "./googleNews";
+import { canonicalDomain, countryForDomain, isAggregator } from "./outletCountries";
+
+const HEADLINE = "Pakistan launches deadly air strikes on Afghanistan after border clash";
+const CREATED = "2026-10-01T10:00:00.000Z";
+
+function hit(partial: Partial<NewsHit> & Pick<NewsHit, "title" | "domain">): NewsHit {
+  return { url: `https://news.google.com/rss/articles/${partial.domain}`, outlet: partial.domain, publishedAt: "2026-10-01T12:00:00.000Z", ...partial };
+}
+
+describe("headlineKeywords / buildQuery", () => {
+  it("searches on names and places", () => {
+    expect(headlineKeywords("Pakistan launches deadly strikes on Afghanistan after Taliban border clash")).toBe("Pakistan Afghanistan Taliban");
+  });
+  it("falls back to the longest words when the headline has no names", () => {
+    expect(headlineKeywords("deadly strikes escalate across disputed frontier")).toContain("frontier");
+  });
+  it("adds a date window around the story", () => {
+    expect(buildQuery(HEADLINE, CREATED)).toMatch(/after:2026-09-27 before:2026-10-06$/);
+  });
+});
+
+describe("parseGoogleNews", () => {
+  it("reads the publisher from <source> and strips the outlet suffix", () => {
+    const xml = `<rss><channel><item>
+      <title>Pakistan launches deadly air strikes on Afghanistan - BBC</title>
+      <link>https://news.google.com/rss/articles/abc</link>
+      <pubDate>Thu, 01 Oct 2026 08:06:00 GMT</pubDate>
+      <source url="https://www.bbc.com">BBC</source></item></channel></rss>`;
+    expect(parseGoogleNews(xml)).toEqual([
+      { title: "Pakistan launches deadly air strikes on Afghanistan", url: "https://news.google.com/rss/articles/abc", domain: "bbc.com", outlet: "BBC", publishedAt: "2026-10-01T08:06:00.000Z" },
+    ]);
+  });
+  it("skips items without a publisher", () => {
+    expect(parseGoogleNews(`<item><title>x</title><link>https://a.com</link></item>`)).toEqual([]);
+  });
+});
+
+describe("matchHits", () => {
+  const hits = [
+    hit({ title: "Pakistan launches deadly air strikes on Afghanistan", domain: "bbc.com" }),
+    hit({ title: "Pakistan air strikes hit Afghanistan border regions", domain: "dawn.com" }),
+    hit({ title: "Pakistan air strikes hit Afghanistan border regions again", domain: "dawn.com" }),
+    hit({ title: "Germany faces winter with lowest gas storage in years", domain: "dw.com" }),
+    hit({ title: "Pakistan launches deadly air strikes on Afghanistan", domain: "old.com", publishedAt: "2026-08-01T00:00:00.000Z" }),
+    hit({ title: "Pakistan launches deadly air strikes on Afghanistan", domain: "already.com" }),
+  ];
+
+  it("keeps same-story articles inside the date window, one per outlet", () => {
+    const m = matchHits(HEADLINE, CREATED, hits, new Set(["already.com"]), 10);
+    expect(m.map((x) => x.domain).sort()).toEqual(["bbc.com", "dawn.com"]);
+  });
+  it("fills in the outlet's country", () => {
+    const m = matchHits(HEADLINE, CREATED, hits, new Set(), 10);
+    expect(m.find((x) => x.domain === "dawn.com")?.source_country).toBe("Pakistan");
+  });
+  it("respects the room left", () => {
+    expect(matchHits(HEADLINE, CREATED, hits, new Set(), 1)).toHaveLength(1);
+    expect(matchHits(HEADLINE, CREATED, hits, new Set(), 0)).toEqual([]);
+  });
+});
+
+describe("countryForDomain / countryCounts", () => {
+  it("resolves known outlets, wire services and country-code domains", () => {
+    expect(countryForDomain("https://www.dawn.com/x")).toBe("Pakistan");
+    expect(countryForDomain("reuters.com")).toBe("United Kingdom");
+    expect(countryForDomain("somepaper.co.za")).toBe("South Africa");
+    expect(countryForDomain("randomsite.com")).toBe("");
+  });
+  it("counts countries and ignores unknowns", () => {
+    expect(countryCounts([{ source_country: "India" }, { source_country: "India" }, { source_country: null }])).toEqual({ India: 2 });
+  });
+});
+
+describe("canonicalDomain / aggregators", () => {
+  it("merges mobile, AMP and alias domains", () => {
+    expect(canonicalDomain("amp.dw.com")).toBe("dw.com");
+    expect(canonicalDomain("https://www.bbc.co.uk/news")).toBe("bbc.com");
+  });
+  it("recognises aggregators, including their subdomains", () => {
+    expect(isAggregator("news.yahoo.com")).toBe(true);
+    expect(isAggregator("aol.com")).toBe(true);
+    expect(isAggregator("dawn.com")).toBe(false);
+  });
+  it("matchHits drops aggregators and counts bbc.co.uk and bbc.com once", () => {
+    const hits = [
+      hit({ title: "Pakistan launches deadly air strikes on Afghanistan", domain: "bbc.com" }),
+      hit({ title: "Pakistan launches deadly air strikes on Afghanistan", domain: "bbc.co.uk" }),
+      hit({ title: "Pakistan launches deadly air strikes on Afghanistan", domain: "aol.com" }),
+    ];
+    expect(matchHits(HEADLINE, CREATED, hits, new Set(), 10).map((m) => m.domain)).toEqual(["bbc.com"]);
+    expect(matchHits(HEADLINE, CREATED, hits, new Set(["bbc.com"]), 10)).toEqual([]);
+  });
+});
