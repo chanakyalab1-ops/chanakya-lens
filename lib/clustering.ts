@@ -28,7 +28,7 @@ const STOPWORDS = new Set([
 const SIMILARITY_THRESHOLD = 0.20;
 const MAX_HOURS_APART = 96;
 
-function tokenize(title: string | null | undefined): Set<string> {
+export function tokenize(title: string | null | undefined): Set<string> {
   return new Set(
     (title ?? '')
       .toLowerCase()
@@ -39,7 +39,7 @@ function tokenize(title: string | null | undefined): Set<string> {
   );
 }
 
-function jaccard(a: Set<string>, b: Set<string>): number {
+export function jaccard(a: Set<string>, b: Set<string>): number {
   if (a.size === 0 || b.size === 0) return 0;
   let intersection = 0;
   for (const t of a) if (b.has(t)) intersection++;
@@ -93,4 +93,54 @@ export function suggestClusters(candidates: Candidate[]): ClusterSuggestion[] {
     suggestions.push({ key: root, candidateIds: ids, score: ids.length });
   }
   return suggestions.sort((a, b) => b.score - a.score);
+}
+
+const ATTACH_SIMILARITY = 0.15;
+export const MAX_SOURCES_PER_GROUP = 8;
+
+// Tops up each candidate group with other not-yet-used candidates that read
+// like the same story, so a story built from a single article still carries
+// several sources. Greedy, group by group; never reuses a candidate or adds a
+// second article from a domain the group already has.
+export function attachRelated<T extends Candidate>(
+  groups: string[][],
+  pool: T[],
+  options: { threshold?: number; maxPerGroup?: number } = {},
+): string[][] {
+  const threshold = options.threshold ?? ATTACH_SIMILARITY;
+  const maxPerGroup = options.maxPerGroup ?? MAX_SOURCES_PER_GROUP;
+  const byId = new Map(pool.map((c) => [c.id, c]));
+  const used = new Set(groups.flat());
+  const tokens = new Map(pool.map((c) => [c.id, tokenize(c.title)]));
+
+  return groups.map((ids) => {
+    const members = ids.map((id) => byId.get(id)).filter((c): c is T => !!c);
+    if (members.length === 0 || members.length >= maxPerGroup) return ids;
+    const domains = new Set(members.map((m) => m.domain));
+
+    const scored: { id: string; score: number }[] = [];
+    for (const c of pool) {
+      if (used.has(c.id) || domains.has(c.domain)) continue;
+      let best = 0;
+      for (const m of members) {
+        const hoursApart =
+          Math.abs(new Date(m.seen_date).getTime() - new Date(c.seen_date).getTime()) / 36e5;
+        if (hoursApart > MAX_HOURS_APART) continue;
+        best = Math.max(best, jaccard(tokens.get(m.id)!, tokens.get(c.id)!));
+      }
+      if (best >= threshold) scored.push({ id: c.id, score: best });
+    }
+    scored.sort((a, b) => b.score - a.score);
+
+    const out = [...ids];
+    for (const { id } of scored) {
+      if (out.length >= maxPerGroup) break;
+      const c = byId.get(id)!;
+      if (domains.has(c.domain)) continue;
+      domains.add(c.domain);
+      used.add(id);
+      out.push(id);
+    }
+    return out;
+  });
 }
