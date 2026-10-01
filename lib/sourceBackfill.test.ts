@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildQuery, headlineKeywords, matchHits, countryCounts } from "./sourceBackfill";
+import { buildQuery, headlineKeywords, matchHits, countryCounts, nextOffset } from "./sourceBackfill";
 import { parseGoogleNews, type NewsHit } from "./googleNews";
 import { canonicalDomain, countryForDomain, isAggregator } from "./outletCountries";
 
@@ -122,5 +122,27 @@ describe("canonicalDomain / aggregators", () => {
     ];
     expect(matchHits(HEADLINE, CREATED, hits, new Set(), 10).map((m) => m.domain)).toEqual(["bbc.com"]);
     expect(matchHits(HEADLINE, CREATED, hits, new Set(["bbc.com"]), 10)).toEqual([]);
+  });
+});
+
+describe("nextOffset", () => {
+  const row = (before: number, after: number, written: boolean) => ({ before, after, written });
+
+  it("dry run: moves past the whole batch", () => {
+    expect(nextOffset(0, [row(1, 15, false), row(1, 1, false)], false, 8, 100)).toBe(2);
+  });
+  it("apply: stories that reached the minimum drop out, so they don't advance the offset", () => {
+    // two topped up to 15, one found nothing and stays eligible
+    expect(nextOffset(0, [row(1, 15, true), row(1, 15, true), row(1, 1, false)], true, 8, 100)).toBe(1);
+  });
+  it("apply: a failed write keeps the story eligible", () => {
+    expect(nextOffset(0, [row(1, 15, false)], true, 8, 100)).toBe(1);
+  });
+  it("apply: a story topped up but still under the minimum stays eligible", () => {
+    expect(nextOffset(0, [row(1, 4, true)], true, 8, 100)).toBe(1);
+  });
+  it("returns null when nothing is left", () => {
+    expect(nextOffset(0, [row(1, 15, true)], true, 8, 1)).toBeNull();
+    expect(nextOffset(95, [row(1, 1, false), row(1, 1, false), row(1, 1, false), row(1, 1, false), row(1, 1, false)], false, 8, 100)).toBeNull();
   });
 });

@@ -108,6 +108,27 @@ export function matchHits(
   );
 }
 
+// Where the next call should start. In dry-run mode nothing changes, so
+// that's just past this batch. In apply mode a story that reached `min`
+// sources drops out of the eligible list and everything behind it shifts up,
+// so only the stories that are still eligible (nothing found, or write
+// failed, or still under `min`) count towards the offset.
+export function nextOffset(
+  offset: number,
+  batch: { before: number; after: number; written: boolean }[],
+  apply: boolean,
+  min: number,
+  eligibleLeft: number,
+): number | null {
+  const advance = apply
+    ? batch.filter((r) => (r.written ? r.after : r.before) < min).length
+    : batch.length;
+  const next = offset + advance;
+  // In apply mode `eligibleLeft` is measured before this batch was written.
+  const remaining = apply ? eligibleLeft - (batch.length - advance) : eligibleLeft;
+  return next < remaining ? next : null;
+}
+
 // Country -> article count over a story's sources; the Off-Lens bar's
 // "ingested sources" layer. Unknown countries are left out.
 export function countryCounts(sources: { source_country: string | null }[]): Record<string, number> {

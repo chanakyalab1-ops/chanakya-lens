@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 import { searchGoogleNews } from "@/lib/googleNews";
-import { buildQuery, matchHits, countryCounts, type BackfillSource } from "@/lib/sourceBackfill";
+import { buildQuery, matchHits, countryCounts, nextOffset, type BackfillSource } from "@/lib/sourceBackfill";
 import { MAX_SOURCES_FOR_STORY } from "@/lib/clustering";
 import { canonicalDomain } from "@/lib/outletCountries";
 
@@ -102,12 +102,11 @@ export async function GET(req: Request) {
     await new Promise((r) => setTimeout(r, 1000));
   }
 
-  const next = offset + batch.length;
   return NextResponse.json({
     mode: apply ? "apply" : "dry-run",
     eligible: eligible.length,
     processed: batch.length,
-    nextOffset: next < eligible.length ? next : null,
+    nextOffset: nextOffset(offset, results, apply, min, eligible.length),
     results,
   });
 }
