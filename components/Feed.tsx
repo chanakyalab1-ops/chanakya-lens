@@ -318,12 +318,12 @@ function SignalPanel({ stories }: { stories: Story[] }) {
       className="rounded-sm border p-4 flex flex-col"
       style={{ background: "var(--surface-strong)", borderColor: "var(--border)" }}
     >
-      <div className="flex items-center gap-2 mb-1">
-        <span aria-hidden className="h-2 w-2 rounded-full animate-pulse" style={{ background: "var(--developing)" }} />
-        <h2 className="font-mono text-[0.68rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
-          Today&apos;s Signal
-        </h2>
-      </div>
+      {/* The logo comes in a dark-ink and a light-ink version; globals.css shows the one that suits the theme. */}
+      <h2 className="mb-2">
+        <span className="sr-only">Today&apos;s Signal</span>
+        <Image src="/todays-signal-logo.png" alt="" width={924} height={162} className="logo-for-light h-auto w-full max-w-[240px]" />
+        <Image src="/todays-signal-logo-dark.png" alt="" width={924} height={162} className="logo-for-dark h-auto w-full max-w-[240px]" />
+      </h2>
       <p className="hidden lg:block text-[0.72rem] mb-1" style={{ color: "var(--text-on-ink-dim)" }}>
         What moved most, in a glance.
       </p>
