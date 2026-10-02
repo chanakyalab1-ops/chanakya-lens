@@ -45,96 +45,115 @@ function scoreCandidate(c: ScorableCandidate): number {
 }
 
 export type AutoGenerateResult = {
-  // null when the run was skipped by the buffer (see `skipped`).
+  // null when nothing was submitted (see `skipped`).
   batchId: string | null;
   groupCount: number;
   skipped?: string;
 };
 
-// `respectBuffer` is on for the cron. A person clicking "generate" in the
-// review UI has decided to spend the money, so that path turns it off.
-export async function autoGenerateBatch(
-  requested: number,
-  options: { respectBuffer?: boolean } = {},
-): Promise<AutoGenerateResult> {
-  const supabase = supabaseServer();
+export type CandidateRow = {
+  id: string;
+  url: string;
+  title: string | null;
+  source_country: string | null;
+  domain: string;
+  seen_date: string | null;
+  tone?: number | null;
+  query_tag?: string | null;
+};
 
-  let limit = requested;
-  if (options.respectBuffer ?? true) {
-    const settings = readBufferSettings();
-    const backlog = await getBacklog(supabase);
-    const plan = planGeneration(backlog, settings, requested);
-    if (plan.allow === 0) {
-      return { batchId: null, groupCount: 0, skipped: describePlan(plan, backlog, settings) };
-    }
-    limit = plan.allow;
-  }
+const CANDIDATE_COLUMNS = 'id, url, title, source_country, domain, seen_date, tone, query_tag';
+const SCORE_FLOOR = 35;
 
-  const { data: candidates, error: candidatesError } = await supabase
+// A story proposed for approval: the articles that cover one event, ranked by
+// how widely it is covered. Nothing is generated (and nothing spent) until a
+// person approves it.
+export type Proposal = {
+  id: string;
+  candidateIds: string[];
+  headline: string;
+  outlets: number;
+  countries: number;
+  newestAt: string | null;
+  sources: { id: string; domain: string; country: string | null; title: string }[];
+};
+
+export function toProposal(ids: string[], rows: Map<string, CandidateRow>): Proposal | null {
+  const members = ids.map((id) => rows.get(id)).filter((r): r is CandidateRow => !!r);
+  if (members.length === 0) return null;
+  const { outlets, countries } = coverageOf(members as unknown as Pick<Candidate, 'domain' | 'source_country'>[]);
+  const dates = members.map((m) => m.seen_date).filter((d): d is string => !!d).sort();
+  return {
+    id: members[0].id,
+    candidateIds: members.map((m) => m.id),
+    headline: members[0].title ?? '',
+    outlets,
+    countries,
+    newestAt: dates.length ? dates[dates.length - 1] : null,
+    sources: members.map((m) => ({ id: m.id, domain: m.domain, country: m.source_country, title: m.title ?? '' })),
+  };
+}
+
+async function loadCandidates(supabase: ReturnType<typeof supabaseServer>): Promise<CandidateRow[]> {
+  const { data, error } = await supabase
     .from('story_candidates')
-    .select('id, url, title, source_country, domain, seen_date, tone, query_tag')
+    .select(CANDIDATE_COLUMNS)
     .eq('status', 'pending')
     .or(`seen_date.gte.${new Date(Date.now() - 96 * 60 * 60 * 1000).toISOString()},seen_date.is.null`)
     .order('seen_date', { ascending: false })
     .limit(1000);
+  if (error) throw new Error(`Failed to load candidates: ${error.message}`);
+  return (data ?? []) as CandidateRow[];
+}
 
-  if (candidatesError) {
-    throw new Error(`Failed to load candidates: ${candidatesError.message}`);
-  }
-
+async function recentHeadlineFilter(supabase: ReturnType<typeof supabaseServer>) {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: recentStories } = await supabase
-    .from('stories')
-    .select('headline')
-    .gte('created_at', sevenDaysAgo);
-
-  const recentHeadlineWords = new Set(
+  const { data: recentStories } = await supabase.from('stories').select('headline').gte('created_at', sevenDaysAgo);
+  const recentWords = new Set(
     (recentStories ?? []).flatMap((s: { headline: string }) =>
-      s.headline.toLowerCase().split(/\s+/).filter((w: string) => w.length > 4)
-    )
+      s.headline.toLowerCase().split(/\s+/).filter((w: string) => w.length > 4),
+    ),
   );
-
-  function isDuplicate(title: string | null): boolean {
+  return (title: string | null): boolean => {
     const words = (title ?? '').toLowerCase().split(/\s+/).filter((w) => w.length > 4);
-    const matches = words.filter((w) => recentHeadlineWords.has(w)).length;
-    return matches >= 4;
-  }
+    return words.filter((w) => recentWords.has(w)).length >= 4;
+  };
+}
 
-  const SCORE_FLOOR = 35;
-
-  const all = (candidates ?? []).filter((c) => {
-    // A candidate with no usable title can't be scored or clustered
-    // meaningfully -- drop it here (once, cleanly) rather than let it reach
-    // scoreCandidate/isDuplicate/suggestClusters where a crash would take
-    // down the whole batch instead of just this one row.
+// Ranks the pending pool into story groups: clusters first, most widely
+// covered on top, then single high-scoring articles. Pure, so it can be
+// tested without a database.
+export function buildGroups(
+  candidates: CandidateRow[],
+  limit: number,
+  isDuplicate: (title: string | null) => boolean = () => false,
+): { groups: string[][]; pool: CandidateRow[] } {
+  // Articles with no usable title can't be scored or clustered -- drop them
+  // here rather than let one bad row crash the whole run.
+  const all = candidates.filter((c) => {
     if (!c.title || !c.title.trim()) return false;
     if (isDuplicate(c.title)) return false;
-    if (scoreCandidate(c) < SCORE_FLOOR) return false;
-    return true;
+    return scoreCandidate(c) >= SCORE_FLOOR;
   });
 
-  // Everything with a usable title that isn't a repeat of a recent story --
-  // including articles below the score floor. They can't seed a story on
-  // their own, but they are fair game as extra sources for one.
-  const pool = (candidates ?? []).filter((c) => c.title && c.title.trim() && !isDuplicate(c.title));
-
-  // Cluster the whole pool, not just the high-scoring articles: a story's
-  // source count is how many outlets covered it, and regional outlets score
-  // low on their own. A cluster qualifies if any member clears the floor,
-  // and clusters are ranked by how widely they are covered.
-  const poolCandidates = pool as unknown as (Candidate & { id: string })[];
+  // Everything usable and not a repeat of a recent story -- including
+  // articles below the score floor. They can't seed a story on their own but
+  // are fair game as extra sources for one.
+  const pool = candidates.filter((c) => c.title && c.title.trim() && !isDuplicate(c.title));
   const poolMap = new Map(pool.map((c) => [c.id, c]));
-  const allClusters = suggestClusters(poolCandidates);
-  // Which cluster each article belongs to, including clusters filtered out
-  // below -- so leftovers of a rejected cluster (say, one outlet publishing
-  // five pieces on the same event) can become at most one story, not five.
+
+  // Cluster the whole pool, not just the high scorers: a story's source count
+  // is how many outlets covered it, and regional outlets score low alone.
+  const allClusters = suggestClusters(pool as unknown as (Candidate & { id: string })[]);
+  // Remember every article's cluster, including clusters filtered out below,
+  // so leftovers of a rejected cluster become at most one story.
   const clusterOf = new Map<string, string>(allClusters.flatMap((c) => c.candidateIds.map((id) => [id, c.key] as const)));
   const clusters = allClusters
     .map((c) => {
       const members = c.candidateIds.map((id) => poolMap.get(id)!).filter(Boolean);
       return {
         members,
-        ...coverageOf(members),
+        ...coverageOf(members as unknown as Pick<Candidate, 'domain' | 'source_country'>[]),
         best: Math.max(...members.map((m) => scoreCandidate(m))),
       };
     })
@@ -144,17 +163,14 @@ export async function autoGenerateBatch(
 
   const groups: string[][] = clusters.slice(0, limit).map((c) =>
     pickSources(c.members as unknown as (Candidate & { id: string })[])
-      // Trusted outlets first: the first article is the story's primary
-      // source (its photo credit and headline lead).
+      // Trusted outlets first: the first article is the story's primary source.
       .sort((a, b) => Number(TRUSTED_DOMAINS.has(b.domain)) - Number(TRUSTED_DOMAINS.has(a.domain)))
       .map((m) => m.id),
   );
 
   if (groups.length < limit) {
     const usedClusters = new Set<string>();
-    const singles = all
-      .filter((c) => !clusteredIds.has(c.id))
-      .sort((a, b) => scoreCandidate(b) - scoreCandidate(a));
+    const singles = all.filter((c) => !clusteredIds.has(c.id)).sort((a, b) => scoreCandidate(b) - scoreCandidate(a));
     for (const single of singles) {
       if (groups.length >= limit) break;
       const key = clusterOf.get(single.id);
@@ -166,26 +182,33 @@ export async function autoGenerateBatch(
     }
   }
 
-  if (groups.length === 0) {
-    throw new Error('No pending candidates above score threshold available.');
-  }
+  return { groups, pool };
+}
 
-  // Free-tier TheNewsAPI is ~100 requests/day, so the extra lookups are
-  // budgeted: one request per still-thin story, best-scoring stories first.
+// The stories worth generating right now, best first. Costs nothing.
+export async function proposeStories(limit = 20): Promise<Proposal[]> {
+  const supabase = supabaseServer();
+  const [candidates, isDuplicate] = await Promise.all([loadCandidates(supabase), recentHeadlineFilter(supabase)]);
+  const { groups, pool } = buildGroups(candidates, limit, isDuplicate);
+  // Free top-up from articles we already hold; no paid lookups just to browse.
+  const grouped = attachRelated(groups, pool as unknown as (Candidate & { id: string })[]);
+  const rows = new Map(pool.map((c) => [c.id, c]));
+  return grouped.map((ids) => toProposal(ids, rows)).filter((p): p is Proposal => !!p);
+}
+
+// Free-tier TheNewsAPI is ~100 requests/day, so the extra lookups are
+// budgeted: one request per still-thin story, best-scoring first.
+async function enrichThinGroups(
+  supabase: ReturnType<typeof supabaseServer>,
+  groups: string[][],
+  rows: Map<string, CandidateRow>,
+): Promise<string[][]> {
   const MIN_SOURCES = 3;
   const lookupBudget = Number(process.env.ENRICH_MAX_LOOKUPS ?? 15);
-  const poolById = new Map(pool.map((c) => [c.id, c]));
-
-  // 1) Free: attach related articles we have already ingested.
-  const grouped = attachRelated(groups, pool);
-  groups.length = 0;
-  groups.push(...grouped);
-
-  // 2) Budgeted: ask TheNewsAPI about stories that are still under-sourced.
   const thin = groups
     .map((ids, index) => ({ ids, index }))
-    .filter(({ ids }) => new Set(ids.map((id) => poolById.get(id)?.domain)).size < MIN_SOURCES)
-    .sort((a, b) => scoreCandidate(poolById.get(b.ids[0])!) - scoreCandidate(poolById.get(a.ids[0])!))
+    .filter(({ ids }) => new Set(ids.map((id) => rows.get(id)?.domain)).size < MIN_SOURCES)
+    .sort((a, b) => scoreCandidate(rows.get(b.ids[0])!) - scoreCandidate(rows.get(a.ids[0])!))
     .slice(0, Math.max(0, lookupBudget));
 
   const extraByGroup = new Map<number, string[]>();
@@ -193,15 +216,15 @@ export async function autoGenerateBatch(
   for (let i = 0; i < thin.length; i += 3) {
     await Promise.all(
       thin.slice(i, i + 3).map(async ({ ids, index }) => {
-        const lead = poolById.get(ids[0]);
-        if (!lead) return;
-        const have = new Set(ids.map((id) => poolById.get(id)?.domain));
+        const lead = rows.get(ids[0]);
+        if (!lead?.title) return;
+        const have = new Set(ids.map((id) => rows.get(id)?.domain));
         const leadTokens = tokenize(lead.title);
-        const found = (await fetchRelatedArticles(lead.title!)).filter(
+        const found = (await fetchRelatedArticles(lead.title)).filter(
           (a) => !have.has(a.domain) && jaccard(leadTokens, tokenize(a.title)) >= 0.1,
         );
         if (found.length === 0) return;
-        const rows = found.map((a) => ({
+        const newRows = found.map((a) => ({
           url: a.url,
           title: a.title,
           domain: a.domain,
@@ -210,38 +233,52 @@ export async function autoGenerateBatch(
           tone: 0,
           query_tag: 'enrich',
         }));
-        await supabase.from('story_candidates').upsert(rows, { onConflict: 'url', ignoreDuplicates: true });
-        // Only claim rows that are still unassigned (a URL we already had may
-        // belong to another story).
+        await supabase.from('story_candidates').upsert(newRows, { onConflict: 'url', ignoreDuplicates: true });
+        // Only claim rows still unassigned (a URL we already had may belong to another story).
         const { data: stored } = await supabase
           .from('story_candidates')
-          .select('id, url, title, source_country, domain, seen_date, status')
-          .in('url', rows.map((r) => r.url))
+          .select(CANDIDATE_COLUMNS)
+          .in('url', newRows.map((r) => r.url))
           .eq('status', 'pending');
-        const fresh = (stored ?? []).filter((r) => !claimed.has(r.id));
-        for (const r of fresh) claimed.add(r.id);
-        for (const r of fresh) poolById.set(r.id, r as never);
+        const fresh = ((stored ?? []) as CandidateRow[]).filter((r) => !claimed.has(r.id));
+        for (const r of fresh) {
+          claimed.add(r.id);
+          rows.set(r.id, r);
+        }
         extraByGroup.set(index, fresh.map((r) => r.id));
       }),
     );
   }
-  for (const [index, ids] of extraByGroup) {
-    groups[index] = [...groups[index], ...ids].slice(0, 8);
-  }
+  return groups.map((g, index) => [...g, ...(extraByGroup.get(index) ?? [])].slice(0, 8));
+}
 
-  const candidateById = poolById;
+// Submits the given groups of candidate articles for generation (one Anthropic
+// batch). This is the step that costs money; callers decide when it runs.
+export async function submitGroups(candidateGroups: string[][], options: { enrich?: boolean } = {}): Promise<AutoGenerateResult> {
+  const supabase = supabaseServer();
+
+  // Re-read from the database: only articles still pending may be used, so a
+  // double-click or a stale page can never submit the same story twice.
+  const wanted = [...new Set(candidateGroups.flat())];
+  if (wanted.length === 0) return { batchId: null, groupCount: 0, skipped: 'Nothing to generate.' };
+  const { data, error } = await supabase.from('story_candidates').select(CANDIDATE_COLUMNS).in('id', wanted).eq('status', 'pending');
+  if (error) throw new Error(`Failed to load candidates: ${error.message}`);
+  const rows = new Map(((data ?? []) as CandidateRow[]).map((r) => [r.id, r]));
+
+  const seen = new Set<string>();
+  let groups = candidateGroups
+    .map((g) => g.filter((id) => rows.has(id) && !seen.has(id) && (seen.add(id), true)))
+    .filter((g) => g.length > 0);
+  if (groups.length === 0) return { batchId: null, groupCount: 0, skipped: 'Those articles are no longer pending.' };
+
+  if (options.enrich) groups = await enrichThinGroups(supabase, groups, rows);
 
   const batchRequests = groups.map((candidateIds, i) => ({
     customId: `group-${i}`,
     articles: candidateIds
-      .map((id) => candidateById.get(id))
-      .filter((c): c is NonNullable<typeof c> => !!c)
-      .map((c) => ({
-        title: c.title,
-        domain: c.domain,
-        sourceCountry: c.source_country,
-        url: c.url,
-      })),
+      .map((id) => rows.get(id))
+      .filter((c): c is CandidateRow => !!c)
+      .map((c) => ({ title: c.title ?? '', domain: c.domain, sourceCountry: c.source_country, url: c.url })),
   }));
 
   const anthropicBatchId = await submitBatchGeneration(batchRequests);
@@ -251,16 +288,46 @@ export async function autoGenerateBatch(
     status: 'submitted',
     candidate_groups: groups,
   });
-
   if (insertError) {
     throw new Error(`Batch submitted to Anthropic (${anthropicBatchId}) but failed to save tracking record: ${insertError.message}`);
   }
 
-  const allCandidateIds = groups.flat();
-  await supabase
-    .from('story_candidates')
-    .update({ status: 'batch_pending' })
-    .in('id', allCandidateIds);
+  await supabase.from('story_candidates').update({ status: 'batch_pending' }).in('id', groups.flat());
 
   return { batchId: anthropicBatchId, groupCount: groups.length };
+}
+
+// The automatic path (cron, and the review queue's "auto batch" button).
+// With `respectBuffer` it first checks the mode and the buffer: in approval
+// mode (the default) it generates nothing -- stories wait at /review/proposals
+// until a person approves them.
+export async function autoGenerateBatch(
+  requested: number,
+  options: { respectBuffer?: boolean } = {},
+): Promise<AutoGenerateResult> {
+  const supabase = supabaseServer();
+
+  let limit = requested;
+  if (options.respectBuffer ?? true) {
+    const settings = readBufferSettings();
+    if (settings.mode === 'approve') {
+      return {
+        batchId: null,
+        groupCount: 0,
+        skipped: 'Approval mode: stories are proposed at /review/proposals and only generated once you approve them.',
+      };
+    }
+    const backlog = await getBacklog(supabase);
+    const plan = planGeneration(backlog, settings, requested);
+    if (plan.allow === 0) {
+      return { batchId: null, groupCount: 0, skipped: describePlan(plan, backlog, settings) };
+    }
+    limit = plan.allow;
+  }
+
+  const [candidates, isDuplicate] = await Promise.all([loadCandidates(supabase), recentHeadlineFilter(supabase)]);
+  const { groups, pool } = buildGroups(candidates, limit, isDuplicate);
+  if (groups.length === 0) throw new Error('No pending candidates above score threshold available.');
+
+  return submitGroups(attachRelated(groups, pool as unknown as (Candidate & { id: string })[]), { enrich: true });
 }

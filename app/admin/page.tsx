@@ -41,6 +41,12 @@ export default async function AdminPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-8">
+        <Link href="/review/proposals" className="col-span-2 block rounded-sm border p-4 hover:opacity-90" style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}>
+          <div className="font-display font-bold text-lg" style={{ color: "var(--text-on-ink)" }}>Proposed stories</div>
+          <div className="text-[0.78rem] mt-0.5" style={{ color: "var(--text-body)" }}>
+            {o.buffer.settings.mode === "approve" ? "Approve what gets generated" : "Automatic mode is on. Open to generate by hand"}
+          </div>
+        </Link>
         <Link href="/review" className="block rounded-sm border p-4 hover:opacity-90" style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}>
           <div className="font-display font-bold text-lg" style={{ color: "var(--text-on-ink)" }}>Review queue</div>
           <div className="text-[0.78rem] mt-0.5" style={{ color: "var(--text-body)" }}>

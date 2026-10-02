@@ -15,6 +15,9 @@ export type BufferSettings = {
   perRunMax: number;
   // Hard stop: no automatic generation at all.
   paused: boolean;
+  // "approve" (default): the cron only proposes stories; nothing is generated
+  // until a person approves it. "auto": the cron generates within the limits above.
+  mode: "approve" | "auto";
 };
 
 function intFromEnv(raw: string | undefined, fallback: number): number {
@@ -28,6 +31,7 @@ export function readBufferSettings(env: Record<string, string | undefined> = pro
     dailyCap: intFromEnv(env.PIPELINE_DAILY_CAP, 20),
     perRunMax: intFromEnv(env.PIPELINE_RUN_MAX, 10),
     paused: env.PIPELINE_PAUSED === "1" || env.PIPELINE_PAUSED === "true",
+    mode: env.PIPELINE_MODE === "auto" ? "auto" : "approve",
   };
 }
 
