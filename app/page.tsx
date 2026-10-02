@@ -1,7 +1,8 @@
 ﻿import { Suspense } from "react";
 import NavDrawer from "@/components/NavDrawer";
 import Feed from "@/components/Feed";
-import MarketTicker, { filterFreshRows } from "@/components/MarketTicker";
+import LiveMarketTicker from "@/components/LiveMarketTicker";
+import { filterFreshRows } from "@/components/MarketTicker";
 import Link from "next/link";
 import { getAllStories, Story } from "@/lib/stories";
 import { getMarketRows } from "@/lib/marketData";
@@ -46,7 +47,7 @@ export default async function FeedPage() {
       />
       <NavDrawer />
 
-      <MarketTicker rows={filterFreshRows(marketRows)} />
+      <LiveMarketTicker initialRows={filterFreshRows(marketRows)} />
 
       {signal.length > 0 && (
         <div className="border-b overflow-hidden" style={{ borderColor: "var(--border)", background: "var(--surface-strong)" }}>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
-import { MARKET_SYMBOLS, fetchQuote } from "@/lib/marketData";
+import { MARKET_SYMBOLS, fetchQuoteFor } from "@/lib/marketData";
 import { sendAlert } from "@/lib/alerts";
 
 export async function GET(req: NextRequest) {
@@ -13,8 +13,9 @@ export async function GET(req: NextRequest) {
   let updated = 0;
   const failures: string[] = [];
 
-  for (const { symbol, label } of MARKET_SYMBOLS) {
-    const result = await fetchQuote(symbol);
+  for (const cfg of MARKET_SYMBOLS) {
+    const { symbol, label } = cfg;
+    const result = await fetchQuoteFor(cfg);
     if (!result.ok) {
       // Leave the cached row untouched -- a stale ticker is caught by
       // comparing updated_at client-side, never by overwriting good data

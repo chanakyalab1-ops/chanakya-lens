@@ -1,28 +1,34 @@
-// Market ticker: Copper, USD/INR, Gold -- editorial context for a site that
-// covers oil geopolitics and India-Russia energy trade heavily, not
-// financial decoration.
+// Market ticker: Brent, Gold, USD/INR, Copper, Silver -- editorial context
+// for a site that covers oil geopolitics and India-Russia energy trade
+// heavily, not financial decoration.
 //
-// Brent (XBR/USD) and Silver (XAG/USD) are confirmed-real Twelve Data
-// symbols but return "This symbol is available starting with the Grow or
-// Venture plan" on the current (free Basic) API key -- a paid-plan
-// restriction, not a code bug. They're commented out rather than deleted so
-// they're one uncomment away from working if the plan is ever upgraded; see
-// https://twelvedata.com/pricing.
-//
-// Copper's symbol was simply wrong: XCU/USD doesn't exist on Twelve Data at
-// all ("symbol or figi parameter is missing or invalid"). Their actual
-// symbol is HG1 (Copper Spot, price per pound), confirmed via
-// twelvedata.com/markets/662294/commodity/hg1.
+// Twelve Data's free plan doesn't include Brent (XBR/USD) or Silver
+// (XAG/USD) -- "available starting with the Grow or Venture plan" -- so those
+// come from Yahoo Finance's chart endpoint, which also backs up the other
+// three if Twelve Data is down or rate-limited. Brent and the metals are
+// front-month futures there, which is what "Brent $102" means in practice.
+// Copper's Twelve Data symbol is HG1 (Copper Spot, price per pound).
 import { supabaseServer } from "./supabase-server";
 
-export type MarketSymbolConfig = { symbol: string; label: string };
+export type MarketSymbolConfig = {
+  // Key stored in market_data.symbol -- unchanged for existing rows.
+  symbol: string;
+  label: string;
+  // Twelve Data symbol, tried first when present.
+  twelve?: string;
+  // Yahoo Finance chart symbol: the fallback when Twelve Data fails or the
+  // plan doesn't include the instrument, and the only source for Brent and
+  // Silver. Unofficial and keyless, so it is never the sole dependency for
+  // gold or USD/INR.
+  yahoo?: string;
+};
 
 export const MARKET_SYMBOLS: MarketSymbolConfig[] = [
-  // { symbol: "XBR/USD", label: "BRENT" },  -- needs Twelve Data Grow/Venture plan
-  // { symbol: "XAG/USD", label: "SILVER" }, -- needs Twelve Data Grow/Venture plan
-  { symbol: "HG1", label: "COPPER" },
-  { symbol: "USD/INR", label: "USD/INR" },
-  { symbol: "XAU/USD", label: "GOLD" },
+  { symbol: "BZ=F", label: "BRENT", yahoo: "BZ=F" },
+  { symbol: "XAU/USD", label: "GOLD", twelve: "XAU/USD", yahoo: "GC=F" },
+  { symbol: "USD/INR", label: "USD/INR", twelve: "USD/INR", yahoo: "INR=X" },
+  { symbol: "HG1", label: "COPPER", twelve: "HG1", yahoo: "HG=F" },
+  { symbol: "SI=F", label: "SILVER", yahoo: "SI=F" },
 ];
 
 export type MarketQuote = {
@@ -50,6 +56,48 @@ export async function getMarketRows(): Promise<MarketDataRow[]> {
   } catch {
     return [];
   }
+}
+
+// Yahoo's chart endpoint: regularMarketPrice vs chartPreviousClose gives the
+// day's change. Pure so it can be tested without the network.
+export function parseYahooChart(json: unknown): QuoteResult {
+  const result = (json as { chart?: { result?: { meta?: Record<string, unknown> }[] | null } })?.chart?.result?.[0];
+  const meta = result?.meta;
+  const price = Number(meta?.regularMarketPrice);
+  if (!meta || !Number.isFinite(price) || price <= 0) return { ok: false, reason: "Yahoo: no price in response" };
+  const prev = Number(meta.chartPreviousClose ?? meta.previousClose);
+  const changePercent = Number.isFinite(prev) && prev > 0 ? ((price - prev) / prev) * 100 : null;
+  return { ok: true, quote: { price, changePercent } };
+}
+
+export async function fetchYahooQuote(symbol: string): Promise<QuoteResult> {
+  try {
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`,
+      { cache: "no-store", headers: { "user-agent": "Mozilla/5.0 (compatible; ChanakyaLensBot/1.0)" }, signal: AbortSignal.timeout(8000) }
+    );
+    if (!res.ok) return { ok: false, reason: `Yahoo HTTP ${res.status}` };
+    return parseYahooChart(await res.json());
+  } catch (err) {
+    return { ok: false, reason: err instanceof Error ? `Yahoo: ${err.message}` : "Yahoo: unknown fetch error" };
+  }
+}
+
+// Twelve Data first, Yahoo second. Both failing leaves the cached row alone
+// (the ticker drops it once it is stale rather than showing an old price).
+export async function fetchQuoteFor(cfg: MarketSymbolConfig): Promise<QuoteResult> {
+  const reasons: string[] = [];
+  if (cfg.twelve) {
+    const r = await fetchQuote(cfg.twelve);
+    if (r.ok) return r;
+    reasons.push(`twelve: ${r.reason}`);
+  }
+  if (cfg.yahoo) {
+    const r = await fetchYahooQuote(cfg.yahoo);
+    if (r.ok) return r;
+    reasons.push(r.reason);
+  }
+  return { ok: false, reason: reasons.join(" | ") || "no data source configured" };
 }
 
 export async function fetchQuote(symbol: string): Promise<QuoteResult> {
