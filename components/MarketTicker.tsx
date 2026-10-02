@@ -19,7 +19,7 @@ export function filterFreshRows(rows: MarketRow[]): MarketRow[] {
   return rows.filter((r) => now - new Date(r.updated_at).getTime() < STALE_AFTER_MS);
 }
 
-function formatValue(label: string, price: number): string {
+export function formatValue(label: string, price: number): string {
   if (label === "GOLD") return `$${Math.round(price).toLocaleString()}`;
   if (label === "BRENT" || label === "SILVER" || label === "COPPER") return `$${price.toFixed(2)}`;
   return price.toFixed(2); // USD/INR is a plain exchange rate, no currency symbol
@@ -36,7 +36,7 @@ export function formatChange(changePercent: number | null): string {
   return `${rounded > 0 ? "+" : ""}${rounded.toFixed(2)}%`;
 }
 
-export default function MarketTicker({ rows }: { rows: MarketRow[] }) {
+export default function MarketTicker({ rows, onSelect }: { rows: MarketRow[]; onSelect?: (row: MarketRow) => void }) {
   const fresh = [...rows].sort((a, b) => rank(a.label) - rank(b.label));
   if (fresh.length === 0) return null;
 
@@ -46,13 +46,28 @@ export default function MarketTicker({ rows }: { rows: MarketRow[] }) {
         {fresh.map((r) => {
           const isUp = (r.change_percent ?? 0) > 0;
           const isDown = (r.change_percent ?? 0) < 0;
-          return (
-            <span key={r.symbol} className="flex items-center gap-1.5 shrink-0">
+          const content = (
+            <>
               <span style={{ color: "var(--brand-soft)" }}>{r.label}</span>
               <span style={{ color: "var(--text-on-ink)" }}>{formatValue(r.label, r.price)}</span>
               {isUp && <span style={{ color: "var(--possible)" }}>▲ {formatChange(r.change_percent)}</span>}
               {isDown && <span style={{ color: "var(--developing)" }}>▼ {formatChange(r.change_percent)}</span>}
-            </span>
+            </>
+          );
+          // Tappable when the parent can show a chart; plain text otherwise.
+          return onSelect ? (
+            <button
+              key={r.symbol}
+              type="button"
+              onClick={() => onSelect(r)}
+              aria-label={`Show ${r.label} price chart`}
+              title="Tap for chart"
+              className="flex items-center gap-1.5 shrink-0 py-1 -my-1 hover:opacity-75 cursor-pointer"
+            >
+              {content}
+            </button>
+          ) : (
+            <span key={r.symbol} className="flex items-center gap-1.5 shrink-0">{content}</span>
           );
         })}
       </div>

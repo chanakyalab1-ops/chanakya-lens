@@ -1,13 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import MarketTicker, { filterFreshRows, type MarketRow } from "@/components/MarketTicker";
 
 const REFRESH_MS = 60_000;
+
+// The chart code only loads once someone taps a price.
+const MarketChart = dynamic(() => import("@/components/MarketChart"), { ssr: false });
 
 // Server-rendered rows give the first paint; after that the ticker keeps
 // itself current without waiting for the cached page to regenerate.
 export default function LiveMarketTicker({ initialRows }: { initialRows: MarketRow[] }) {
   const [rows, setRows] = useState<MarketRow[]>(initialRows);
+  const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -30,5 +35,10 @@ export default function LiveMarketTicker({ initialRows }: { initialRows: MarketR
     };
   }, []);
 
-  return <MarketTicker rows={rows} />;
+  return (
+    <>
+      <MarketTicker rows={rows} onSelect={(row) => setSelected(row.label)} />
+      {selected && <MarketChart label={selected} onClose={() => setSelected(null)} />}
+    </>
+  );
 }
