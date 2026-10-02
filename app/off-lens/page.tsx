@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import Image from "next/image";
 import NavDrawer from "@/components/NavDrawer";
 import { getAllStories } from "@/lib/stories";
 export const revalidate = 300;
@@ -13,8 +14,10 @@ export default async function OffLensPage() {
           <div className="font-mono text-[0.68rem] uppercase tracking-wide mb-3.5" style={{ color: "var(--brand-soft)" }}>
             Methodology
           </div>
-          <h1 className="font-display font-bold text-3xl leading-tight mb-4">
-            Off-Lens
+          <h1 className="mb-5">
+            <span className="sr-only">Off-Lens</span>
+            <Image src="/offlens-logo.svg" alt="" width={492} height={90} unoptimized priority className="logo-for-light h-auto w-full max-w-[380px]" />
+            <Image src="/offlens-logo-dark.svg" alt="" width={492} height={90} unoptimized priority className="logo-for-dark h-auto w-full max-w-[380px]" />
           </h1>
           <p className="text-base mb-8" style={{ color: "var(--text-body)" }}>
             Every story is reported from somewhere. Off-Lens is where we make that visible -- who's actually covering an event, from where, and where the framing splits depending on whose interest is at stake.

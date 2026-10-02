@@ -47,8 +47,10 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
       style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}
     >
       <Link href="/off-lens" className="hover:opacity-90">
-        <div className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
-          Off-Lens
+        <div className="mb-3">
+          <span className="sr-only">Off-Lens</span>
+          <Image src="/offlens-logo.svg" alt="" width={492} height={90} unoptimized className="logo-for-light h-auto w-full max-w-[230px]" />
+          <Image src="/offlens-logo-dark.svg" alt="" width={492} height={90} unoptimized className="logo-for-dark h-auto w-full max-w-[230px]" />
         </div> </Link>
       <p className="text-[0.88rem] leading-relaxed mb-4" style={{ color: "var(--text-body)" }}>
         Every story is reported from somewhere. Off-Lens shows who&apos;s covering it, from where, and where the framing splits by whose interest is at stake.
