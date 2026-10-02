@@ -86,6 +86,7 @@ export default function NavDrawer() {
               <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Read</div>
               <div className="space-y-3">
                 <Link href="/" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Latest stories</Link>
+                <Link href="/today" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Today&apos;s Signal</Link>
                 <Link href="/off-lens" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Off-Lens</Link>
                 <Link href="/digest" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Daily digest</Link>
               </div>

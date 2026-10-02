@@ -236,7 +236,7 @@ function HeroCard({ story }: { story: Story }) {
   );
 }
 
-function CompactCard({ story }: { story: Story }) {
+export function CompactCard({ story }: { story: Story }) {
   return (
     <Link
       href={`/story/${story.slug}`}
@@ -268,7 +268,7 @@ function CompactCard({ story }: { story: Story }) {
 
 // Ground News-style list row for phones: headline + meta on the left,
 // square thumbnail on the right. Desktop keeps CompactCard.
-function MobileRow({ story }: { story: Story }) {
+export function MobileRow({ story }: { story: Story }) {
   return (
     <Link
       href={`/story/${story.slug}`}
@@ -311,7 +311,7 @@ function MobileRow({ story }: { story: Story }) {
 // "Today's Signal": the few stories that matter most right now, set beside the
 // hero. Picked on the server (recent, still developing, with a direct impact)
 // and passed in as slugs.
-function SignalPanel({ stories }: { stories: Story[] }) {
+export function SignalPanel({ stories, moreCount, plainHeading }: { stories: Story[]; moreCount?: number; plainHeading?: boolean }) {
   return (
     <section
       aria-label="Today's Signal"
@@ -319,11 +319,18 @@ function SignalPanel({ stories }: { stories: Story[] }) {
       style={{ background: "var(--surface-strong)", borderColor: "var(--border)" }}
     >
       {/* The logo comes in a dark-ink and a light-ink version; globals.css shows the one that suits the theme. */}
-      <h2 className="mb-2">
-        <span className="sr-only">Today&apos;s Signal</span>
-        <Image src="/todays-signal-logo.png" alt="" width={924} height={162} className="logo-for-light h-auto w-full max-w-[240px]" />
-        <Image src="/todays-signal-logo-dark.png" alt="" width={924} height={162} className="logo-for-dark h-auto w-full max-w-[240px]" />
-      </h2>
+      {plainHeading ? (
+        // The page already shows the logo (e.g. /today), so don't repeat it.
+        <h2 className="font-mono text-[0.68rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>
+          Top signals
+        </h2>
+      ) : (
+        <h2 className="mb-2">
+          <span className="sr-only">Today&apos;s Signal</span>
+          <Image src="/todays-signal-logo.png" alt="" width={924} height={162} className="logo-for-light h-auto w-full max-w-[240px]" />
+          <Image src="/todays-signal-logo-dark.png" alt="" width={924} height={162} className="logo-for-dark h-auto w-full max-w-[240px]" />
+        </h2>
+      )}
       <p className="hidden lg:block text-[0.72rem] mb-1" style={{ color: "var(--text-on-ink-dim)" }}>
         What moved most, in a glance.
       </p>
@@ -354,6 +361,16 @@ function SignalPanel({ stories }: { stories: Story[] }) {
           </li>
         ))}
       </ol>
+      {moreCount !== undefined && moreCount > stories.length && (
+        <Link
+          href="/today"
+          className="mt-1 pt-3 border-t font-mono text-[0.7rem] uppercase tracking-wide hover:opacity-80 flex items-center justify-between"
+          style={{ borderColor: "var(--border)", color: "var(--brand-soft)" }}
+        >
+          <span>More from today</span>
+          <span>{moreCount} stories →</span>
+        </Link>
+      )}
     </section>
   );
 }
@@ -404,7 +421,7 @@ function CategoryRail({
   );
 }
 
-export default function Feed({ stories, signalSlugs }: { stories: Story[]; signalSlugs?: string[] }) {
+export default function Feed({ stories, signalSlugs, todayCount }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
     [stories]
@@ -500,7 +517,7 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
         <div>
           {(hero || signalStories.length > 0) && (
             <div className={signalStories.length > 0 ? "mt-3 lg:grid lg:grid-cols-[280px_1fr] lg:gap-4 lg:items-start" : "mt-3"}>
-              {signalStories.length > 0 && <SignalPanel stories={signalStories} />}
+              {signalStories.length > 0 && <SignalPanel stories={signalStories} moreCount={todayCount} />}
               {hero && (
                 <div className={signalStories.length > 0 ? "mt-3 lg:mt-0" : undefined}>
                   <HeroCard story={hero} />
