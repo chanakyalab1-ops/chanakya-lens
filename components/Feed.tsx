@@ -47,8 +47,10 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
       style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}
     >
       <Link href="/off-lens" className="hover:opacity-90">
-        <div className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
-          Off-Lens
+        <div className="mb-3">
+          <span className="sr-only">Off-Lens</span>
+          <Image src="/offlens-logo.svg" alt="" width={492} height={90} unoptimized className="logo-for-light h-auto w-full max-w-[230px]" />
+          <Image src="/offlens-logo-dark.svg" alt="" width={492} height={90} unoptimized className="logo-for-dark h-auto w-full max-w-[230px]" />
         </div> </Link>
       <p className="text-[0.88rem] leading-relaxed mb-4" style={{ color: "var(--text-body)" }}>
         Every story is reported from somewhere. Off-Lens shows who&apos;s covering it, from where, and where the framing splits by whose interest is at stake.
@@ -236,7 +238,7 @@ function HeroCard({ story }: { story: Story }) {
   );
 }
 
-function CompactCard({ story }: { story: Story }) {
+export function CompactCard({ story }: { story: Story }) {
   return (
     <Link
       href={`/story/${story.slug}`}
@@ -268,7 +270,7 @@ function CompactCard({ story }: { story: Story }) {
 
 // Ground News-style list row for phones: headline + meta on the left,
 // square thumbnail on the right. Desktop keeps CompactCard.
-function MobileRow({ story }: { story: Story }) {
+export function MobileRow({ story }: { story: Story }) {
   return (
     <Link
       href={`/story/${story.slug}`}
@@ -305,6 +307,73 @@ function MobileRow({ story }: { story: Story }) {
         </div>
       )}
     </Link>
+  );
+}
+
+// "Today's Signal": the few stories that matter most right now, set beside the
+// hero. Picked on the server (recent, still developing, with a direct impact)
+// and passed in as slugs.
+export function SignalPanel({ stories, moreCount, plainHeading }: { stories: Story[]; moreCount?: number; plainHeading?: boolean }) {
+  return (
+    <section
+      aria-label="Today's Signal"
+      className="rounded-sm border p-4 flex flex-col"
+      style={{ background: "var(--surface-strong)", borderColor: "var(--border)" }}
+    >
+      {/* The logo comes in a dark-ink and a light-ink version; globals.css shows the one that suits the theme. */}
+      {plainHeading ? (
+        // The page already shows the logo (e.g. /today), so don't repeat it.
+        <h2 className="font-mono text-[0.68rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>
+          Top signals
+        </h2>
+      ) : (
+        <h2 className="mb-2">
+          <span className="sr-only">Today&apos;s Signal</span>
+          <Image src="/todays-signal-logo.png" alt="" width={924} height={162} className="logo-for-light h-auto w-full max-w-[240px]" />
+          <Image src="/todays-signal-logo-dark.png" alt="" width={924} height={162} className="logo-for-dark h-auto w-full max-w-[240px]" />
+        </h2>
+      )}
+      <p className="hidden lg:block text-[0.72rem] mb-1" style={{ color: "var(--text-on-ink-dim)" }}>
+        What moved most, in a glance.
+      </p>
+      <div className="mb-2" />
+      <ol className="flex flex-col">
+        {stories.map((story, i) => (
+          <li key={story.slug} className={i > 0 ? "border-t" : undefined} style={{ borderColor: "var(--border)" }}>
+            <Link href={`/story/${story.slug}`} className="flex gap-3 py-2.5 lg:py-3 hover:opacity-80">
+              <span className="font-display font-extrabold text-2xl leading-none w-6 lg:w-7 shrink-0" style={{ color: "var(--brand-soft)" }}>
+                {i + 1}
+              </span>
+              <span className="min-w-0">
+                <span className="flex items-center gap-2 font-mono text-[0.58rem] uppercase tracking-wide mb-1" style={{ color: "var(--text-on-ink-dim)" }}>
+                  {story.category}
+                  {story.status === "developing" && (
+                    <span className="flex items-center gap-1" style={{ color: "var(--developing)" }}>
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />
+                      Developing
+                    </span>
+                  )}
+                </span>
+                <span className="block font-display font-bold text-[1rem] leading-tight line-clamp-2 lg:line-clamp-3">{story.headline}</span>
+                <span className="hidden lg:block font-mono text-[0.58rem] mt-1.5" style={{ color: "var(--text-on-ink-dim)" }}>
+                  {formatStoryDate(story.publishedAt)}
+                </span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ol>
+      {moreCount !== undefined && moreCount > stories.length && (
+        <Link
+          href="/today"
+          className="mt-1 pt-3 border-t font-mono text-[0.7rem] uppercase tracking-wide hover:opacity-80 flex items-center justify-between"
+          style={{ borderColor: "var(--border)", color: "var(--brand-soft)" }}
+        >
+          <span>More from today</span>
+          <span>{moreCount} stories →</span>
+        </Link>
+      )}
+    </section>
   );
 }
 
@@ -354,7 +423,7 @@ function CategoryRail({
   );
 }
 
-export default function Feed({ stories, signalSlugs }: { stories: Story[]; signalSlugs?: string[] }) {
+export default function Feed({ stories, signalSlugs, todayCount }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
     [stories]
@@ -391,6 +460,11 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
   // as normal -- this only changes which single story becomes the hero.
   const nonSignal = showRails && signalSlugs?.length ? treated.filter((s) => !signalSlugs.includes(s.slug)) : treated;
   const hero = nonSignal[0] ?? treated[0];
+  // Same condition as above: the panel only shows on the plain landing view.
+  const signalStories =
+    showRails && signalSlugs?.length
+      ? signalSlugs.map((slug) => stories.find((s) => s.slug === slug)).filter((s): s is Story => !!s)
+      : [];
   const rest = treated.filter((s) => s.slug !== hero?.slug);
   const restByCategory = useMemo(() => {
     if (!showRails) return null;
@@ -443,9 +517,14 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
       )}
       <main className="max-w-7xl mx-auto px-4 pb-16 lg:grid lg:grid-cols-[1fr_280px] lg:gap-6 lg:items-start">
         <div>
-          {hero && (
-            <div className="mt-3">
-              <HeroCard story={hero} />
+          {(hero || signalStories.length > 0) && (
+            <div className={signalStories.length > 0 ? "mt-3 lg:grid lg:grid-cols-[280px_1fr] lg:gap-4 lg:items-start" : "mt-3"}>
+              {signalStories.length > 0 && <SignalPanel stories={signalStories} moreCount={todayCount} />}
+              {hero && (
+                <div className={signalStories.length > 0 ? "mt-3 lg:mt-0" : undefined}>
+                  <HeroCard story={hero} />
+                </div>
+              )}
             </div>
           )}
 

@@ -87,3 +87,9 @@ a { color: inherit; text-decoration: none; }
 
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Today's Signal logo: one image per theme, only the matching one shows. */
+.logo-for-light { display: none; }
+.logo-for-dark { display: block; }
+:root[data-theme="light"] .logo-for-light { display: block; }
+:root[data-theme="light"] .logo-for-dark { display: none; }
