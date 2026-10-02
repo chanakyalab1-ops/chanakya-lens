@@ -25,7 +25,19 @@ function formatValue(label: string, price: number): string {
   return price.toFixed(2); // USD/INR is a plain exchange rate, no currency symbol
 }
 
-export default function MarketTicker({ rows: fresh }: { rows: MarketRow[] }) {
+// Oil first -- it is what this site is about -- then the rest in a fixed order
+// regardless of how the database returns them.
+const ORDER = ["BRENT", "GOLD", "USD/INR", "COPPER", "SILVER"];
+const rank = (label: string) => (ORDER.indexOf(label) === -1 ? ORDER.length : ORDER.indexOf(label));
+
+export function formatChange(changePercent: number | null): string {
+  if (changePercent == null || !Number.isFinite(changePercent)) return "";
+  const rounded = Math.abs(changePercent) < 0.005 ? 0 : changePercent;
+  return `${rounded > 0 ? "+" : ""}${rounded.toFixed(2)}%`;
+}
+
+export default function MarketTicker({ rows }: { rows: MarketRow[] }) {
+  const fresh = [...rows].sort((a, b) => rank(a.label) - rank(b.label));
   if (fresh.length === 0) return null;
 
   return (
@@ -38,8 +50,8 @@ export default function MarketTicker({ rows: fresh }: { rows: MarketRow[] }) {
             <span key={r.symbol} className="flex items-center gap-1.5 shrink-0">
               <span style={{ color: "var(--brand-soft)" }}>{r.label}</span>
               <span style={{ color: "var(--text-on-ink)" }}>{formatValue(r.label, r.price)}</span>
-              {isUp && <span style={{ color: "var(--possible)" }}>▲</span>}
-              {isDown && <span style={{ color: "var(--developing)" }}>▼</span>}
+              {isUp && <span style={{ color: "var(--possible)" }}>▲ {formatChange(r.change_percent)}</span>}
+              {isDown && <span style={{ color: "var(--developing)" }}>▼ {formatChange(r.change_percent)}</span>}
             </span>
           );
         })}
