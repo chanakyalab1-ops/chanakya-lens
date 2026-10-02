@@ -1,6 +1,7 @@
 ﻿import { supabaseServer } from '@/lib/supabase-server';
 import { suggestClusters, attachRelated, coverageOf, pickSources, jaccard, tokenize, type Candidate } from '@/lib/clustering';
 import { fetchRelatedArticles } from '@/lib/thenewsapi';
+import { describePlan, getBacklog, planGeneration, readBufferSettings } from '@/lib/pipelineBuffer';
 import { submitBatchGeneration } from '@/lib/anthropic-server';
 import { TRUSTED_DOMAINS } from '@/lib/trustedDomains';
 
@@ -44,12 +45,30 @@ function scoreCandidate(c: ScorableCandidate): number {
 }
 
 export type AutoGenerateResult = {
-  batchId: string;
+  // null when the run was skipped by the buffer (see `skipped`).
+  batchId: string | null;
   groupCount: number;
+  skipped?: string;
 };
 
-export async function autoGenerateBatch(limit: number): Promise<AutoGenerateResult> {
+// `respectBuffer` is on for the cron. A person clicking "generate" in the
+// review UI has decided to spend the money, so that path turns it off.
+export async function autoGenerateBatch(
+  requested: number,
+  options: { respectBuffer?: boolean } = {},
+): Promise<AutoGenerateResult> {
   const supabase = supabaseServer();
+
+  let limit = requested;
+  if (options.respectBuffer ?? true) {
+    const settings = readBufferSettings();
+    const backlog = await getBacklog(supabase);
+    const plan = planGeneration(backlog, settings, requested);
+    if (plan.allow === 0) {
+      return { batchId: null, groupCount: 0, skipped: describePlan(plan, backlog, settings) };
+    }
+    limit = plan.allow;
+  }
 
   const { data: candidates, error: candidatesError } = await supabase
     .from('story_candidates')

@@ -3,13 +3,14 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { createClient } from "@supabase/supabase-js";
-import { MARKET_SYMBOLS, fetchQuote, getMarketRows, type MarketDataRow, type QuoteResult } from "@/lib/marketData";
+import { MARKET_SYMBOLS, fetchQuoteFor, getMarketRows, type MarketDataRow, type QuoteResult } from "@/lib/marketData";
+import { describePlan, getBacklog, planGeneration, readBufferSettings, unreviewed } from "@/lib/pipelineBuffer";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Live-checks each ticker symbol against Twelve Data right now, so the real
+// Live-checks each ticker symbol (Twelve Data, then Yahoo) right now, so the real
 // reason a symbol isn't showing (bad plan tier, wrong symbol, missing key)
 // is visible on the page itself instead of requiring log/DB access to
 // diagnose. Sequential with a small gap between calls -- firing all 5 at
@@ -24,7 +25,8 @@ async function getMarketDiagnostics() {
 
   const checks: { symbol: string; label: string; cached: MarketDataRow | null; live: QuoteResult }[] = [];
   for (const s of MARKET_SYMBOLS) {
-    const result = await fetchQuote(s.symbol);
+    // Same Twelve Data -> Yahoo path the cron uses, so a failure here is the real one.
+    const result = await fetchQuoteFor(s);
     checks.push({ symbol: s.symbol, label: s.label, cached: rowBySymbol.get(s.symbol) ?? null, live: result });
     await sleep(500);
   }
@@ -95,6 +97,10 @@ async function getAnalyticsSummary() {
     supabase.from("story_drafts").select("*", { count: "exact", head: true }).eq("fact_check_status", "failed"),
   ]);
 
+  const bufferSettings = readBufferSettings();
+  const backlog = await getBacklog(supabase);
+  const plan = planGeneration(backlog, bufferSettings, bufferSettings.perRunMax);
+
   const { count: totalFeedback } = await supabase
     .from("feedback_submissions")
     .select("*", { count: "exact", head: true });
@@ -126,6 +132,12 @@ async function getAnalyticsSummary() {
     totalFeedback: totalFeedback ?? 0,
     totalDigestSignups: totalDigestSignups ?? 0,
     recentFeedback: recentFeedback ?? [],
+    buffer: {
+      settings: bufferSettings,
+      backlog,
+      plan,
+      message: describePlan(plan, backlog, bufferSettings),
+    },
     pipeline: {
       candidatesPending: candidatesPending ?? 0,
       candidatesBatchPending: candidatesBatchPending ?? 0,
@@ -159,6 +171,47 @@ export default async function AdminPage() {
         <AdminLink href="/review" title="Review Queue" description="Generate and review story drafts from candidates." />
         <AdminLink href="/review/manage" title="Manage Published Stories" description="Edit or unpublish live stories." />
       </div>
+
+      <h2 className="font-display text-lg font-bold mb-4" style={{ color: "var(--text-on-ink)" }}>
+        Generation Buffer
+      </h2>
+      <p className="text-[0.8rem] mb-4" style={{ color: "var(--text-on-ink-dim)" }}>
+        Automatic generation only runs while there is room: the drafts waiting on you stay under the buffer, and
+        no more than the daily cap are generated in any 24 hours. Review drafts to open it back up. The
+        &quot;Generate&quot; button in the review queue ignores this.
+      </p>
+      <div
+        className="rounded-sm border p-4 mb-4 text-[0.85rem]"
+        style={{
+          background: "var(--ink-card)",
+          borderColor: stats.buffer.plan.allow === 0 ? "var(--developing)" : "var(--possible)",
+          color: "var(--text-on-ink)",
+        }}
+      >
+        <span className="font-mono text-[0.65rem] uppercase tracking-wide mr-2" style={{ color: "var(--text-on-ink-dim)" }}>
+          Generation
+        </span>
+        {stats.buffer.message}
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-3">
+        <StatCard label="Waiting for your review" value={stats.buffer.backlog.inReview} />
+        <StatCard label="Being fact-checked" value={stats.buffer.backlog.factChecking} />
+        <StatCard label="Still generating" value={stats.buffer.backlog.inFlight} />
+        <StatCard
+          label="Unreviewed / buffer"
+          value={`${unreviewed(stats.buffer.backlog)} / ${stats.buffer.settings.buffer}`}
+        />
+        <StatCard
+          label="Generated, last 24h / cap"
+          value={`${stats.buffer.backlog.generated24h} / ${stats.buffer.settings.dailyCap}`}
+        />
+        <StatCard label="Generated, last 7 days" value={stats.buffer.backlog.generated7d} />
+      </div>
+      <p className="text-[0.72rem] mb-10" style={{ color: "var(--text-on-ink-dim)" }}>
+        Change in Vercel environment variables: PIPELINE_BUFFER ({stats.buffer.settings.buffer}), PIPELINE_DAILY_CAP (
+        {stats.buffer.settings.dailyCap}), PIPELINE_RUN_MAX ({stats.buffer.settings.perRunMax} per run), and
+        PIPELINE_PAUSED=1 to stop automatic generation entirely.
+      </p>
 
       <h2 className="font-display text-lg font-bold mb-4" style={{ color: "var(--text-on-ink)" }}>
         Pipeline Health
@@ -209,7 +262,7 @@ export default async function AdminPage() {
         Market Ticker
       </h2>
       <p className="text-[0.8rem] mb-4" style={{ color: "var(--text-on-ink-dim)" }}>
-        &quot;Live check&quot; calls Twelve Data right now, on this page load -- if a symbol shows an error here,
+        &quot;Live check&quot; calls the price sources (Twelve Data, then Yahoo) right now, on this page load -- if a symbol shows an error here,
         that&apos;s the exact reason it isn&apos;t appearing in the homepage ticker.
       </p>
       <div className="flex flex-col gap-2 mb-10">
@@ -299,7 +352,7 @@ export default async function AdminPage() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="rounded-sm border p-4" style={{ background: "var(--ink-card)", borderColor: "var(--border)" }}>
       <div className="font-mono text-[0.62rem] uppercase tracking-wide mb-1" style={{ color: "var(--text-on-ink-dim)" }}>

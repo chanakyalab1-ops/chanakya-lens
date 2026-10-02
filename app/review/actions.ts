@@ -428,8 +428,10 @@ export async function generateDraft(candidateIds: string[]): Promise<ActionResul
 export async function triggerAutoGenerateBatch(limit: number): Promise<ActionResult<{ batchId: string; groupCount: number }>> {
   try {
     const { autoGenerateBatch } = await import('@/lib/auto-generate');
-    const result = await autoGenerateBatch(limit);
-    return { ok: true, data: result };
+    // A person clicked this, so the automatic buffer does not apply.
+    const result = await autoGenerateBatch(limit, { respectBuffer: false });
+    if (!result.batchId) throw new Error(result.skipped ?? 'No batch was started.');
+    return { ok: true, data: { batchId: result.batchId, groupCount: result.groupCount } };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
