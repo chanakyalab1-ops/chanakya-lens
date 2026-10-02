@@ -5,7 +5,7 @@ import { planGeneration, type Backlog, type BufferSettings } from "../../lib/pip
 import { timeAgo } from "./time";
 
 const NOW = new Date("2026-10-02T12:00:00Z").getTime();
-const settings: BufferSettings = { buffer: 15, dailyCap: 20, perRunMax: 10, paused: false };
+const settings: BufferSettings = { buffer: 15, dailyCap: 20, perRunMax: 10, paused: false, mode: "auto" };
 
 function overview(over: { backlog?: Partial<Backlog>; pipeline?: Partial<Overview["pipeline"]>; settings?: Partial<BufferSettings> } = {}): Overview {
   const backlog: Backlog = { factChecking: 0, inReview: 0, inFlight: 0, generated24h: 0, generated7d: 0, ...over.backlog };

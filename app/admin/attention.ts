@@ -11,7 +11,8 @@ export function buildAttention(o: Overview, now: number = Date.now()): Attention
   const items: AttentionItem[] = [];
   const p = o.pipeline;
 
-  if (o.buffer.plan.allow === 0) {
+  // In approval mode the buffer isn't what holds generation back, so don't raise it as a problem.
+  if (o.buffer.settings.mode === "auto" && o.buffer.plan.allow === 0) {
     items.push({ level: "info", text: o.buffer.message, href: o.buffer.plan.limitedBy === "buffer" ? "/review" : undefined });
   }
   if (p.factCheckFailed > 0) {

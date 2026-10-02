@@ -1,18 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { describePlan, planGeneration, readBufferSettings, unreviewed, type Backlog, type BufferSettings } from "./pipelineBuffer";
 
-const settings: BufferSettings = { buffer: 15, dailyCap: 20, perRunMax: 10, paused: false };
+const settings: BufferSettings = { buffer: 15, dailyCap: 20, perRunMax: 10, paused: false, mode: "auto" };
 const backlog = (over: Partial<Backlog> = {}): Backlog => ({
   factChecking: 0, inReview: 0, inFlight: 0, generated24h: 0, generated7d: 0, ...over,
 });
 
 describe("readBufferSettings", () => {
   it("has conservative defaults", () => {
-    expect(readBufferSettings({})).toEqual({ buffer: 15, dailyCap: 20, perRunMax: 10, paused: false });
+    expect(readBufferSettings({})).toEqual({ buffer: 15, dailyCap: 20, perRunMax: 10, paused: false, mode: "approve" });
   });
   it("reads env overrides, including 0, and ignores junk", () => {
     expect(readBufferSettings({ PIPELINE_BUFFER: "8", PIPELINE_DAILY_CAP: "0", PIPELINE_RUN_MAX: "abc", PIPELINE_PAUSED: "1" }))
-      .toEqual({ buffer: 8, dailyCap: 0, perRunMax: 10, paused: true });
+      .toEqual({ buffer: 8, dailyCap: 0, perRunMax: 10, paused: true, mode: "approve" });
+    expect(readBufferSettings({ PIPELINE_MODE: "auto" }).mode).toBe("auto");
+    expect(readBufferSettings({ PIPELINE_MODE: "whatever" }).mode).toBe("approve");
     expect(readBufferSettings({ PIPELINE_BUFFER: "-3", PIPELINE_PAUSED: "true" }).buffer).toBe(15);
   });
 });

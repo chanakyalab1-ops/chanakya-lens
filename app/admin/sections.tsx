@@ -103,16 +103,26 @@ export function AttentionBox({ items }: { items: AttentionItem[] }) {
 
 export function BufferPanel({ o }: { o: Overview }) {
   const { settings, backlog, plan, message } = o.buffer;
-  const closed = plan.allow === 0;
+  const approval = settings.mode === "approve";
+  const closed = !approval && plan.allow === 0;
   return (
     <div className="rounded-sm border p-4 md:p-5" style={{ ...card, borderColor: closed ? "var(--developing)" : "var(--border)" }}>
       <div className="flex items-start gap-3 mb-5">
         <span aria-hidden className="h-2.5 w-2.5 rounded-full shrink-0 mt-1.5" style={{ background: closed ? "var(--developing)" : "var(--possible)" }} />
         <div>
           <div className="font-display font-bold text-lg leading-tight" style={{ color: "var(--text-on-ink)" }}>
-            {settings.paused ? "Generation paused" : closed ? "Generation held" : "Generation open"}
+            {approval ? "Approval mode" : settings.paused ? "Generation paused" : closed ? "Generation held" : "Generation open"}
           </div>
-          <div className="text-[0.82rem] mt-0.5" style={{ color: "var(--text-body)" }}>{message}</div>
+          <div className="text-[0.82rem] mt-0.5" style={{ color: "var(--text-body)" }}>
+            {approval
+              ? "Nothing is generated until you approve it. The buffer and caps below only apply if you switch to automatic mode."
+              : message}
+          </div>
+          {approval && (
+            <Link href="/review/proposals" className="inline-block mt-2 font-mono text-[0.72rem]" style={{ color: "var(--brand-soft)" }}>
+              Review proposed stories →
+            </Link>
+          )}
         </div>
       </div>
       <div className="grid md:grid-cols-2 gap-5 mb-5">
@@ -126,7 +136,7 @@ export function BufferPanel({ o }: { o: Overview }) {
         <p className="text-[0.76rem] mt-2 leading-relaxed" style={dim}>
           Set in Vercel environment variables (no redeploy of code needed, just a redeploy to pick them up):
           PIPELINE_BUFFER = {settings.buffer} · PIPELINE_DAILY_CAP = {settings.dailyCap} · PIPELINE_RUN_MAX = {settings.perRunMax} per run ·
-          PIPELINE_PAUSED = {settings.paused ? "1 (paused)" : "unset"}. The Generate button in the review queue ignores this buffer.
+          PIPELINE_PAUSED = {settings.paused ? "1 (paused)" : "unset"} · PIPELINE_MODE = {settings.mode} (&quot;approve&quot; waits for you, &quot;auto&quot; generates by itself within these limits). The Generate button in the review queue ignores the buffer.
         </p>
       </details>
     </div>
