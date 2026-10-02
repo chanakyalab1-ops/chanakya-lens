@@ -62,7 +62,7 @@ describe("describePlan", () => {
     const b = backlog({ inReview: 12 });
     const msg = describePlan(planGeneration(b, settings, 40), b, settings);
     expect(msg).not.toContain("Buffer full");
-    expect(msg).toContain("nearly full");
+    expect(msg).toContain("before the buffer is full");
     expect(msg).toContain("room for 3");
   });
 });

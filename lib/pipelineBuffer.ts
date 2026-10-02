@@ -108,7 +108,7 @@ export function describePlan(plan: GenerationPlan, backlog: Backlog, settings: B
     }
   }
   const room = `room for ${plan.room} more draft${plan.room === 1 ? "" : "s"}`;
-  if (plan.limitedBy === "buffer") return `Open, but the buffer is nearly full: ${room}.`;
-  if (plan.limitedBy === "daily") return `Open, but the daily cap is nearly reached: ${room}.`;
+  if (plan.limitedBy === "buffer") return `Open: ${room} before the buffer is full.`;
+  if (plan.limitedBy === "daily") return `Open: ${room} before the daily cap.`;
   return `Open: ${room}.`;
 }
