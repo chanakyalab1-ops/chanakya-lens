@@ -3,7 +3,6 @@ import NavDrawer from "@/components/NavDrawer";
 import Feed from "@/components/Feed";
 import LiveMarketTicker from "@/components/LiveMarketTicker";
 import { filterFreshRows } from "@/components/MarketTicker";
-import Link from "next/link";
 import { getAllStories, Story } from "@/lib/stories";
 import { getMarketRows } from "@/lib/marketData";
 export const revalidate = 3600;
@@ -48,33 +47,6 @@ export default async function FeedPage() {
       <NavDrawer />
 
       <LiveMarketTicker initialRows={filterFreshRows(marketRows)} />
-
-      {signal.length > 0 && (
-        <div className="border-b overflow-hidden" style={{ borderColor: "var(--border)", background: "var(--surface-strong)" }}>
-          <div className="max-w-7xl mx-auto flex items-center gap-3 px-4 py-2">
-            <span className="font-mono text-[0.62rem] uppercase tracking-widest shrink-0" style={{ color: "var(--brand-soft)" }}>
-              Signal
-            </span>
-            <div className="relative flex-1 overflow-hidden">
-              <div className="ticker-track flex gap-10 whitespace-nowrap w-max">
-                {[...signal, ...signal].map((story, i) => (
-                  <Link
-                    key={`${story.slug}-${i}`}
-                    href={`/story/${story.slug}`}
-                    aria-hidden={i >= signal.length || undefined}
-                    tabIndex={i >= signal.length ? -1 : undefined}
-                    className="flex items-center gap-2 text-sm hover:opacity-80"
-                    style={{ color: "var(--text-on-ink)" }}
-                  >
-                    <span aria-hidden style={{ color: "var(--brand-soft)" }}>●</span>
-                    {story.headline}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Suspense fallback={null}>
         <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} />

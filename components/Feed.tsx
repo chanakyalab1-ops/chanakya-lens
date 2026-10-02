@@ -308,6 +308,56 @@ function MobileRow({ story }: { story: Story }) {
   );
 }
 
+// "Today's Signal": the few stories that matter most right now, set beside the
+// hero. Picked on the server (recent, still developing, with a direct impact)
+// and passed in as slugs.
+function SignalPanel({ stories }: { stories: Story[] }) {
+  return (
+    <section
+      aria-label="Today's Signal"
+      className="rounded-sm border p-4 flex flex-col"
+      style={{ background: "var(--surface-strong)", borderColor: "var(--border)" }}
+    >
+      <div className="flex items-center gap-2 mb-1">
+        <span aria-hidden className="h-2 w-2 rounded-full animate-pulse" style={{ background: "var(--developing)" }} />
+        <h2 className="font-mono text-[0.68rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
+          Today&apos;s Signal
+        </h2>
+      </div>
+      <p className="hidden lg:block text-[0.72rem] mb-1" style={{ color: "var(--text-on-ink-dim)" }}>
+        What moved most, in a glance.
+      </p>
+      <div className="mb-2" />
+      <ol className="flex flex-col">
+        {stories.map((story, i) => (
+          <li key={story.slug} className={i > 0 ? "border-t" : undefined} style={{ borderColor: "var(--border)" }}>
+            <Link href={`/story/${story.slug}`} className="flex gap-3 py-2.5 lg:py-3 hover:opacity-80">
+              <span className="font-display font-extrabold text-2xl leading-none w-6 lg:w-7 shrink-0" style={{ color: "var(--brand-soft)" }}>
+                {i + 1}
+              </span>
+              <span className="min-w-0">
+                <span className="flex items-center gap-2 font-mono text-[0.58rem] uppercase tracking-wide mb-1" style={{ color: "var(--text-on-ink-dim)" }}>
+                  {story.category}
+                  {story.status === "developing" && (
+                    <span className="flex items-center gap-1" style={{ color: "var(--developing)" }}>
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />
+                      Developing
+                    </span>
+                  )}
+                </span>
+                <span className="block font-display font-bold text-[1rem] leading-tight line-clamp-2 lg:line-clamp-3">{story.headline}</span>
+                <span className="hidden lg:block font-mono text-[0.58rem] mt-1.5" style={{ color: "var(--text-on-ink-dim)" }}>
+                  {formatStoryDate(story.publishedAt)}
+                </span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 const CATEGORY_ROW_LIMIT = 6;
 
 // Groups stories by category, in the order categories first appear, and
@@ -391,6 +441,11 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
   // as normal -- this only changes which single story becomes the hero.
   const nonSignal = showRails && signalSlugs?.length ? treated.filter((s) => !signalSlugs.includes(s.slug)) : treated;
   const hero = nonSignal[0] ?? treated[0];
+  // Same condition as above: the panel only shows on the plain landing view.
+  const signalStories =
+    showRails && signalSlugs?.length
+      ? signalSlugs.map((slug) => stories.find((s) => s.slug === slug)).filter((s): s is Story => !!s)
+      : [];
   const rest = treated.filter((s) => s.slug !== hero?.slug);
   const restByCategory = useMemo(() => {
     if (!showRails) return null;
@@ -443,9 +498,14 @@ export default function Feed({ stories, signalSlugs }: { stories: Story[]; signa
       )}
       <main className="max-w-7xl mx-auto px-4 pb-16 lg:grid lg:grid-cols-[1fr_280px] lg:gap-6 lg:items-start">
         <div>
-          {hero && (
-            <div className="mt-3">
-              <HeroCard story={hero} />
+          {(hero || signalStories.length > 0) && (
+            <div className={signalStories.length > 0 ? "mt-3 lg:grid lg:grid-cols-[280px_1fr] lg:gap-4 lg:items-start" : "mt-3"}>
+              {signalStories.length > 0 && <SignalPanel stories={signalStories} />}
+              {hero && (
+                <div className={signalStories.length > 0 ? "mt-3 lg:mt-0" : undefined}>
+                  <HeroCard story={hero} />
+                </div>
+              )}
             </div>
           )}
 
