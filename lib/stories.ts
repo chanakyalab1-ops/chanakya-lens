@@ -1,5 +1,5 @@
 ﻿import { supabase } from "./supabase";
-import { resolveSourceCountry } from "./outletCountries";
+import { articleHost, resolveSourceCountry } from "./outletCountries";
 
 export type ConfidenceLevel = "direct" | "likely" | "possible";
 
@@ -72,7 +72,7 @@ function mapRow(row: StoryRow): Story {
     hasVideo: row.has_video ?? false,
     impactNodes: row.impact_nodes && row.impact_nodes.length > 0 ? row.impact_nodes : undefined,
     sources: row.sources && row.sources.length > 0
-      ? row.sources.map((s) => ({ url: s.url, title: s.title, domain: s.domain, sourceCountry: resolveSourceCountry(s.source_country, s.domain), role: s.role }))
+      ? row.sources.map((s) => ({ url: s.url, title: s.title, domain: articleHost(s.url) || s.domain, sourceCountry: resolveSourceCountry(s.source_country, s.domain, s.url), role: s.role }))
       : undefined,
     chanakyaAnalysis: row.chanakya_analysis ?? undefined,
     offLens: row.off_lens ?? undefined,

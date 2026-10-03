@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildQuery, headlineKeywords, matchHits, countryCounts, nextOffset } from "./sourceBackfill";
 import { parseGoogleNews, type NewsHit } from "./googleNews";
-import { canonicalDomain, countryForDomain, isAggregator, resolveSourceCountry } from "./outletCountries";
+import { canonicalDomain, countryForDomain, isAggregator, resolveSourceCountry, articleHost } from "./outletCountries";
 
 const HEADLINE = "Pakistan launches deadly air strikes on Afghanistan after border clash";
 const CREATED = "2026-10-01T10:00:00.000Z";
@@ -157,5 +157,16 @@ describe("resolveSourceCountry", () => {
   });
   it("returns null when the outlet's country can't be told", () => {
     expect(resolveSourceCountry("", "example.com")).toBeNull();
+  });
+});
+
+describe("articleHost", () => {
+  it("uses the article's own host, not the feed host stored with it", () => {
+    expect(resolveSourceCountry(null, "feeds.thelocal.com", "https://www.thelocal.it/20261001/x")).toBe("Italy");
+    expect(articleHost("https://www.thelocal.it/20261001/x")).toBe("thelocal.it");
+  });
+  it("ignores aggregator links and bad URLs", () => {
+    expect(articleHost("https://news.google.com/rss/articles/abc")).toBe("");
+    expect(articleHost("not a url")).toBe("");
   });
 });
