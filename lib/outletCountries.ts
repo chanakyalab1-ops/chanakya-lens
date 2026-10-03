@@ -68,10 +68,24 @@ export function countryForDomain(input: string): string {
 
 // The country stored on a source, or the outlet's home country when none was
 // recorded (stories generated from RSS and Google News carry no country).
-export function resolveSourceCountry(stored: string | null | undefined, domain: string): string | null {
+export function resolveSourceCountry(stored: string | null | undefined, domain: string, url?: string): string | null {
   const s = (stored ?? "").trim();
   if (s && s.toLowerCase() !== "unknown") return s;
-  return countryForDomain(domain) || null;
+  const host = articleHost(url);
+  return (host && countryForDomain(host)) || countryForDomain(domain) || null;
+}
+
+// The outlet that published an article, taken from its URL. RSS candidates
+// store the feed's host instead (feeds.thelocal.com), which says nothing about
+// the outlet; Google News links point at the aggregator, so they don't count.
+export function articleHost(url?: string): string {
+  if (!url) return "";
+  try {
+    const host = normalizeDomain(new URL(url).hostname);
+    return isAggregator(host) ? "" : host;
+  } catch {
+    return "";
+  }
 }
 
 const ALIASES: Record<string, string> = {
