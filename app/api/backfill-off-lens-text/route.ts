@@ -104,6 +104,9 @@ export async function GET(req: Request) {
       headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
       body: JSON.stringify({
         model: process.env.OFF_LENS_MODEL ?? "claude-sonnet-5-5",
+        // Sonnet 5.5 thinks by default and thinking counts against max_tokens,
+        // which could cut the note off. This is a short comparison, so turn it off.
+        thinking: { type: "between_tools" },
         max_tokens: 700,
         system: OFF_LENS_SYSTEM,
         messages: [{ role: "user", content: buildOffLensPrompt(input, sources) }],
