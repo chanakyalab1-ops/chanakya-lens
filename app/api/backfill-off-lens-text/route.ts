@@ -6,13 +6,13 @@ import {
 
 export const maxDuration = 60;
 
-type StoryRow = {
+type Row = {
   slug: string;
   headline: string;
   dek: string;
-  created_at: string;
   subject_countries: string[] | null;
-  sources: OffLensInput["sources"] | null;
+  sources?: OffLensInput["sources"] | null;
+  articles?: { candidate_id: string }[] | null;
 };
 
 // Writes the Off-Lens "Analysis" note for recently published stories that
@@ -20,10 +20,12 @@ type StoryRow = {
 //
 //   /api/backfill-off-lens-text?secret=...                 dry run (default): shows the notes, writes nothing
 //   /api/backfill-off-lens-text?secret=...&apply=1         saves them
-//   &hours=6     stories published in the last N hours (default 6, max 72)
-//   &limit=10    stories per call (max 20)       &slug=...   one specific story
+//   &target=drafts   drafts waiting in review instead of published stories, so
+//                    the note is in the editor's Off-Lens box before you publish
+//   &hours=6     published stories from the last N hours (default 6, max 72)
+//   &limit=10    items per call (max 20)       &slug=...   one specific story or draft
 //
-// Only fills stories whose off_lens is empty, never overwrites one. Protected
+// Only fills items whose off_lens is empty, never overwrites one. Protected
 // by BACKFILL_SECRET.
 export async function GET(req: Request) {
   const params = new URL(req.url).searchParams;
@@ -38,27 +40,48 @@ export async function GET(req: Request) {
   const hours = Math.min(Math.max(Number(params.get("hours") ?? 6) || 6, 1), 72);
   const limit = Math.min(Math.max(Number(params.get("limit") ?? 10) || 10, 1), 20);
   const onlySlug = params.get("slug");
+  const drafts = params.get("target") === "drafts";
+  const table = drafts ? "story_drafts" : "stories";
 
   const supabase = supabaseServer();
   let query = supabase
-    .from("stories")
-    .select("slug, headline, dek, created_at, subject_countries, sources")
-    .is("off_lens", null)
-    .order("created_at", { ascending: false });
-  query = onlySlug
-    ? query.eq("slug", onlySlug)
-    : query.gte("created_at", new Date(Date.now() - hours * 3600 * 1000).toISOString());
+    .from(table)
+    .select(drafts ? "slug, headline, dek, subject_countries, articles" : "slug, headline, dek, subject_countries, sources")
+    .is("off_lens", null);
+  if (drafts) {
+    query = query.eq("workflow_status", "in_review");
+  } else {
+    query = query.order("created_at", { ascending: false });
+    if (!onlySlug) query = query.gte("created_at", new Date(Date.now() - hours * 3600 * 1000).toISOString());
+  }
+  if (onlySlug) query = query.eq("slug", onlySlug);
 
   const { data, error } = await query.limit(limit);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // A draft keeps only candidate ids; the outlets live on the candidates.
+  const candidates = new Map<string, OffLensInput["sources"][number]>();
+  if (drafts) {
+    const ids = [...new Set(((data ?? []) as unknown as Row[]).flatMap((d) => (d.articles ?? []).map((a) => a.candidate_id)))];
+    if (ids.length > 0) {
+      const { data: rows, error: candError } = await supabase
+        .from("story_candidates")
+        .select("id, url, title, domain, source_country")
+        .in("id", ids);
+      if (candError) return NextResponse.json({ error: candError.message }, { status: 500 });
+      for (const r of rows ?? []) candidates.set(r.id, r);
+    }
+  }
+
   const results: { slug: string; status: string; offLens?: string }[] = [];
-  for (const story of (data ?? []) as StoryRow[]) {
+  for (const story of (data ?? []) as unknown as Row[]) {
     const input: OffLensInput = {
       headline: story.headline,
       dek: story.dek,
       subjectCountries: story.subject_countries ?? [],
-      sources: story.sources ?? [],
+      sources: drafts
+        ? (story.articles ?? []).map((a) => candidates.get(a.candidate_id)).filter((c): c is NonNullable<typeof c> => !!c)
+        : story.sources ?? [],
     };
     const sources = describeSources(input.sources);
     if (!hasEnoughCoverage(sources)) {
@@ -90,7 +113,7 @@ export async function GET(req: Request) {
 
     if (apply) {
       const { error: updateError } = await supabase
-        .from("stories")
+        .from(table)
         .update({ off_lens: note })
         .eq("slug", story.slug)
         .is("off_lens", null);
@@ -102,5 +125,5 @@ export async function GET(req: Request) {
     results.push({ slug: story.slug, status: apply ? "saved" : "proposed", offLens: note });
   }
 
-  return NextResponse.json({ apply, hours, checked: results.length, results });
+  return NextResponse.json({ apply, target: drafts ? "drafts" : "stories", checked: results.length, results });
 }
