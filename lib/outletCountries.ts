@@ -66,6 +66,14 @@ export function countryForDomain(input: string): string {
   return TLD[tld] ?? "";
 }
 
+// The country stored on a source, or the outlet's home country when none was
+// recorded (stories generated from RSS and Google News carry no country).
+export function resolveSourceCountry(stored: string | null | undefined, domain: string): string | null {
+  const s = (stored ?? "").trim();
+  if (s && s.toLowerCase() !== "unknown") return s;
+  return countryForDomain(domain) || null;
+}
+
 const ALIASES: Record<string, string> = {
   "bbc.co.uk": "bbc.com",
   "theguardian.co.uk": "theguardian.com",

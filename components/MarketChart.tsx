@@ -259,7 +259,7 @@ export default function MarketChart({ label, onClose }: { label: string; onClose
         </div>
 
         <p className="text-[0.7rem] mt-3" style={{ color: "var(--text-on-ink-dim)" }}>
-          {note}. Prices via Yahoo Finance, may be delayed.
+          {note}. Indicative prices, may be delayed. Not investment advice.
         </p>
 
         {data && (

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildQuery, headlineKeywords, matchHits, countryCounts, nextOffset } from "./sourceBackfill";
 import { parseGoogleNews, type NewsHit } from "./googleNews";
-import { canonicalDomain, countryForDomain, isAggregator } from "./outletCountries";
+import { canonicalDomain, countryForDomain, isAggregator, resolveSourceCountry } from "./outletCountries";
 
 const HEADLINE = "Pakistan launches deadly air strikes on Afghanistan after border clash";
 const CREATED = "2026-10-01T10:00:00.000Z";
@@ -144,5 +144,18 @@ describe("nextOffset", () => {
   it("returns null when nothing is left", () => {
     expect(nextOffset(0, [row(1, 15, true)], true, 8, 1)).toBeNull();
     expect(nextOffset(95, [row(1, 1, false), row(1, 1, false), row(1, 1, false), row(1, 1, false), row(1, 1, false)], false, 8, 100)).toBeNull();
+  });
+});
+
+describe("resolveSourceCountry", () => {
+  it("keeps a recorded country", () => {
+    expect(resolveSourceCountry("India", "bbc.com")).toBe("India");
+  });
+  it("falls back to the outlet's home country when none was stored", () => {
+    expect(resolveSourceCountry(null, "www.thelocal.it")).toBe("Italy");
+    expect(resolveSourceCountry("unknown", "swissinfo.ch")).toBe("Switzerland");
+  });
+  it("returns null when the outlet's country can't be told", () => {
+    expect(resolveSourceCountry("", "example.com")).toBeNull();
   });
 });

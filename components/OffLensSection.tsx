@@ -88,7 +88,8 @@ export function OffLensSection({
   const coveredSet = new Set(Object.keys(sourceCounts));
   const missing = [...subjectSet].filter((c) => !coveredSet.has(c));
 
-  const hasAnything = total > 0 || missing.length > 0 || offLens || subjectSet.size > 0;
+  const chipSources = (sources ?? []).filter((s) => s.domain);
+  const hasAnything = total > 0 || chipSources.length > 0 || missing.length > 0 || offLens || subjectSet.size > 0;
   if (!hasAnything) return null;
 
   return (
@@ -100,12 +101,12 @@ export function OffLensSection({
         Who is covering this — and who is not.
       </div>
 
-      {total > 0 && (
+      {(total > 0 || chipSources.length > 0) && (
         <div className="mb-6">
           <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3" style={{ color: "var(--text-on-ink-dim)" }}>
             {usingGdelt
-              ? `${total} articles · ${sorted.length} countries · via GDELT`
-              : `${total} source${total !== 1 ? "s" : ""} reviewed`}
+              ? `${total} articles · ${sorted.length} countries`
+              : `${chipSources.length} source${chipSources.length !== 1 ? "s" : ""} reviewed`}
           </div>
           <div className="space-y-2.5">
             {sorted.map(([country, count]) => {
@@ -124,7 +125,7 @@ export function OffLensSection({
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            {validSources.map((s, i) => (
+            {chipSources.map((s, i) => (
               <a
                 key={i}
                 href={s.url}
@@ -134,7 +135,7 @@ export function OffLensSection({
                 className="inline-flex items-center gap-1.5 px-2 py-1 rounded border text-[0.65rem] font-mono hover:opacity-80 truncate max-w-[160px]"
                 style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}
               >
-                <span>{countryToEmoji(s.sourceCountry!)}</span>
+                <span>{s.sourceCountry && !NON_COUNTRIES.has(s.sourceCountry) ? countryToEmoji(s.sourceCountry) : "🌐"}</span>
                 <span className="truncate">{s.domain.replace("www.", "")}</span>
               </a>
             ))}

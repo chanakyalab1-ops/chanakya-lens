@@ -1,5 +1,6 @@
 ﻿"use client";
 import { useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 const TOPICS = ["Trade & Tariffs", "Security & Conflict", "Political", "Resources", "Tech & Regulation"];
@@ -83,6 +84,9 @@ export default function DigestSignup() {
           {status === "loading" ? "..." : "Notify me"}
         </button>
       </div>
+      <p className="text-[0.68rem] text-center" style={{ color: "var(--text-on-ink-dim)" }}>
+        By subscribing you agree to our <Link href="/privacy" className="underline">Privacy Policy</Link>. Unsubscribe anytime.
+      </p>
       {status === "error" && (
         <p className="text-xs text-center" style={{ color: "var(--developing)" }}>
           Something went wrong — try again.

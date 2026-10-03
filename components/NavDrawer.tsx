@@ -114,6 +114,8 @@ export default function NavDrawer() {
                 <Link href="/about" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Our approach</Link>
                 <Link href="/how-we-rate" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>How we rate this</Link>
                 <Link href="/feedback" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Feedback</Link>
+                <Link href="/privacy" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Privacy policy</Link>
+                <Link href="/terms" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Terms of service</Link>
                 {isAdmin && <Link href="/admin" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--brand-soft)" }}>Admin</Link>}
               </div>
             </div>
