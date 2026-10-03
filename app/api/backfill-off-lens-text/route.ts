@@ -24,6 +24,9 @@ type Row = {
 //                    the note is in the editor's Off-Lens box before you publish
 //   &hours=6     published stories from the last N hours (default 6, max 72)
 //   &limit=10    items per call (max 20)       &slug=...   one specific story or draft
+//   &skip=paris,eiffel   leave out items whose slug contains any of these words
+//
+// Drafts are taken newest-updated first, the same order as the review page.
 //
 // Only fills items whose off_lens is empty, never overwrites one. Protected
 // by BACKFILL_SECRET.
@@ -49,15 +52,20 @@ export async function GET(req: Request) {
     .select(drafts ? "slug, headline, dek, subject_countries, articles" : "slug, headline, dek, subject_countries, sources")
     .is("off_lens", null);
   if (drafts) {
-    query = query.eq("workflow_status", "in_review");
+    query = query.eq("workflow_status", "in_review").order("updated_at", { ascending: false });
   } else {
     query = query.order("created_at", { ascending: false });
     if (!onlySlug) query = query.gte("created_at", new Date(Date.now() - hours * 3600 * 1000).toISOString());
   }
   if (onlySlug) query = query.eq("slug", onlySlug);
 
-  const { data, error } = await query.limit(limit);
+  const skip = (params.get("skip") ?? "").split(",").map((w) => w.trim().toLowerCase()).filter(Boolean);
+  // Skipped items still count toward the limit's window, so over-fetch and trim.
+  const { data: fetched, error } = await query.limit(limit + skip.length * 3);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const data = (fetched ?? [])
+    .filter((r) => !skip.some((w) => String((r as unknown as Row).slug).toLowerCase().includes(w)))
+    .slice(0, limit);
 
   // A draft keeps only candidate ids; the outlets live on the candidates.
   const candidates = new Map<string, OffLensInput["sources"][number]>();
