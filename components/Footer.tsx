@@ -28,6 +28,9 @@ export default function Footer() {
               <Link href="/about" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Our approach</Link>
               <Link href="/how-we-rate" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>How we rate this</Link>
               <Link href="/feedback" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Feedback</Link>
+              <Link href="/privacy" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Privacy policy</Link>
+              <Link href="/terms" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Terms of service</Link>
+              <a href="mailto:chanakya.lab1@gmail.com" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Contact</a>
             </div>
           </div>
           <div>
@@ -44,7 +47,7 @@ export default function Footer() {
             © 2026 Chanakya Labs. All rights reserved.
           </span>
           <span className="font-mono text-[0.65rem]" style={{ color: "var(--text-on-ink-dim)" }}>
-            Stay ahead of the map.
+            Market prices are indicative only. Not investment advice.
           </span>
         </div>
       </div>

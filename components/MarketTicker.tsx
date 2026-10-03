@@ -70,6 +70,7 @@ export default function MarketTicker({ rows, onSelect }: { rows: MarketRow[]; on
             <span key={r.symbol} className="flex items-center gap-1.5 shrink-0">{content}</span>
           );
         })}
+        <span className="shrink-0 uppercase tracking-wide text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>Indicative only</span>
       </div>
     </div>
   );
