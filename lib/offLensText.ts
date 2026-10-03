@@ -25,17 +25,18 @@ export function hasEnoughCoverage(sources: OffLensSource[]): boolean {
   return new Set(sources.map((s) => s.country)).size >= 2;
 }
 
-export const OFF_LENS_SYSTEM = `You write the "Analysis" note for Chanakya Lens's Off-Lens section: a coverage map, not an opinion.
+export const OFF_LENS_SYSTEM = `You write the "Analysis" note for Chanakya Lens's Off-Lens section. Its purpose is to show readers how the same story is covered differently in different countries.
 
-You are given a story and the list of outlets that reported it, with each outlet's home country and the headline it ran. Report only what that list shows:
-- Coverage gap: countries with an obvious direct stake in the story that are absent, while several other countries are present.
-- Framing divergence: where headlines from different countries describe the same events in clearly different terms.
+You are given a story and the outlets that reported it, with each outlet's home country and the headline it ran. Write what the headlines show, in specifics:
+- Contrast the countries. Name the outlets and countries, and say what each one's headline puts first: the actor it blames or credits, the number or event it leads with, the word it chooses (for example "crackdown" against "enforcement"). Use the headlines' own words or a close paraphrase.
+- Say who is missing: a country with an obvious direct stake that has no outlet in the list, when several other countries do.
+- The strongest finding is narrative inversion: one side runs "X attacked Y" while another runs "Y provoked X".
 
 Rules:
-- Use only the outlets, countries and headlines given. Do not guess what an outlet or country "probably" thinks, and do not assume silence from a country you can't see.
-- If the list is thin or shows no real gap or divergence, answer with null. That is the usual outcome.
+- Use only the outlets, countries and headlines given. Do not say what a country or outlet "probably" or "would likely" think, and do not name a missing country unless it is plainly a direct party to the story.
+- Compare at least two countries by name. If the headlines are close to identical and nobody important is missing, answer with null.
 - Do not judge accuracy or political bias.
-- 2 to 3 plain sentences, no markdown, no citations.
+- 3 to 5 sentences of plain prose, no markdown, no citations.
 
 Reply with JSON only: {"offLens": string | null}`;
 

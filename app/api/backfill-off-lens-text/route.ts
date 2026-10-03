@@ -25,6 +25,8 @@ type Row = {
 //   &hours=6     published stories from the last N hours (default 6, max 72)
 //   &limit=10    items per call (max 20)       &slug=...   one specific story or draft
 //   &skip=paris,eiffel   leave out items whose slug contains any of these words
+//   &force=1     also redo items that already have a note, overwriting it. Use it
+//                with &slug=... so a note you have edited by hand isn't replaced.
 //
 // Drafts are taken newest-updated first, the same order as the review page.
 //
@@ -49,8 +51,8 @@ export async function GET(req: Request) {
   const supabase = supabaseServer();
   let query = supabase
     .from(table)
-    .select(drafts ? "slug, headline, dek, subject_countries, articles" : "slug, headline, dek, subject_countries, sources")
-    .is("off_lens", null);
+    .select(drafts ? "slug, headline, dek, subject_countries, articles" : "slug, headline, dek, subject_countries, sources");
+  if (params.get("force") !== "1") query = query.is("off_lens", null);
   if (drafts) {
     query = query.eq("workflow_status", "in_review").order("updated_at", { ascending: false });
   } else {
@@ -81,7 +83,7 @@ export async function GET(req: Request) {
     }
   }
 
-  const results: { slug: string; status: string; offLens?: string }[] = [];
+  const results: { slug: string; status: string; offLens?: string; sources?: string[] }[] = [];
   for (const story of (data ?? []) as unknown as Row[]) {
     const input: OffLensInput = {
       headline: story.headline,
@@ -101,8 +103,8 @@ export async function GET(req: Request) {
       method: "POST",
       headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 400,
+        model: process.env.OFF_LENS_MODEL ?? "claude-sonnet-5-5",
+        max_tokens: 700,
         system: OFF_LENS_SYSTEM,
         messages: [{ role: "user", content: buildOffLensPrompt(input, sources) }],
       }),
@@ -120,17 +122,20 @@ export async function GET(req: Request) {
     }
 
     if (apply) {
-      const { error: updateError } = await supabase
-        .from(table)
-        .update({ off_lens: note })
-        .eq("slug", story.slug)
-        .is("off_lens", null);
+      let update = supabase.from(table).update({ off_lens: note }).eq("slug", story.slug);
+      if (params.get("force") !== "1") update = update.is("off_lens", null);
+      const { error: updateError } = await update;
       if (updateError) {
         results.push({ slug: story.slug, status: `error: ${updateError.message}` });
         continue;
       }
     }
-    results.push({ slug: story.slug, status: apply ? "saved" : "proposed", offLens: note });
+    results.push({
+      slug: story.slug,
+      status: apply ? "saved" : "proposed",
+      offLens: note,
+      sources: sources.map((s) => `${s.outlet} (${s.country}): ${s.title}`),
+    });
   }
 
   return NextResponse.json({ apply, target: drafts ? "drafts" : "stories", checked: results.length, results });
