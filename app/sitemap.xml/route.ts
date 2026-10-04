@@ -1,4 +1,5 @@
 ﻿import { getAllStories } from '@/lib/stories';
+import { ALL_ENTITIES } from '@/lib/lens';
 
 export async function GET() {
   const stories = await getAllStories();
@@ -9,6 +10,13 @@ export async function GET() {
       <lastmod>${new Date(s.publishedAt).toISOString()}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.8</priority>
+    </url>`).join('');
+
+  const lensUrls = ALL_ENTITIES.map((e) => `
+    <url>
+      <loc>https://chanakyalens.com/lens/${e.slug}</loc>
+      <changefreq>daily</changefreq>
+      <priority>${e.kind === 'country' ? '0.5' : '0.6'}</priority>
     </url>`).join('');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -27,7 +35,12 @@ export async function GET() {
     <loc>https://chanakyalens.com/regions</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
-  </url>${urls}
+  </url>
+  <url>
+    <loc>https://chanakyalens.com/lens</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>${lensUrls}${urls}
 </urlset>`;
 
   return new Response(xml, {
