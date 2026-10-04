@@ -31,6 +31,9 @@ const NON_COUNTRIES = new Set([
   "Unknown",
 ]);
 
+// More outlets than this are collapsed into "+N more" so the panel stays short.
+const CHIP_LIMIT = 8;
+
 export function OffLensSection({
   sources,
   subjectCountries,
@@ -125,7 +128,7 @@ export function OffLensSection({
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            {chipSources.map((s, i) => (
+            {chipSources.slice(0, CHIP_LIMIT).map((s, i) => (
               <a
                 key={i}
                 href={s.url}
@@ -139,6 +142,11 @@ export function OffLensSection({
                 <span className="truncate">{s.domain.replace("www.", "")}</span>
               </a>
             ))}
+            {chipSources.length > CHIP_LIMIT && (
+              <span className="inline-flex items-center px-2 py-1 text-[0.65rem] font-mono" style={{ color: "var(--text-on-ink-dim)" }}>
+                +{chipSources.length - CHIP_LIMIT} more
+              </span>
+            )}
           </div>
         </div>
       )}
