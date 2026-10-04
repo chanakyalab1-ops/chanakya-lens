@@ -4,7 +4,7 @@ import Feed from "@/components/Feed";
 import LiveMarketTicker from "@/components/LiveMarketTicker";
 import { filterFreshRows } from "@/components/MarketTicker";
 import { getAllStories } from "@/lib/stories";
-import { pickTodaysSignal, storiesFromToday } from "@/lib/signal";
+import { pickTodaysSignal, recentWindow } from "@/lib/signal";
 import { getMarketRows } from "@/lib/marketData";
 export const revalidate = 3600;
 
@@ -19,7 +19,7 @@ const websiteSchema = {
 export default async function FeedPage() {
   const [stories, marketRows] = await Promise.all([getAllStories(), getMarketRows()]);
   const signal = pickTodaysSignal(stories);
-  const todayCount = storiesFromToday(stories).length;
+  const recent = recentWindow(stories);
 
   return (
     <>
@@ -32,7 +32,7 @@ export default async function FeedPage() {
       <LiveMarketTicker initialRows={filterFreshRows(marketRows)} />
 
       <Suspense fallback={null}>
-        <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} todayCount={todayCount} />
+        <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} todayCount={recent.stories.length} windowLabel={recent.label} />
       </Suspense>
     </>
   );

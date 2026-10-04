@@ -4,21 +4,21 @@ import Link from "next/link";
 import NavDrawer from "@/components/NavDrawer";
 import { CompactCard, MobileRow, SignalPanel } from "@/components/Feed";
 import { getAllStories } from "@/lib/stories";
-import { pickTodaysSignal, storiesFromToday } from "@/lib/signal";
+import { pickTodaysSignal, recentWindow } from "@/lib/signal";
 
 export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Today's Signal",
-  description: "Everything published today on Chanakya Lens, with the stories that matter most on top.",
+  description: "Everything published in the last day on Chanakya Lens, with the stories that matter most on top.",
 };
 
 export default async function TodayPage() {
   const all = await getAllStories();
-  const today = storiesFromToday(all);
+  const recent = recentWindow(all);
+  const today = recent.stories;
   const signal = pickTodaysSignal(all).filter((s) => today.some((t) => t.slug === s.slug));
   const rest = today.filter((s) => !signal.some((t) => t.slug === s.slug));
-  const date = new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" }).format(new Date());
 
   return (
     <>
@@ -31,13 +31,13 @@ export default async function TodayPage() {
             <Image src="/todays-signal-logo-dark.png" alt="" width={924} height={162} priority className="logo-for-dark h-auto w-full max-w-[420px]" />
           </h1>
           <p className="font-mono text-[0.72rem] mt-3" style={{ color: "var(--text-on-ink-dim)" }}>
-            {date} · {today.length} {today.length === 1 ? "story" : "stories"} so far
+            {today.length} {today.length === 1 ? "story" : "stories"} in the {recent.label}
           </p>
         </header>
 
         {today.length === 0 ? (
           <div className="rounded-sm border p-5 text-[0.9rem]" style={{ background: "var(--ink-card)", borderColor: "var(--border)", color: "var(--text-body)" }}>
-            Nothing has been published yet today. New stories land through the day.{" "}
+            Nothing has been published in the last 2 days. New stories land through the day.{" "}
             <Link href="/" className="underline" style={{ color: "var(--brand-soft)" }}>
               See the latest stories →
             </Link>
