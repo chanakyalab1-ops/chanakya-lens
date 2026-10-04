@@ -6,6 +6,8 @@ import Image from "next/image";
 import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 import { isOptimizableImageUrl } from "@/lib/imageHost";
+import { getLensEntity, storiesFor } from "@/lib/lens";
+import type { TrendingTopic } from "@/lib/trending";
 const dotColor: Record<string, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
@@ -423,7 +425,39 @@ function CategoryRail({
   );
 }
 
-export default function Feed({ stories, signalSlugs, todayCount, windowLabel }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string }) {
+function TrendingRow({ topics, activeSlug }: { topics: TrendingTopic[]; activeSlug?: string }) {
+  return (
+    <div className="max-w-7xl mx-auto px-4 pt-3 flex items-center gap-2.5 overflow-x-auto no-scrollbar">
+      <span className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+          <path d="M2 12l4-4 3 3 5-6" />
+          <path d="M10 5h4v4" />
+        </svg>
+        Trending
+      </span>
+      {topics.map((t) => {
+        const on = t.slug === activeSlug;
+        return (
+          <Link
+            key={t.slug}
+            href={on ? "/" : `/?topic=${t.slug}`}
+            scroll={false}
+            className="shrink-0 font-mono text-[0.68rem] whitespace-nowrap rounded-full border px-3 py-1 transition-colors"
+            style={
+              on
+                ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
+                : { color: "var(--text-body)", borderColor: "var(--border)" }
+            }
+          >
+            {t.name}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[] }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
     [stories]
@@ -434,7 +468,11 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel }: 
   // input state, since Feed no longer renders its own search box.
   const searchParams = useSearchParams();
   const query = searchParams.get("q") ?? "";
-  const categoryFiltered = active === "All" ? stories : stories.filter((s) => s.category === active);
+  // A trending-topic chip sets ?topic=<slug>; narrow everything to that topic.
+  const topicSlug = searchParams.get("topic");
+  const topic = topicSlug ? getLensEntity(topicSlug) : undefined;
+  const topicStories = useMemo(() => (topic ? storiesFor(topic, stories) : stories), [topic, stories]);
+  const categoryFiltered = active === "All" ? topicStories : topicStories.filter((s) => s.category === active);
   const filtered = query.trim()
     ? categoryFiltered.filter((s) => {
         const q = query.trim().toLowerCase();
@@ -451,7 +489,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel }: 
   // Only group into category rails on the unfiltered, no-search "All" view --
   // once someone picks a specific category or searches, show the flat,
   // complete list they actually asked for.
-  const showRails = active === "All" && !query.trim();
+  const showRails = active === "All" && !query.trim() && !topic;
 
   // On that same default landing view, the Today's Signal panel above the
   // feed already shows the top story -- skip it as the hero pick too so
@@ -510,6 +548,19 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel }: 
           ))}
         </div>
       </div>
+      {trending && trending.length > 0 && (
+        <TrendingRow topics={trending} activeSlug={topic?.slug} />
+      )}
+      {topic && (
+        <div className="max-w-7xl mx-auto px-4 pt-3 flex items-center justify-between gap-3">
+          <div className="font-mono text-[0.7rem] uppercase tracking-wide" style={{ color: "var(--text-body)" }}>
+            Topic: <span style={{ color: "var(--brand-soft)" }}>{topic.name}</span> · {topicStories.length} {topicStories.length === 1 ? "story" : "stories"}
+          </div>
+          <Link href="/" scroll={false} className="font-mono text-[0.7rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
+            Clear ✕
+          </Link>
+        </div>
+      )}
       {treated.length > 0 && (
         <div className="hidden md:block max-w-7xl mx-auto px-4 pt-3">
           <ImpactLegend />
