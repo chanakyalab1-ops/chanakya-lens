@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 import { isOptimizableImageUrl } from "@/lib/imageHost";
+import { SYSTEMS } from "@/lib/lens";
 import type { TrendingTopic } from "@/lib/trending";
 const dotColor: Record<string, string> = {
   direct: "var(--direct)",
@@ -427,6 +428,45 @@ function CategoryRail({
   );
 }
 
+// The Lens on the homepage: the five strategic systems, each a permanent page.
+// The count is the stories on it this past week, so the cards feel live.
+function LensBand({ weekly }: { weekly?: Record<string, number> }) {
+  return (
+    <section className="mt-6" aria-labelledby="lens-band">
+      <div className="flex items-baseline justify-between gap-3 mb-2.5">
+        <div>
+          <h2 id="lens-band" className="font-display font-bold text-xl">The Lens</h2>
+          <p className="text-[0.78rem] mt-0.5" style={{ color: "var(--text-on-ink-dim)" }}>
+            The places, powers and supply chains behind the news.
+          </p>
+        </div>
+        <Link href="/lens" className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
+          See all →
+        </Link>
+      </div>
+      <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-5">
+        {SYSTEMS.map((e) => {
+          const n = weekly?.[e.slug] ?? 0;
+          return (
+            <Link
+              key={e.slug}
+              href={`/lens/${e.slug}`}
+              className="shrink-0 w-[62%] sm:w-[40%] md:w-auto flex flex-col rounded-sm border p-3.5 hover:opacity-90"
+              style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}
+            >
+              <span className="font-display font-bold text-[1.05rem] leading-tight" style={{ color: "var(--text-on-ink)" }}>{e.name}</span>
+              <span className="text-[0.76rem] leading-snug mt-1.5 line-clamp-3" style={{ color: "var(--text-body)" }}>{e.tagline}</span>
+              <span className="mt-auto pt-2.5 font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+                {n > 0 ? `${n} ${n === 1 ? "story" : "stories"} this week` : "Explore →"}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
   return (
     <div className="max-w-7xl mx-auto px-4 pt-3 flex items-center gap-2.5 overflow-x-auto no-scrollbar">
@@ -451,7 +491,7 @@ function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
   );
 }
 
-export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[] }) {
+export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending, lensWeek }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[]; lensWeek?: Record<string, number> }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
     [stories]
@@ -558,6 +598,8 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
               )}
             </div>
           )}
+
+          {showRails && <LensBand weekly={lensWeek} />}
 
           {showRails && restByCategory ? (
             <div className="mt-4">

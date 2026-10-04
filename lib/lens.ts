@@ -361,3 +361,10 @@ export const MIN_COUNTRY_STORIES = 3;
 export function isThinCountry(entity: LensEntity, storyCount: number): boolean {
   return entity.kind === "country" && storyCount < MIN_COUNTRY_STORIES;
 }
+
+// Stories on each entity over the past 7 days, keyed by slug.
+export function weeklyCounts(entities: LensEntity[], stories: Story[], now: number = Date.now()): Record<string, number> {
+  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const week = stories.filter((s) => new Date(s.publishedAt).getTime() >= weekAgo);
+  return Object.fromEntries(entities.map((e) => [e.slug, storiesFor(e, week).length]));
+}
