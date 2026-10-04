@@ -43,4 +43,18 @@ describe("trendingTopics", () => {
     const stories = ["Iran", "India", "China", "Russia", "Israel"].flatMap((c) => [story(`${c} one`, 2), story(`${c} two`, 3)]);
     expect(trendingTopics(stories, NOW, 3)).toHaveLength(3);
   });
+
+  it("keeps countries to three chips so themes and systems get room", () => {
+    const countries = ["Iran", "India", "China", "Russia", "Israel"].flatMap((c) => [story(`${c} one`, 2), story(`${c} two`, 3)]);
+    const hormuz = [story("Hormuz closed", 1), story("Hormuz reopens", 2)];
+    const out = trendingTopics([...countries, ...hormuz], NOW, 8);
+    const countryNames = ["Iran", "India", "China", "Russia", "Israel"];
+    expect(out.filter((t) => countryNames.includes(t.name))).toHaveLength(3);
+    expect(out.map((t) => t.slug)).toContain("strait-of-hormuz");
+  });
+
+  it("picks up a theme", () => {
+    const stories = [story("Trump threatens new tariffs on EU", 1), story("China answers tariffs with curbs", 2), story("Tariffs hit exporters", 3)];
+    expect(trendingTopics(stories, NOW).map((t) => t.slug)).toContain("tariffs-and-trade");
+  });
 });

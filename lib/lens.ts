@@ -3,7 +3,7 @@ import { COUNTRY_NAMES, REGIONS } from "./regions";
 import { inferStoryRegion } from "./regions";
 import { slugify } from "./slug";
 
-export type LensKind = "system" | "actor" | "country";
+export type LensKind = "system" | "actor" | "country" | "theme";
 
 export type LensEntity = {
   slug: string;
@@ -221,6 +221,61 @@ export const ACTORS: LensEntity[] = [
   },
 ];
 
+// Themes: the ongoing storylines readers follow. A theme that lists a country
+// by name (Iran, Ukraine, Israel) stands in for that country in the trending row. Edit this list as storylines
+// start and end; each trends on its own when enough stories match.
+export const THEMES: LensEntity[] = [
+  {
+    slug: "iran-war",
+    name: "Iran war",
+    kind: "theme",
+    tagline: "The war with Iran and the talks around it.",
+    keywords: ["Iran", "Iranian", "Tehran"],
+  },
+  {
+    slug: "ukraine-war",
+    name: "Ukraine war",
+    kind: "theme",
+    tagline: "The war in Ukraine and efforts to end it.",
+    keywords: ["Ukraine", "Ukrainian", "Kyiv", "Zelenskyy", "Zelensky", "Kursk", "Donbas"],
+  },
+  {
+    slug: "gaza-and-israel",
+    name: "Gaza and Israel",
+    kind: "theme",
+    tagline: "The war in Gaza and the fighting around Israel.",
+    keywords: ["Gaza", "West Bank", "Israel", "Israeli", "Netanyahu", "Rafah"],
+  },
+  {
+    slug: "tariffs-and-trade",
+    name: "Tariffs and trade",
+    kind: "theme",
+    tagline: "Tariffs, trade wars and export controls.",
+    keywords: ["tariff", "tariffs", "trade war", "trade truce", "export controls"],
+  },
+  {
+    slug: "india-us-trade",
+    name: "India–US trade",
+    kind: "theme",
+    tagline: "The India–US trade deal and the tariff threats around it.",
+    keywords: ["India-US", "US-India", "India-U.S.", "Goyal", "USTR"],
+  },
+  {
+    slug: "us-midterms",
+    name: "US midterms",
+    kind: "theme",
+    tagline: "The 2026 US midterm elections.",
+    keywords: ["midterm", "midterms"],
+  },
+  {
+    slug: "oil-and-energy",
+    name: "Oil and energy",
+    kind: "theme",
+    tagline: "Oil, gas and fuel prices.",
+    keywords: ["crude", "Brent", "diesel", "oil price", "oil prices", "energy prices", "LNG"],
+  },
+];
+
 // Aliases for countries whose names show up in other forms in headlines.
 const COUNTRY_ALIASES: Record<string, string[]> = {
   "United States": ["U.S.", "US"],
@@ -244,7 +299,7 @@ export const COUNTRIES: LensEntity[] = COUNTRY_NAMES.filter((n) => n !== "UAE").
   keywords: [name, ...(COUNTRY_ALIASES[name] ?? [])],
 }));
 
-export const ALL_ENTITIES: LensEntity[] = [...SYSTEMS, ...ACTORS, ...COUNTRIES];
+export const ALL_ENTITIES: LensEntity[] = [...THEMES, ...SYSTEMS, ...ACTORS, ...COUNTRIES];
 
 const BY_SLUG = new Map(ALL_ENTITIES.map((e) => [e.slug, e]));
 
