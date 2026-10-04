@@ -313,7 +313,7 @@ export function MobileRow({ story }: { story: Story }) {
 // "Today's Signal": the few stories that matter most right now, set beside the
 // hero. Picked on the server (recent, still developing, with a direct impact)
 // and passed in as slugs.
-export function SignalPanel({ stories, moreCount, plainHeading }: { stories: Story[]; moreCount?: number; plainHeading?: boolean }) {
+export function SignalPanel({ stories, moreCount, moreLabel = "More from today", plainHeading }: { stories: Story[]; moreCount?: number; moreLabel?: string; plainHeading?: boolean }) {
   return (
     <section
       aria-label="Today's Signal"
@@ -369,7 +369,7 @@ export function SignalPanel({ stories, moreCount, plainHeading }: { stories: Sto
           className="mt-1 pt-3 border-t font-mono text-[0.7rem] uppercase tracking-wide hover:opacity-80 flex items-center justify-between"
           style={{ borderColor: "var(--border)", color: "var(--brand-soft)" }}
         >
-          <span>More from today</span>
+          <span>{moreLabel}</span>
           <span>{moreCount} stories →</span>
         </Link>
       )}
@@ -423,7 +423,7 @@ function CategoryRail({
   );
 }
 
-export default function Feed({ stories, signalSlugs, todayCount }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number }) {
+export default function Feed({ stories, signalSlugs, todayCount, windowLabel }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
     [stories]
@@ -519,7 +519,7 @@ export default function Feed({ stories, signalSlugs, todayCount }: { stories: St
         <div>
           {(hero || signalStories.length > 0) && (
             <div className={signalStories.length > 0 ? "mt-3 lg:grid lg:grid-cols-[280px_1fr] lg:gap-4 lg:items-start" : "mt-3"}>
-              {signalStories.length > 0 && <SignalPanel stories={signalStories} moreCount={todayCount} />}
+              {signalStories.length > 0 && <SignalPanel stories={signalStories} moreCount={todayCount} moreLabel={windowLabel ? `More from the ${windowLabel}` : undefined} />}
               {hero && (
                 <div className={signalStories.length > 0 ? "mt-3 lg:mt-0" : undefined}>
                   <HeroCard story={hero} />
