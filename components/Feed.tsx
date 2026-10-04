@@ -428,7 +428,11 @@ function CategoryRail({
 function TrendingRow({ topics, activeSlug }: { topics: TrendingTopic[]; activeSlug?: string }) {
   return (
     <div className="max-w-7xl mx-auto px-4 pt-3 flex items-center gap-2.5 overflow-x-auto no-scrollbar">
-      <span className="shrink-0 font-mono text-[0.62rem] uppercase tracking-widest" style={{ color: "var(--text-on-ink-dim)" }}>
+      <span className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
+          <path d="M2 12l4-4 3 3 5-6" />
+          <path d="M10 5h4v4" />
+        </svg>
         Trending
       </span>
       {topics.map((t) => {
