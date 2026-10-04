@@ -353,3 +353,11 @@ export function countriesByRegion(): { region: string; countries: LensEntity[] }
     .map((region) => ({ region, countries: (groups.get(region) ?? []).sort((a, b) => a.name.localeCompare(b.name)) }))
     .filter((g) => g.countries.length > 0);
 }
+
+// A country page needs this many stories to be worth indexing or listing in
+// the sitemap. Curated pages (systems, actors, themes) are always kept.
+export const MIN_COUNTRY_STORIES = 3;
+
+export function isThinCountry(entity: LensEntity, storyCount: number): boolean {
+  return entity.kind === "country" && storyCount < MIN_COUNTRY_STORIES;
+}

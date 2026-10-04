@@ -6,7 +6,6 @@ import Image from "next/image";
 import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 import { isOptimizableImageUrl } from "@/lib/imageHost";
-import { getLensEntity, storiesFor } from "@/lib/lens";
 import type { TrendingTopic } from "@/lib/trending";
 const dotColor: Record<string, string> = {
   direct: "var(--direct)",
@@ -116,9 +115,12 @@ function ImpactLegend() {
   );
 }
 function ImpactDots({ story }: { story: Story }) {
+  // Stories without an impact chain (briefs) have none; the Lens and Today
+  // pages list those alongside the rest.
+  if (!story.impactNodes?.length) return null;
   return (
     <div className="flex gap-1">
-      {story.impactNodes!.map((n, i) => (
+      {story.impactNodes.map((n, i) => (
         <span
           key={i}
           title={dotLabel[n.confidence]}
@@ -425,7 +427,7 @@ function CategoryRail({
   );
 }
 
-function TrendingRow({ topics, activeSlug }: { topics: TrendingTopic[]; activeSlug?: string }) {
+function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
   return (
     <div className="max-w-7xl mx-auto px-4 pt-3 flex items-center gap-2.5 overflow-x-auto no-scrollbar">
       <span className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
@@ -435,24 +437,16 @@ function TrendingRow({ topics, activeSlug }: { topics: TrendingTopic[]; activeSl
         </svg>
         Trending
       </span>
-      {topics.map((t) => {
-        const on = t.slug === activeSlug;
-        return (
-          <Link
-            key={t.slug}
-            href={on ? "/" : `/?topic=${t.slug}`}
-            scroll={false}
-            className="shrink-0 font-mono text-[0.68rem] whitespace-nowrap rounded-full border px-3 py-1 transition-colors"
-            style={
-              on
-                ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
-                : { color: "var(--text-body)", borderColor: "var(--border)" }
-            }
-          >
-            {t.name}
-          </Link>
-        );
-      })}
+      {topics.map((t) => (
+        <Link
+          key={t.slug}
+          href={`/lens/${t.slug}`}
+          className="shrink-0 font-mono text-[0.68rem] whitespace-nowrap rounded-full border px-3 py-1 transition-colors hover:opacity-80"
+          style={{ color: "var(--text-body)", borderColor: "var(--border)" }}
+        >
+          {t.name}
+        </Link>
+      ))}
     </div>
   );
 }
@@ -468,11 +462,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
   // input state, since Feed no longer renders its own search box.
   const searchParams = useSearchParams();
   const query = searchParams.get("q") ?? "";
-  // A trending-topic chip sets ?topic=<slug>; narrow everything to that topic.
-  const topicSlug = searchParams.get("topic");
-  const topic = topicSlug ? getLensEntity(topicSlug) : undefined;
-  const topicStories = useMemo(() => (topic ? storiesFor(topic, stories) : stories), [topic, stories]);
-  const categoryFiltered = active === "All" ? topicStories : topicStories.filter((s) => s.category === active);
+  const categoryFiltered = active === "All" ? stories : stories.filter((s) => s.category === active);
   const filtered = query.trim()
     ? categoryFiltered.filter((s) => {
         const q = query.trim().toLowerCase();
@@ -489,7 +479,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
   // Only group into category rails on the unfiltered, no-search "All" view --
   // once someone picks a specific category or searches, show the flat,
   // complete list they actually asked for.
-  const showRails = active === "All" && !query.trim() && !topic;
+  const showRails = active === "All" && !query.trim();
 
   // On that same default landing view, the Today's Signal panel above the
   // feed already shows the top story -- skip it as the hero pick too so
@@ -549,17 +539,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
         </div>
       </div>
       {trending && trending.length > 0 && (
-        <TrendingRow topics={trending} activeSlug={topic?.slug} />
-      )}
-      {topic && (
-        <div className="max-w-7xl mx-auto px-4 pt-3 flex items-center justify-between gap-3">
-          <div className="font-mono text-[0.7rem] uppercase tracking-wide" style={{ color: "var(--text-body)" }}>
-            Topic: <span style={{ color: "var(--brand-soft)" }}>{topic.name}</span> · {topicStories.length} {topicStories.length === 1 ? "story" : "stories"}
-          </div>
-          <Link href="/" scroll={false} className="font-mono text-[0.7rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
-            Clear ✕
-          </Link>
-        </div>
+        <TrendingRow topics={trending} />
       )}
       {treated.length > 0 && (
         <div className="hidden md:block max-w-7xl mx-auto px-4 pt-3">
