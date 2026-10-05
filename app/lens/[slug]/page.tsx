@@ -71,10 +71,10 @@ export default async function LensEntityPage({ params }: { params: Promise<{ slu
               </section>
             )}
 
-            {entity.whyIndia && (
+            {entity.whyItMatters && (
               <section className="mb-8 max-w-2xl p-4 md:p-5 rounded-sm border-2" style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}>
-                <h2 className="font-display font-bold text-lg mb-1.5" style={{ color: "var(--brand-soft)" }}>Why it matters from India</h2>
-                <p className="text-[0.92rem] leading-relaxed" style={{ color: "var(--text-on-ink)" }}>{entity.whyIndia}</p>
+                <h2 className="font-display font-bold text-lg mb-1.5" style={{ color: "var(--brand-soft)" }}>Why it matters</h2>
+                <p className="text-[0.92rem] leading-relaxed" style={{ color: "var(--text-on-ink)" }}>{entity.whyItMatters}</p>
               </section>
             )}
 
