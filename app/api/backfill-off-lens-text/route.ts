@@ -13,6 +13,7 @@ type Row = {
   subject_countries: string[] | null;
   sources?: OffLensInput["sources"] | null;
   articles?: { candidate_id: string }[] | null;
+  off_lens?: string | null;
 };
 
 // Writes the Off-Lens "Analysis" note for recently published stories that
@@ -25,6 +26,8 @@ type Row = {
 //   &hours=6     published stories from the last N hours (default 6, max 72)
 //   &limit=10    items per call (max 20)       &slug=...   one specific story or draft
 //   &skip=paris,eiffel   leave out items whose slug contains any of these words
+//   &list=1      no Claude call: just list each item's outlets, countries and
+//                headlines (and any note it already has), so notes can be written by hand
 //   &force=1     also redo items that already have a note, overwriting it. Use it
 //                with &slug=... so a note you have edited by hand isn't replaced.
 //
@@ -51,8 +54,9 @@ export async function GET(req: Request) {
   const supabase = supabaseServer();
   let query = supabase
     .from(table)
-    .select(drafts ? "slug, headline, dek, subject_countries, articles" : "slug, headline, dek, subject_countries, sources");
-  if (params.get("force") !== "1") query = query.is("off_lens", null);
+    .select(drafts ? "slug, headline, dek, subject_countries, articles, off_lens" : "slug, headline, dek, subject_countries, sources, off_lens");
+  const list = params.get("list") === "1";
+  if (params.get("force") !== "1" && !list) query = query.is("off_lens", null);
   if (drafts) {
     query = query.eq("workflow_status", "in_review").order("updated_at", { ascending: false });
   } else {
@@ -94,6 +98,15 @@ export async function GET(req: Request) {
         : story.sources ?? [],
     };
     const sources = describeSources(input.sources);
+    if (list) {
+      results.push({
+        slug: story.slug,
+        status: story.off_lens ? "has a note" : "no note",
+        offLens: story.off_lens ?? undefined,
+        sources: sources.map((s) => `${s.outlet} (${s.country}): ${s.title}`),
+      });
+      continue;
+    }
     if (!hasEnoughCoverage(sources)) {
       results.push({ slug: story.slug, status: "skipped: fewer than 2 countries covering it" });
       continue;
