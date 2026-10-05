@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   // Every page names itself as its own canonical URL, so search engines
   // don't treat ?q= and other query variants as separate pages.
-  alternates: { canonical: "./" },
+  alternates: { canonical: "./", types: { "application/rss+xml": "/rss.xml" } },
   // Pages that set their own openGraph (stories) override these.
   openGraph: {
     type: "website",
