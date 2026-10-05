@@ -20,9 +20,28 @@ const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
+const SITE_TITLE = "Chanakya Lens -- stay ahead of the map";
+const SITE_DESCRIPTION = "Geopolitics traced to you. Small events, real chains, plausible impact -- not forecasts.";
+
 export const metadata: Metadata = {
-  title: "Chanakya Lens -- stay ahead of the map",
-  description: "Geopolitics traced to you. Small events, real chains, plausible impact -- not forecasts.",
+  metadataBase: new URL("https://chanakyalens.com"),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  // Every page names itself as its own canonical URL, so search engines
+  // don't treat ?q= and other query variants as separate pages.
+  alternates: { canonical: "./" },
+  // Pages that set their own openGraph (stories) override these.
+  openGraph: {
+    type: "website",
+    siteName: "Chanakya Lens",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: "/",
+  },
+  twitter: { card: "summary_large_image", title: SITE_TITLE, description: SITE_DESCRIPTION },
+  // Set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION in Vercel to the code Google
+  // Search Console gives you; nothing is rendered until it is set.
+  verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION },
   icons: {
     icon: "/logo-mark.png",
   },
