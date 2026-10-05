@@ -14,8 +14,8 @@ export type LensEntity = {
   keywords: string[];
   // Plain, evergreen background. Countries have none and show coverage only.
   primer?: string[];
-  // Why a reader in India should care.
-  whyIndia?: string;
+  // Why a reader anywhere should care.
+  whyItMatters?: string;
   related?: string[];
 };
 
@@ -31,8 +31,8 @@ export const SYSTEMS: LensEntity[] = [
       "The Strait of Hormuz is a narrow waterway between Iran and Oman that connects the Persian Gulf to the Gulf of Oman and the Arabian Sea. For most of the Gulf's oil and liquefied natural gas it is the only way out by sea.",
       "Roughly a fifth of the world's oil consumption passes through it. At its narrowest the strait is about 33 km wide, and the shipping lanes in each direction are only a few kilometres across, which is why a mine, a seizure or a threat can slow traffic quickly.",
     ],
-    whyIndia:
-      "India imports most of the crude oil it uses, and much of that, along with a large share of its LPG and LNG, comes from Gulf producers whose cargoes leave through the strait. Disruption here shows up in fuel prices, shipping insurance and the rupee.",
+    whyItMatters:
+      "Roughly a fifth of the world's oil and a large share of its LNG pass through this strait. Disruption shows up quickly in fuel prices and shipping insurance, and hits import-dependent economies in Asia and Europe hardest.",
     related: ["iran", "irgc", "opec", "trade-corridors"],
   },
   {
@@ -45,8 +45,8 @@ export const SYSTEMS: LensEntity[] = [
       "The Red Sea links the Suez Canal in the north to the Bab el-Mandeb strait in the south, which opens onto the Gulf of Aden and the Indian Ocean. It is the shortest sea route between Asia and Europe.",
       "The Suez Canal alone is commonly estimated to carry around 12% of world trade by volume. When attacks on ships made the route unsafe, many carriers switched to the long way round the Cape of Good Hope, which adds days and cost to every voyage.",
     ],
-    whyIndia:
-      "Indian exports to Europe and the Mediterranean, and energy cargoes heading west, use this route. When ships divert, freight rates and delivery times rise for Indian exporters and importers.",
+    whyItMatters:
+      "A large share of container traffic between Asia and Europe, and energy cargoes heading west, use this route. When ships divert around Africa, freight rates and delivery times rise for exporters and importers everywhere.",
     related: ["houthis", "egypt", "yemen", "trade-corridors"],
   },
   {
@@ -59,8 +59,8 @@ export const SYSTEMS: LensEntity[] = [
       "Taiwan is a self-governed island of about 23 million people off China's south-east coast. Beijing claims it as part of China and has not ruled out using force to unify it. The United States has no formal diplomatic ties with Taipei but keeps unofficial relations and sells it weapons under the Taiwan Relations Act.",
       "The Taiwan Strait, about 130 km wide at its narrowest, is one of the busiest shipping lanes in the world. Taiwan is also home to the factories that make most of the world's most advanced semiconductors.",
     ],
-    whyIndia:
-      "A crisis here would disrupt chip and electronics supply, and shipping and trade through East Asia, both of which Indian industry depends on.",
+    whyItMatters:
+      "A crisis here would disrupt chip and electronics supply and shipping through East Asia, and could draw in the United States and its allies. Almost every modern industry depends on one or the other.",
     related: ["semiconductors", "china", "taiwan", "quad"],
   },
   {
@@ -73,8 +73,8 @@ export const SYSTEMS: LensEntity[] = [
       "Chips pass through a long chain. Design is led by US firms; the machines that print the most advanced chips come from the Netherlands, Japan and the United States, and one Dutch company, ASML, is the only maker of the most advanced lithography machines. Fabrication of leading-edge chips is concentrated in Taiwan, with South Korea next; assembly, packaging and testing happen mostly across Asia.",
       "Because only a handful of firms and places can do each step, export controls, tariffs, or a disruption at one point carry through the whole chain.",
     ],
-    whyIndia:
-      "India is building chip fabrication and packaging plants under its Semiconductor Mission, and its electronics and auto industries import chips. Export controls and supply shocks hit both.",
+    whyItMatters:
+      "Chips run everything from phones to cars to weapons, and production is concentrated in a few places. Export controls and supply shocks hit manufacturers worldwide, and governments from the US to the EU to East Asia are spending billions to build their own capacity.",
     related: ["taiwan-strait", "china", "united-states", "south-korea"],
   },
   {
@@ -87,8 +87,8 @@ export const SYSTEMS: LensEntity[] = [
       "A trade corridor is a sea, rail or road route, together with the ports, agreements and investment built around it. The ones in the news include the India-Middle East-Europe Economic Corridor (IMEC), announced at the G20 summit in New Delhi in 2023; the International North-South Transport Corridor (INSTC), which links India to Russia through Iran; China's Belt and Road Initiative; and the Arctic Northern Sea Route.",
       "Corridors matter most for the choke points they avoid or depend on, such as Hormuz, the Red Sea and the Strait of Malacca.",
     ],
-    whyIndia:
-      "India is a partner in IMEC and INSTC and competes with Belt and Road projects around its neighbourhood. New routes change what Indian goods cost to move and which countries India depends on.",
+    whyItMatters:
+      "New routes change what goods cost to move and which countries depend on whom. Rival corridors are also a way for the US, China, Europe and the Gulf states to compete for influence.",
     related: ["strait-of-hormuz", "red-sea", "india", "china"],
   },
 ];
@@ -115,7 +115,7 @@ export const ACTORS: LensEntity[] = [
     primer: [
       "OPEC is a group of major oil-exporting countries, led by Saudi Arabia, that coordinates how much oil its members produce. OPEC+ adds Russia and other producers, and its output decisions move oil prices.",
     ],
-    whyIndia: "India buys most of its oil abroad, so OPEC+ production choices feed straight into Indian fuel and import costs.",
+    whyItMatters: "OPEC+ production choices feed straight into fuel prices, inflation and the budgets of both oil importers and exporters.",
     related: ["saudi-arabia", "russia", "strait-of-hormuz"],
   },
   {
@@ -138,7 +138,7 @@ export const ACTORS: LensEntity[] = [
     primer: [
       "The European Union is a political and economic union of 27 member states. It negotiates trade deals and imposes sanctions as a bloc, and the European Commission speaks for it on trade.",
     ],
-    whyIndia: "The EU is one of India's largest trading partners, and an India-EU trade agreement has been under negotiation for years.",
+    whyItMatters: "The EU is the world's largest single market, so its trade rules, tariffs and sanctions shape what companies and governments far outside Europe can do.",
     related: ["nato", "france", "germany", "russia"],
   },
   {
@@ -150,7 +150,7 @@ export const ACTORS: LensEntity[] = [
     primer: [
       "The Quadrilateral Security Dialogue brings together India, the United States, Japan and Australia. It is a consultative group on the Indo-Pacific rather than an alliance, and its leaders have met in person since 2021.",
     ],
-    whyIndia: "It is India's main forum with the US, Japan and Australia on maritime security, technology and supply chains.",
+    whyItMatters: "It is how four large Indo-Pacific democracies coordinate on maritime security, technology and supply chains, and a signal of how the region is lining up around China.",
     related: ["india", "china", "taiwan-strait"],
   },
   {

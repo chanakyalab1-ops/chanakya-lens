@@ -47,7 +47,7 @@ export default async function LensIndexPage() {
             The Lens
           </h1>
           <p className="text-base" style={{ color: "var(--text-body)" }}>
-            The places, powers and supply chains that keep coming back. Each page has the background in plain terms, why it matters from India, the latest coverage and which countries are reporting it.
+            The places, powers and supply chains that keep coming back. Each page has the background in plain terms, why it matters, the latest coverage and which countries are reporting it.
           </p>
         </div>
 
