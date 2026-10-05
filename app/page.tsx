@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-﻿import { Suspense } from "react";
+import { Suspense } from "react";
 import NavDrawer from "@/components/NavDrawer";
 import Feed from "@/components/Feed";
 import LiveMarketTicker from "@/components/LiveMarketTicker";
