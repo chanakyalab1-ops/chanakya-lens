@@ -1,10 +1,12 @@
 import type { Story } from "./stories";
 import { ALL_ENTITIES, THEMES, storiesFor } from "./lens";
-import { recentWindow } from "./signal";
 
 export type TrendingTopic = { slug: string; name: string; count: number };
 
 const DAY = 24 * 60 * 60 * 1000;
+// Topics stay on the row for two days, so a storyline still running isn't
+// dropped the moment its first batch is a day old.
+const WINDOW_MS = 2 * DAY;
 const BASELINE_DAYS = 14;
 const MIN_STORIES = 2;
 // Countries are the broadest topics, so they get at most this many chips.
@@ -17,17 +19,16 @@ const COVERED_BY_THEME = new Set(THEMES.flatMap((t) => t.keywords));
 // by its stories in the recent window against how many it normally gets in a
 // window that long over the previous two weeks.
 export function trendingTopics(stories: Story[], now: number = Date.now(), limit = 8): TrendingTopic[] {
-  const window = recentWindow(stories, now);
-  if (window.stories.length === 0) return [];
-  const windowMs = window.hours * 60 * 60 * 1000;
-  const windowSlugs = new Set(window.stories.map((s) => s.slug));
+  const recent = stories.filter((s) => now - new Date(s.publishedAt).getTime() < WINDOW_MS);
+  if (recent.length === 0) return [];
+  const windowMs = WINDOW_MS;
   const prior = stories.filter((s) => {
     const age = now - new Date(s.publishedAt).getTime();
     return age >= windowMs && age < windowMs + BASELINE_DAYS * DAY;
   });
 
   const ranked = ALL_ENTITIES.filter((e) => !(e.kind === "country" && COVERED_BY_THEME.has(e.name))).map((entity) => {
-    const count = storiesFor(entity, window.stories).filter((s) => windowSlugs.has(s.slug)).length;
+    const count = storiesFor(entity, recent).length;
     const normal = (storiesFor(entity, prior).length / BASELINE_DAYS) * (windowMs / DAY);
     return { slug: entity.slug, name: entity.name, kind: entity.kind, count, score: count / (normal + 1) };
   })

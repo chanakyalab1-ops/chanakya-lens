@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 import { isOptimizableImageUrl } from "@/lib/imageHost";
-import { getLensEntity, storiesFor } from "@/lib/lens";
+import { SYSTEMS } from "@/lib/lens";
 import type { TrendingTopic } from "@/lib/trending";
 const dotColor: Record<string, string> = {
   direct: "var(--direct)",
@@ -116,9 +116,12 @@ function ImpactLegend() {
   );
 }
 function ImpactDots({ story }: { story: Story }) {
+  // Stories without an impact chain (briefs) have none; the Lens and Today
+  // pages list those alongside the rest.
+  if (!story.impactNodes?.length) return null;
   return (
     <div className="flex gap-1">
-      {story.impactNodes!.map((n, i) => (
+      {story.impactNodes.map((n, i) => (
         <span
           key={i}
           title={dotLabel[n.confidence]}
@@ -425,7 +428,46 @@ function CategoryRail({
   );
 }
 
-function TrendingRow({ topics, activeSlug }: { topics: TrendingTopic[]; activeSlug?: string }) {
+// The Lens on the homepage: the five strategic systems, each a permanent page.
+// The count is the stories on it this past week, so the cards feel live.
+function LensBand({ weekly }: { weekly?: Record<string, number> }) {
+  return (
+    <section className="mt-6" aria-labelledby="lens-band">
+      <div className="flex items-baseline justify-between gap-3 mb-2.5">
+        <div>
+          <h2 id="lens-band" className="font-display font-bold text-xl">The Lens</h2>
+          <p className="text-[0.78rem] mt-0.5" style={{ color: "var(--text-on-ink-dim)" }}>
+            The places, powers and supply chains behind the news.
+          </p>
+        </div>
+        <Link href="/lens" className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
+          See all →
+        </Link>
+      </div>
+      <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-5">
+        {SYSTEMS.map((e) => {
+          const n = weekly?.[e.slug] ?? 0;
+          return (
+            <Link
+              key={e.slug}
+              href={`/lens/${e.slug}`}
+              className="shrink-0 w-[62%] sm:w-[40%] md:w-auto flex flex-col rounded-sm border p-3.5 hover:opacity-90"
+              style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}
+            >
+              <span className="font-display font-bold text-[1.05rem] leading-tight" style={{ color: "var(--text-on-ink)" }}>{e.name}</span>
+              <span className="text-[0.76rem] leading-snug mt-1.5 line-clamp-3" style={{ color: "var(--text-body)" }}>{e.tagline}</span>
+              <span className="mt-auto pt-2.5 font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+                {n > 0 ? `${n} ${n === 1 ? "story" : "stories"} this week` : "Explore →"}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
   return (
     <div className="max-w-7xl mx-auto px-4 pt-3 flex items-center gap-2.5 overflow-x-auto no-scrollbar">
       <span className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
@@ -435,29 +477,21 @@ function TrendingRow({ topics, activeSlug }: { topics: TrendingTopic[]; activeSl
         </svg>
         Trending
       </span>
-      {topics.map((t) => {
-        const on = t.slug === activeSlug;
-        return (
-          <Link
-            key={t.slug}
-            href={on ? "/" : `/?topic=${t.slug}`}
-            scroll={false}
-            className="shrink-0 font-mono text-[0.68rem] whitespace-nowrap rounded-full border px-3 py-1 transition-colors"
-            style={
-              on
-                ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
-                : { color: "var(--text-body)", borderColor: "var(--border)" }
-            }
-          >
-            {t.name}
-          </Link>
-        );
-      })}
+      {topics.map((t) => (
+        <Link
+          key={t.slug}
+          href={`/lens/${t.slug}`}
+          className="shrink-0 font-mono text-[0.68rem] whitespace-nowrap rounded-full border px-3 py-1 transition-colors hover:opacity-80"
+          style={{ color: "var(--text-body)", borderColor: "var(--border)" }}
+        >
+          {t.name}
+        </Link>
+      ))}
     </div>
   );
 }
 
-export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[] }) {
+export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending, lensWeek }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[]; lensWeek?: Record<string, number> }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
     [stories]
@@ -468,11 +502,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
   // input state, since Feed no longer renders its own search box.
   const searchParams = useSearchParams();
   const query = searchParams.get("q") ?? "";
-  // A trending-topic chip sets ?topic=<slug>; narrow everything to that topic.
-  const topicSlug = searchParams.get("topic");
-  const topic = topicSlug ? getLensEntity(topicSlug) : undefined;
-  const topicStories = useMemo(() => (topic ? storiesFor(topic, stories) : stories), [topic, stories]);
-  const categoryFiltered = active === "All" ? topicStories : topicStories.filter((s) => s.category === active);
+  const categoryFiltered = active === "All" ? stories : stories.filter((s) => s.category === active);
   const filtered = query.trim()
     ? categoryFiltered.filter((s) => {
         const q = query.trim().toLowerCase();
@@ -489,7 +519,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
   // Only group into category rails on the unfiltered, no-search "All" view --
   // once someone picks a specific category or searches, show the flat,
   // complete list they actually asked for.
-  const showRails = active === "All" && !query.trim() && !topic;
+  const showRails = active === "All" && !query.trim();
 
   // On that same default landing view, the Today's Signal panel above the
   // feed already shows the top story -- skip it as the hero pick too so
@@ -549,17 +579,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
         </div>
       </div>
       {trending && trending.length > 0 && (
-        <TrendingRow topics={trending} activeSlug={topic?.slug} />
-      )}
-      {topic && (
-        <div className="max-w-7xl mx-auto px-4 pt-3 flex items-center justify-between gap-3">
-          <div className="font-mono text-[0.7rem] uppercase tracking-wide" style={{ color: "var(--text-body)" }}>
-            Topic: <span style={{ color: "var(--brand-soft)" }}>{topic.name}</span> · {topicStories.length} {topicStories.length === 1 ? "story" : "stories"}
-          </div>
-          <Link href="/" scroll={false} className="font-mono text-[0.7rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
-            Clear ✕
-          </Link>
-        </div>
+        <TrendingRow topics={trending} />
       )}
       {treated.length > 0 && (
         <div className="hidden md:block max-w-7xl mx-auto px-4 pt-3">
@@ -578,6 +598,8 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
               )}
             </div>
           )}
+
+          {showRails && <LensBand weekly={lensWeek} />}
 
           {showRails && restByCategory ? (
             <div className="mt-4">

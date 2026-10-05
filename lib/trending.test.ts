@@ -26,13 +26,18 @@ describe("trendingTopics", () => {
 
   it("ranks a surge above a topic that is always in the news", () => {
     // India has 3 stories today but ~4 a day all fortnight; Hormuz has 3 today and none before.
-    const usual = Array.from({ length: 50 }, (_, i) => story("India budget talks", 30 + i * 6));
+    const usual = Array.from({ length: 50 }, (_, i) => story("India budget talks", 60 + i * 6));
     const today = [
       story("India trade deal", 1), story("India inflation", 2), story("India rate cut", 3),
       story("Hormuz closed", 1), story("Hormuz reopens", 2), story("Hormuz talks", 3),
     ];
     const slugs = trendingTopics([...usual, ...today], NOW).map((t) => t.slug);
     expect(slugs.indexOf("strait-of-hormuz")).toBeLessThan(slugs.indexOf("india"));
+  });
+
+  it("keeps a topic on the row for two days", () => {
+    const stories = [story("France school protests spread", 30), story("France shuts 400 schools", 38), story("Other news", 1)];
+    expect(trendingTopics(stories, NOW).map((x) => x.slug)).toContain("france");
   });
 
   it("returns nothing when no story is recent", () => {

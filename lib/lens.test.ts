@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ALL_ENTITIES, COUNTRIES, getLensEntity, matchesKeyword, storiesFor, coverageCounts, countriesByRegion } from "./lens";
+import { ALL_ENTITIES, COUNTRIES, getLensEntity, matchesKeyword, storiesFor, coverageCounts, countriesByRegion, weeklyCounts, SYSTEMS } from "./lens";
 import type { Story } from "./stories";
 
 const story = (slug: string, headline: string, extra: Partial<Story> = {}): Story =>
@@ -59,5 +59,18 @@ describe("countriesByRegion", () => {
   it("groups countries and leaves none out", () => {
     const total = countriesByRegion().reduce((n, g) => n + g.countries.length, 0);
     expect(total).toBe(COUNTRIES.length);
+  });
+});
+
+describe("weeklyCounts", () => {
+  it("counts only the past 7 days", () => {
+    const now = new Date("2026-10-10T00:00:00Z").getTime();
+    const stories = [
+      story("a", "Hormuz closed", { publishedAt: "2026-10-09T00:00:00Z" }),
+      story("b", "Hormuz reopens", { publishedAt: "2026-10-05T00:00:00Z" }),
+      story("c", "Hormuz last month", { publishedAt: "2026-09-01T00:00:00Z" }),
+    ];
+    expect(weeklyCounts(SYSTEMS, stories, now)["strait-of-hormuz"]).toBe(2);
+    expect(weeklyCounts(SYSTEMS, stories, now)["red-sea"]).toBe(0);
   });
 });
