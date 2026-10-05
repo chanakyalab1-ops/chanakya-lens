@@ -8,7 +8,7 @@ import { pickTodaysSignal, recentWindow } from "@/lib/signal";
 import { trendingTopics } from "@/lib/trending";
 import { SYSTEMS, weeklyCounts } from "@/lib/lens";
 import { getMarketRows } from "@/lib/marketData";
-export const revalidate = 3600;
+export const revalidate = 600;
 
 const websiteSchema = {
   "@context": "https://schema.org",

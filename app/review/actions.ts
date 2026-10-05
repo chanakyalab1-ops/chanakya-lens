@@ -289,6 +289,8 @@ export async function publishDraft(slug: string, feedback?: PublishFeedback): Pr
     }
 
     revalidatePath('/review');
+    revalidatePath('/');
+    revalidatePath('/today');
     return { ok: true };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };

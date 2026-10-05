@@ -1,4 +1,5 @@
 import type { Story } from "./stories";
+import { jaccard, tokenize } from "./clustering";
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -17,8 +18,9 @@ export function recentWindow(stories: Story[], now: number = Date.now()): { stor
     : { stories: newestFirst, hours: 48, label: "last 2 days" };
 }
 
-// The few stories that matter most right now: recent, still developing, with
-// a direct impact on a reader.
+// The few stories that matter most right now: freshest first (6-hour
+// buckets), then still developing with a direct impact on a reader. Near-
+// duplicate headlines are skipped so one event doesn't fill the strip.
 export function pickTodaysSignal(stories: Story[], now: number = Date.now()): Story[] {
   const rank = (s: Story) => {
     const hasDirect = s.impactNodes?.some((n) => n.confidence === "direct");
@@ -28,7 +30,18 @@ export function pickTodaysSignal(stories: Story[], now: number = Date.now()): St
     if (hasDirect) score += 1;
     return score;
   };
-  return [...recentWindow(stories, now).stories]
-    .sort((a, b) => rank(b) - rank(a) || new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, 3);
+  const time = (s: Story) => new Date(s.publishedAt).getTime();
+  const bucket = (s: Story) => Math.floor(Math.max(0, now - time(s)) / (6 * HOUR));
+  const ordered = [...recentWindow(stories, now).stories].sort(
+    (a, b) => bucket(a) - bucket(b) || rank(b) - rank(a) || time(b) - time(a),
+  );
+  const picked: Story[] = [];
+  const skipped: Story[] = [];
+  for (const s of ordered) {
+    if (picked.length === 3) break;
+    const tokens = tokenize(s.headline);
+    const dup = picked.some((p) => jaccard(tokenize(p.headline), tokens) >= 0.2);
+    (dup ? skipped : picked).push(s);
+  }
+  return [...picked, ...skipped].slice(0, 3);
 }
