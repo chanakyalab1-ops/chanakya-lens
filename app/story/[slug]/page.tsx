@@ -7,6 +7,8 @@ import { formatStoryDate } from "@/lib/formatDate";
 import { PageViewBeacon } from "@/components/PageViewBeacon";
 import { ShareButtons } from "@/components/ShareButtons";
 import { OffLensSection } from "@/components/OffLensSection";
+import { paragraphs } from "@/lib/paragraphs";
+import { groupSources } from "@/lib/groupSources";
 const tagColor: Record<ConfidenceLevel, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
@@ -115,7 +117,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         <span className="w-[52px]" aria-hidden />
       </div>
       <div className="max-w-7xl mx-auto px-4 md:px-5 pt-4 md:pt-7 pb-16">
-      <article className="max-w-2xl mx-auto md:max-w-none flex flex-col md:grid md:grid-cols-[1fr_380px] md:gap-10">
+      <article className="max-w-2xl mx-auto md:max-w-none flex flex-col md:grid md:grid-cols-[minmax(0,1fr)_380px] md:gap-12">
         <div className="contents md:flex md:flex-col">
         <Link
           href="/"
@@ -171,12 +173,14 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                 </span>
               </>
             )}
+            <span className="hidden md:inline text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>·</span>
+            <span className="hidden md:inline font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(story.publishedAt)}</span>
           </div>
           <div className="hidden md:block"><ShareButtons slug={slug} headline={story.headline} /></div>
         </div>
-        <div className="flex items-center justify-between mb-2 font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+        <div className="md:hidden flex items-center justify-between mb-2 font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>
           <span>{formatStoryDate(story.publishedAt)}</span>
-          <span className="md:hidden -mr-2"><ShareButtons slug={slug} headline={story.headline} compact /></span>
+          <span className="-mr-2"><ShareButtons slug={slug} headline={story.headline} compact /></span>
         </div>
         {story.subjectCountries && story.subjectCountries.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
@@ -191,10 +195,31 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             ))}
           </div>
         )}
-        <h1 className="font-display font-bold text-[1.75rem] md:text-3xl leading-[1.15] mb-3 md:mb-4">{story.headline}</h1>
-        <p className="text-[1.02rem] md:text-base mb-5 md:mb-6 leading-snug md:leading-normal" style={{ color: "var(--text-on-ink-dim)" }}>{story.dek}</p>
+        <h1 className="font-display font-bold text-[1.75rem] md:text-[2.6rem] leading-[1.15] md:leading-[1.08] mb-3 md:mb-4 md:max-w-[46rem]">{story.headline}</h1>
+        <p className="text-[1.02rem] md:text-xl mb-5 md:mb-7 leading-snug md:leading-snug md:max-w-[46rem]" style={{ color: "var(--text-on-ink-dim)" }}>{story.dek}</p>
 
-        <p className="max-md:order-2 text-[1rem] md:text-[0.95rem] leading-[1.7] md:leading-relaxed mb-6 md:mb-8" style={{ color: "var(--text-body)" }}>{story.body}</p>
+        <div className="max-md:order-2 mb-6 md:mb-8 space-y-4 md:space-y-5 md:max-w-[42rem]">
+          {paragraphs(story.body ?? "").map((para, i) => (
+            <p key={i} className="text-[1rem] md:text-[1.125rem] leading-[1.7] md:leading-[1.75]" style={{ color: "var(--text-body)" }}>{para}</p>
+          ))}
+        </div>
+
+        {story.chanakyaAnalysis && (
+          <section
+            className="max-md:order-3 mt-2 mb-6 md:mb-9 p-4 md:p-6 rounded-sm border-2 md:max-w-[42rem]"
+            style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}
+          >
+            <div className="font-display font-bold uppercase tracking-wide text-xl mb-1.5" style={{ color: "var(--brand-soft)" }}>
+              Chanakya&apos;s Move
+            </div>
+            <div className="text-[0.78rem] mb-4" style={{ color: "var(--text-on-ink-dim)" }}>
+              Whose move this was, what they&apos;re betting on, what could counter it.
+            </div>
+            <p className="text-[0.95rem] md:text-[1.05rem] leading-relaxed md:leading-[1.7]" style={{ color: "var(--text-on-ink)" }}>
+              {story.chanakyaAnalysis}
+            </p>
+          </section>
+        )}
 
         {story.impactNodes && story.impactNodes.length > 0 && (
           <section className="max-md:order-4 mt-2 md:mt-9">
@@ -249,61 +274,81 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           offLensCountries={story.offLensCountries}
         />
 
-        {story.chanakyaAnalysis && (
-          <section
-            className="max-md:order-3 mt-2 mb-6 md:mb-9 p-4 md:p-5 rounded-sm border-2"
-            style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}
-          >
-            <div className="font-display font-bold uppercase tracking-wide text-xl mb-1.5" style={{ color: "var(--brand-soft)" }}>
-              Chanakya&apos;s Move
-            </div>
-            <div className="text-[0.78rem] mb-4" style={{ color: "var(--text-on-ink-dim)" }}>
-              Whose move this was, what they&apos;re betting on, what could counter it.
-            </div>
-            <p className="text-[0.95rem] leading-relaxed" style={{ color: "var(--text-on-ink)" }}>
-              {story.chanakyaAnalysis}
-            </p>
-          </section>
-        )}
         </aside>
       </article>
 
       {/* Full width below grid — Impact, Sources, Related */}
-      <div className="mt-8 md:mt-10 space-y-8 md:space-y-10 max-w-screen-xl mx-auto md:px-8">
+      <div className="mt-8 md:mt-10 space-y-8 md:space-y-0 mx-auto md:grid md:grid-cols-[minmax(0,1fr)_380px] md:gap-12 md:items-start">
         
 
         {story.sources && story.sources.length > 0 && (
-          <section className="mt-9">
+          <section className="mt-9 md:mt-2 md:max-w-[42rem]">
             <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
               Sources
             </div>
             <div className="text-[0.78rem] mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
               Every claim here traces back to reporting you can read yourself.
             </div>
-            <div className="space-y-2">
-              {story.sources.map((source, i) => (
-                <a
-                  key={i}
-                  href={source.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between gap-3 p-3 rounded-sm border hover:opacity-80"
-                  style={{ borderColor: "var(--border)" }}
-                >
-                  <span className="text-[0.85rem] truncate" style={{ color: "var(--text-body)" }}>
-                    {source.title}
-                  </span>
-                  <span className="font-mono text-[0.62rem] uppercase tracking-wide shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>
-                    {source.sourceCountry ?? source.domain}
-                  </span>
-                </a>
-              ))}
-            </div>
+            {(() => {
+              const groups = groupSources(story.sources);
+              const row = (g: (typeof groups)[number], i: number) => (
+                <div key={i} className="rounded-sm border" style={{ borderColor: "var(--border)" }}>
+                  <a
+                    href={g.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between gap-3 p-3 hover:opacity-80"
+                  >
+                    <span className="text-[0.85rem] truncate" style={{ color: "var(--text-body)" }}>
+                      {g.title}
+                    </span>
+                    <span className="font-mono text-[0.62rem] uppercase tracking-wide shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>
+                      {g.label}
+                    </span>
+                  </a>
+                  {g.others.length > 0 && (
+                    <details className="px-3 pb-2.5">
+                      <summary className="cursor-pointer font-mono text-[0.62rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
+                        Same story in {g.others.length} more {g.others.length === 1 ? "outlet" : "outlets"}
+                      </summary>
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {g.others.map((o, j) => (
+                          <a
+                            key={j}
+                            href={o.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-mono text-[0.62rem] px-2 py-1 rounded border hover:opacity-80"
+                            style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}
+                          >
+                            {o.domain.replace("www.", "")}
+                          </a>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              );
+              const SHOWN = 6;
+              return (
+                <>
+                  <div className="space-y-2">{groups.slice(0, SHOWN).map(row)}</div>
+                  {groups.length > SHOWN && (
+                    <details className="mt-2 group">
+                      <summary className="cursor-pointer font-mono text-[0.68rem] uppercase tracking-wide py-2 hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
+                        Show {groups.length - SHOWN} more {groups.length - SHOWN === 1 ? "source" : "sources"}
+                      </summary>
+                      <div className="space-y-2 mt-1">{groups.slice(SHOWN).map((g, i) => row(g, i + SHOWN))}</div>
+                    </details>
+                  )}
+                </>
+              );
+            })()}
           </section>
         )}
 
         {related.length > 0 && (
-          <section className="mt-10 pt-6 border-t" style={{ borderColor: "var(--border)" }}>
+          <section className="mt-10 pt-6 border-t md:mt-2 md:pt-0 md:border-t-0" style={{ borderColor: "var(--border)" }}>
             <div className="font-display font-bold uppercase tracking-wide text-lg mb-4" style={{ color: "var(--brand-soft)" }}>
               Related
             </div>
@@ -325,7 +370,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </section>
         )}
 
-        <div className="flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.68rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
+        <div className="md:col-span-2 md:mt-10 flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.68rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
           <div className="flex gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--direct)" }} />
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--likely)" }} />
