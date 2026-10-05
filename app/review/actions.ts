@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { after } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { slugify } from '@/lib/slug';
@@ -288,6 +288,7 @@ export async function publishDraft(slug: string, feedback?: PublishFeedback): Pr
       console.error(`Failed to log publish decision for ${slug}: ${decisionError.message}`);
     }
 
+    updateTag('stories');
     revalidatePath('/review');
     revalidatePath('/');
     revalidatePath('/today');
@@ -481,6 +482,7 @@ export async function updatePublishedStory(slug: string, input: UpdatePublishedS
     }
 
     revalidatePath('/review/manage');
+    updateTag('stories');
     revalidatePath(`/story/${slug}`);
     revalidatePath('/');
     return { ok: true };
@@ -500,6 +502,7 @@ export async function unpublishStory(slug: string): Promise<ActionResult> {
       throw new Error(`Failed to unpublish: ${error.message}`);
     }
 
+    updateTag('stories');
     revalidatePath('/review/manage');
     revalidatePath('/');
     return { ok: true };

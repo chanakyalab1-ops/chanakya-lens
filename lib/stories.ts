@@ -1,4 +1,5 @@
-﻿import { supabase } from "./supabase";
+﻿import { unstable_cache } from "next/cache";
+import { supabase } from "./supabase";
 import { articleHost, resolveSourceCountry } from "./outletCountries";
 
 export type ConfidenceLevel = "direct" | "likely" | "possible";
@@ -84,7 +85,14 @@ function mapRow(row: StoryRow): Story {
   };
 }
 
-export async function getAllStories(): Promise<Story[]> {
+// Everything the list views (home, today, lens, regions, sitemap, feed) need,
+// without `body` -- the article text is the largest column and only the story
+// page reads it (via getStoryBySlug). Pulling it into every list render was a
+// major source of database egress.
+const LIST_COLUMNS =
+  "slug, category, status, headline, dek, read_time, has_video, impact_nodes, sources, chanakya_analysis, off_lens, off_lens_countries, subject_countries, image_url, created_at, quality_score";
+
+async function fetchAllStories(): Promise<Story[]> {
   // Ranked by quality_score (best-fact-checked first), falling back to
   // recency. Stories published before fact-check scores existed carry
   // quality_score=null, which nullsFirst:false sends to the bottom of that
@@ -93,14 +101,29 @@ export async function getAllStories(): Promise<Story[]> {
   // scores start landing without needing a separate code path later.
   const { data, error } = await supabase
     .from("stories")
-    .select("*")
+    .select(LIST_COLUMNS)
     .order("quality_score", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
   if (error) {
-    console.error("Failed to fetch stories:", error.message);
+    // Throw, so a failed read is never stored in the cache as "no stories".
+    throw new Error(`Failed to fetch stories: ${error.message}`);
+  }
+  return (data as unknown as Omit<StoryRow, "body">[]).map((row) => mapRow({ ...row, body: "" }));
+}
+
+// One shared read for every page and every build, refreshed every 10 minutes
+// or when a story is published, edited or unpublished (updateTag("stories")).
+// Without this each page regeneration and each prerendered page in a deploy
+// re-downloaded the whole table.
+const cachedStories = unstable_cache(fetchAllStories, ["all-stories"], { revalidate: 600, tags: ["stories"] });
+
+export async function getAllStories(): Promise<Story[]> {
+  try {
+    return await cachedStories();
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : e);
     return [];
   }
-  return (data as StoryRow[]).map(mapRow);
 }
 
 export async function getStoryBySlug(slug: string): Promise<Story | null> {
