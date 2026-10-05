@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 ﻿import { Suspense } from "react";
 import NavDrawer from "@/components/NavDrawer";
 import Feed from "@/components/Feed";
@@ -8,6 +9,13 @@ import { pickTodaysSignal, recentWindow } from "@/lib/signal";
 import { trendingTopics } from "@/lib/trending";
 import { SYSTEMS, weeklyCounts } from "@/lib/lens";
 import { getMarketRows } from "@/lib/marketData";
+// The layout's relative canonical ("./") resolves to /index on the root route,
+// which is a duplicate URL. Name the homepage explicitly. A page-level
+// `alternates` replaces the layout's wholesale, so the RSS link is repeated.
+export const metadata: Metadata = {
+  alternates: { canonical: "https://chanakyalens.com", types: { "application/rss+xml": "/rss.xml" } },
+};
+
 export const revalidate = 600;
 
 const websiteSchema = {
