@@ -27,7 +27,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: story.headline,
     description: story.dek ?? story.headline,
+    alternates: { canonical: `https://chanakyalens.com/story/${slug}` },
     openGraph: {
+      type: "article",
+      siteName: "Chanakya Lens",
+      publishedTime: story.publishedAt,
       title: story.headline,
       description: story.dek ?? story.headline,
       url: `https://chanakyalens.com/story/${slug}`,
