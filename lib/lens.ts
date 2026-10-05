@@ -74,7 +74,7 @@ export const SYSTEMS: LensEntity[] = [
       "Because only a handful of firms and places can do each step, export controls, tariffs, or a disruption at one point carry through the whole chain.",
     ],
     whyItMatters:
-      "Chips run everything from phones to cars to weapons, and production is concentrated in a few places. Export controls and supply shocks hit manufacturers worldwide, and governments from the US to the EU to India are spending billions to build their own capacity.",
+      "Chips run everything from phones to cars to weapons, and production is concentrated in a few places. Export controls and supply shocks hit manufacturers worldwide, and governments from the US to the EU to East Asia are spending billions to build their own capacity.",
     related: ["taiwan-strait", "china", "united-states", "south-korea"],
   },
   {
@@ -88,7 +88,7 @@ export const SYSTEMS: LensEntity[] = [
       "Corridors matter most for the choke points they avoid or depend on, such as Hormuz, the Red Sea and the Strait of Malacca.",
     ],
     whyItMatters:
-      "New routes change what goods cost to move and which countries depend on whom. Rival corridors are also a way for the US, China, India and the Gulf states to compete for influence.",
+      "New routes change what goods cost to move and which countries depend on whom. Rival corridors are also a way for the US, China, Europe and the Gulf states to compete for influence.",
     related: ["strait-of-hormuz", "red-sea", "india", "china"],
   },
 ];
@@ -150,7 +150,7 @@ export const ACTORS: LensEntity[] = [
     primer: [
       "The Quadrilateral Security Dialogue brings together India, the United States, Japan and Australia. It is a consultative group on the Indo-Pacific rather than an alliance, and its leaders have met in person since 2021.",
     ],
-    whyItMatters: "It is the main way four large Indo-Pacific democracies coordinate on maritime security, technology and supply chains, and a signal of how the region is lining up around China.",
+    whyItMatters: "It is how four large Indo-Pacific democracies coordinate on maritime security, technology and supply chains, and a signal of how the region is lining up around China.",
     related: ["india", "china", "taiwan-strait"],
   },
   {
