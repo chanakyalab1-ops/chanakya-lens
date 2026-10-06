@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 // Global search lives in the header now (was previously a row under the
 // homepage feed). It writes the query to the `q` URL param on `/` --
-// Feed.tsx reads that reactively via its own useSearchParams() to filter.
+// Feed.tsx reads that reactively from the URL (and a "lens-query" event) to filter.
 // On any other page, submitting navigates to `/?q=...`.
 function useHeaderSearch() {
   const router = useRouter();
@@ -24,6 +24,7 @@ function useHeaderSearch() {
   function navigate(next: string) {
     const trimmed = next.trim();
     router.push(trimmed ? `/?q=${encodeURIComponent(trimmed)}` : "/", { scroll: false });
+    window.dispatchEvent(new CustomEvent("lens-query", { detail: trimmed }));
   }
 
   function onChange(next: string) {

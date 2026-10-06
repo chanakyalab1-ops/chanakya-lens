@@ -4,6 +4,11 @@ import { getAllStories } from "@/lib/stories";
 
 export const revalidate = 300;
 
+export const metadata = {
+  title: "Geopolitics by region -- Asia, Europe, Middle East and more | Chanakya Lens",
+  description: "Browse the latest geopolitics news and analysis by region: Asia, Europe, the Middle East, Africa and the Americas.",
+};
+
 export default async function RegionsPage() {
   const stories = await getAllStories();
 
