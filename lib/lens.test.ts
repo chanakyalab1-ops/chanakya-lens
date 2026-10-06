@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ALL_ENTITIES, COUNTRIES, getLensEntity, matchesKeyword, storiesFor, coverageCounts, countriesByRegion, weeklyCounts, SYSTEMS } from "./lens";
+import { ALL_ENTITIES, COUNTRIES, hubsForStory, getLensEntity, matchesKeyword, storiesFor, coverageCounts, countriesByRegion, weeklyCounts, SYSTEMS } from "./lens";
 import type { Story } from "./stories";
 
 const story = (slug: string, headline: string, extra: Partial<Story> = {}): Story =>
@@ -72,5 +72,20 @@ describe("weeklyCounts", () => {
     ];
     expect(weeklyCounts(SYSTEMS, stories, now)["strait-of-hormuz"]).toBe(2);
     expect(weeklyCounts(SYSTEMS, stories, now)["red-sea"]).toBe(0);
+  });
+});
+
+describe("hubsForStory", () => {
+  it("lists topical hubs first, capped, and skips thin country pages", () => {
+    const s = story("a", "Iran threatens the Strait of Hormuz", { subjectCountries: ["Iran"] });
+    const hubs = hubsForStory(s, [s]);
+    expect(hubs.length).toBeGreaterThan(0);
+    expect(hubs.length).toBeLessThanOrEqual(3);
+    expect(hubs[0].kind).not.toBe("country");
+    // Iran has a single story, below the country-page minimum, so it is not offered.
+    expect(hubs.some((h) => h.kind === "country")).toBe(false);
+  });
+  it("is empty when nothing matches", () => {
+    expect(hubsForStory(story("b", "Local bake sale raises funds"), [])).toEqual([]);
   });
 });

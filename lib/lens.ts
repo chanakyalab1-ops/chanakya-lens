@@ -368,3 +368,15 @@ export function weeklyCounts(entities: LensEntity[], stories: Story[], now: numb
   const week = stories.filter((s) => new Date(s.publishedAt).getTime() >= weekAgo);
   return Object.fromEntries(entities.map((e) => [e.slug, storiesFor(e, week).length]));
 }
+
+// The Lens pages a story belongs to, for the links at the foot of a story.
+// Themes, systems and actors come first (they are the stronger topical hubs);
+// a country only counts once its page has enough stories to be indexed.
+export function hubsForStory(story: Story, allStories: Story[], max = 3): LensEntity[] {
+  const matches = ALL_ENTITIES.filter((e) => storiesFor(e, [story]).length > 0);
+  const strong = matches.filter((e) => e.kind !== "country");
+  const countries = matches.filter(
+    (e) => e.kind === "country" && !isThinCountry(e, storiesFor(e, allStories).length),
+  );
+  return [...strong, ...countries].slice(0, max);
+}
