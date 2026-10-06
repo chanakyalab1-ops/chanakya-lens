@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -68,6 +68,7 @@ export default function DigestSignup() {
       <div className="flex flex-col sm:flex-row gap-2">
         <input
           type="email"
+            aria-label="Email address"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}

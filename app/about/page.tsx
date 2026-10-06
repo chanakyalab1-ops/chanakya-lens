@@ -1,10 +1,9 @@
+import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import NavDrawer from "@/components/NavDrawer";
 import Link from "next/link";
 
-export const metadata = {
-  title: "About Chanakya Lens: how we trace geopolitics to you",
-  description: "Why Chanakya Lens exists and how we turn small world events into traceable consequences, with sources and confidence ratings.",
-};
+export const metadata: Metadata = pageMeta("/about", "About Chanakya Lens: how we trace geopolitics to you", "Why Chanakya Lens exists and how we turn small world events into traceable consequences, with sources and confidence ratings.");
 
 export default function AboutPage() {
   return (

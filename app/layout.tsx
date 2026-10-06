@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import Footer from "@/components/Footer";
 import MobileTabBar from "@/components/MobileTabBar";
 import StickyDigestBar from "@/components/StickyDigestBar";
@@ -57,7 +57,7 @@ const JSON_LD = JSON.stringify([
     "@type": "Organization",
     "name": "Chanakya Lens",
     "url": "https://chanakyalens.com",
-    "logo": "https://chanakyalens.com/favicon.ico",
+    "logo": "https://chanakyalens.com/logo-mark.png",
     "description": "Geopolitics traced to you. Global moves. Local math.",
     "sameAs": [
       "https://www.instagram.com/chanakya.lab",

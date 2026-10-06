@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -52,6 +52,7 @@ export default function StickyDigestBar() {
           <form onSubmit={handleSubmit} className="flex flex-1 gap-2 max-w-md">
             <input
               type="email"
+            aria-label="Email address"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}

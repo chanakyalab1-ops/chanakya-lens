@@ -1,3 +1,4 @@
+import { pageMeta } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const description = entity.primer?.[0] ?? `Latest Chanakya Lens coverage of ${entity.name}, and which countries are reporting it.`;
   // Keep thin country pages out of search results until they have real coverage.
   const thin = isThinCountry(entity, storiesFor(entity, await getAllStories()).length);
-  return { title: `${entity.name} | The Lens`, description, robots: thin ? { index: false, follow: true } : undefined };
+  return { ...pageMeta(`/lens/${slug}`, `${entity.name} | The Lens`, description), robots: thin ? { index: false, follow: true } : undefined };
 }
 
 const KIND_LABEL: Record<LensKind, string> = { system: "Strategic system", actor: "Actor", country: "Country", theme: "Storyline" };

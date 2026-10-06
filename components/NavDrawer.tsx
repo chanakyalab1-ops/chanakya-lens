@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -129,6 +129,7 @@ export default function NavDrawer() {
                   <p className="text-[0.78rem] mb-1" style={{ color: "var(--text-on-ink-dim)" }}>Daily geopolitics digest — free.</p>
                   <input
                     type="email"
+            aria-label="Email address"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}

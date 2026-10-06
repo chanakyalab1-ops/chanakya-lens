@@ -1,4 +1,4 @@
-﻿import { notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
@@ -11,6 +11,7 @@ import { OffLensSection } from "@/components/OffLensSection";
 import { paragraphs } from "@/lib/paragraphs";
 import { groupSources } from "@/lib/groupSources";
 import { hubsForStory } from "@/lib/lens";
+import { seoTitle } from "@/lib/seo";
 const tagColor: Record<ConfidenceLevel, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const story = await getStoryBySlug(slug);
   if (!story) return {};
   return {
-    title: story.headline,
+    title: seoTitle(story.headline),
     description: story.dek ?? story.headline,
     alternates: { canonical: `https://chanakyalens.com/story/${slug}` },
     openGraph: {

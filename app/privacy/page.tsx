@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import NavDrawer from "@/components/NavDrawer";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -33,7 +35,7 @@ const Mail = () => (
   <a href="mailto:chanakya.lab1@gmail.com" className="underline" style={heading}>chanakya.lab1@gmail.com</a>
 );
 
-export const metadata = { title: "Privacy Policy", description: "How Chanakya Lens collects, uses and protects your personal data." };
+export const metadata: Metadata = pageMeta("/privacy", "Privacy Policy", "How Chanakya Lens collects, uses and protects your personal data.");
 
 export default function PrivacyPage() {
   return (

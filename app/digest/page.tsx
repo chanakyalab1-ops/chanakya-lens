@@ -1,10 +1,9 @@
-﻿import NavDrawer from "@/components/NavDrawer";
+import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
+import NavDrawer from "@/components/NavDrawer";
 import DigestSignup from "@/components/DigestSignup";
 
-export const metadata = {
-  title: "The Chanakya Lens daily digest: geopolitics by email",
-  description: "A daily email on what mattered in geopolitics today, traced by topic. Pick your topics and get the signal, not the noise.",
-};
+export const metadata: Metadata = pageMeta("/digest", "The Chanakya Lens daily digest: geopolitics by email", "A daily email on what mattered in geopolitics today, traced by topic. Pick your topics and get the signal, not the noise.");
 
 export default function DigestPage() {
   return (

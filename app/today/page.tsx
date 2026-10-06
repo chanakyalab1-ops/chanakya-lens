@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
 import NavDrawer from "@/components/NavDrawer";
@@ -8,10 +9,7 @@ import { pickTodaysSignal, recentWindow } from "@/lib/signal";
 
 export const revalidate = 600;
 
-export const metadata: Metadata = {
-  title: "Today's Signal",
-  description: "Everything published in the last day on Chanakya Lens, with the stories that matter most on top.",
-};
+export const metadata: Metadata = pageMeta("/today", "Today's Signal", "Everything published in the last day on Chanakya Lens, with the stories that matter most on top.");
 
 export default async function TodayPage() {
   const all = await getAllStories();

@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import NavDrawer from "@/components/NavDrawer";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -32,7 +34,7 @@ const Mail = () => (
   <a href="mailto:chanakya.lab1@gmail.com" className="underline" style={heading}>chanakya.lab1@gmail.com</a>
 );
 
-export const metadata = { title: "Terms of Service", description: "The terms for using Chanakya Lens." };
+export const metadata: Metadata = pageMeta("/terms", "Terms of Service", "The terms for using Chanakya Lens.");
 
 export default function TermsPage() {
   return (

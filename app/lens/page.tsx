@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import Link from "next/link";
 import NavDrawer from "@/components/NavDrawer";
 import { getAllStories } from "@/lib/stories";
@@ -6,10 +7,7 @@ import { THEMES, SYSTEMS, ACTORS, countriesByRegion, storiesFor, type LensEntity
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "The Lens",
-  description: "Permanent pages for the countries, actors and strategic systems that keep coming up: Hormuz, the Red Sea, Taiwan, semiconductors, trade corridors and more.",
-};
+export const metadata: Metadata = pageMeta("/lens", "The Lens", "Permanent pages for the countries, actors and strategic systems that keep coming up: Hormuz, the Red Sea, Taiwan, semiconductors, trade corridors and more.");
 
 function Card({ entity, count }: { entity: LensEntity; count: number }) {
   return (
