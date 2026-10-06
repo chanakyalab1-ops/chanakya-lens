@@ -270,7 +270,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         </div>
 
         {/* RIGHT SIDEBAR */}
-        <aside className="contents md:block md:space-y-6 md:sticky md:top-20 md:self-start">
+        <aside className="contents md:block md:space-y-6 md:self-start">
 
         {story.hasVideo && (
           <div
