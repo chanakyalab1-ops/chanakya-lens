@@ -40,6 +40,26 @@ export async function GET() {
     <loc>https://chanakyalens.com/lens</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://chanakyalens.com/today</loc>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chanakyalens.com/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://chanakyalens.com/how-we-rate</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://chanakyalens.com/digest</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>${lensUrls}${urls}
 </urlset>`;
 

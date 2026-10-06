@@ -27,8 +27,8 @@ export default async function TodayPage() {
         <header className="mb-6">
           <h1>
             <span className="sr-only">Today&apos;s Signal</span>
-            <Image src="/todays-signal-logo.png" alt="" width={924} height={162} priority className="logo-for-light h-auto w-full max-w-[420px]" />
-            <Image src="/todays-signal-logo-dark.png" alt="" width={924} height={162} priority className="logo-for-dark h-auto w-full max-w-[420px]" />
+            <Image src="/todays-signal-logo.png" alt="Today's Signal" width={924} height={162} priority className="logo-for-light h-auto w-full max-w-[420px]" />
+            <Image src="/todays-signal-logo-dark.png" alt="Today's Signal" width={924} height={162} priority className="logo-for-dark h-auto w-full max-w-[420px]" />
           </h1>
           <p className="font-mono text-[0.72rem] mt-3" style={{ color: "var(--text-on-ink-dim)" }}>
             {today.length} {today.length === 1 ? "story" : "stories"} in the {recent.label}
