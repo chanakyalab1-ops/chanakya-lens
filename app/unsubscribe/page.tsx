@@ -29,7 +29,7 @@ function UnsubscribeContent() {
   if (status === "done") {
     return (
       <>
-        <h1 className="font-display font-bold text-2xl mb-4">You've been unsubscribed</h1>
+        <h1 className="font-display font-bold text-2xl mb-4">You&apos;ve been unsubscribed</h1>
         <p className="text-[0.9rem] mb-6" style={{ color: "var(--text-body)" }}>
           {email} will no longer receive the Chanakya Lens daily digest.
         </p>

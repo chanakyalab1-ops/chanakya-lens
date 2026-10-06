@@ -24,14 +24,14 @@ export default async function OffLensPage() {
             <Image src="/offlens-logo-dark.svg" alt="Off-Lens" width={492} height={90} unoptimized priority className="logo-for-dark h-auto w-full max-w-[380px]" />
           </h1>
           <p className="text-base mb-8" style={{ color: "var(--text-body)" }}>
-            Every story is reported from somewhere. Off-Lens is where we make that visible -- who's actually covering an event, from where, and where the framing splits depending on whose interest is at stake.
+            Every story is reported from somewhere. Off-Lens is where we make that visible -- who&apos;s actually covering an event, from where, and where the framing splits depending on whose interest is at stake.
           </p>
           <section className="mb-6">
             <h2 className="font-display font-bold text-lg mb-2" style={{ color: "var(--brand-soft)" }}>
               We rate the coverage, not the event
             </h2>
             <p className="text-[0.9rem] leading-relaxed" style={{ color: "var(--text-body)" }}>
-              Off-Lens isn't about whether a story is true. It's about whose vantage point it was reported from -- which countries have real coverage, which are conspicuously quiet, and where the same facts get told as a different story depending on who's telling it.
+              Off-Lens isn&apos;t about whether a story is true. It&apos;s about whose vantage point it was reported from -- which countries have real coverage, which are conspicuously quiet, and where the same facts get told as a different story depending on who&apos;s telling it.
             </p>
           </section>
           <section className="mb-9">
@@ -39,7 +39,7 @@ export default async function OffLensPage() {
               Not a political bias score
             </h2>
             <p className="text-[0.9rem] leading-relaxed" style={{ color: "var(--text-body)" }}>
-              Off-Lens has nothing to do with left versus right. A story can be reported accurately by every outlet involved and still be Off-Lens, if it's only being told from one country's vantage point. The axis here is geography and national interest, not partisanship.
+              Off-Lens has nothing to do with left versus right. A story can be reported accurately by every outlet involved and still be Off-Lens, if it&apos;s only being told from one country&apos;s vantage point. The axis here is geography and national interest, not partisanship.
             </p>
           </section>
         </div>

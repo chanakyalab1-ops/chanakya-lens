@@ -894,7 +894,7 @@ function StoryEditor({
         <div>
           <div className="flex items-center justify-between">
             <label className="font-mono text-xs uppercase tracking-wider text-[#8A93A6]">
-              How Could This Affect You (optional — skip if it doesn't earn a place)
+              How Could This Affect You (optional — skip if it doesn&apos;t earn a place)
             </label>
             <button
               onClick={addNode}
