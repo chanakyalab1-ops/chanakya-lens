@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import Link from "next/link";
 import NavDrawer from "@/components/NavDrawer";
 
@@ -13,10 +15,7 @@ const principles = [
   { title: "One story, any source", body: "A story might come from wire reporting, or from one of our own video briefs. Either way, it goes through the same rating system." },
 ];
 
-export const metadata = {
-  title: "How we rate coverage and confidence | Chanakya Lens",
-  description: "How Chanakya Lens labels confidence (Direct, Likely, Possible), checks sources and scores its stories.",
-};
+export const metadata: Metadata = pageMeta("/how-we-rate", "How we rate coverage and confidence | Chanakya Lens", "How Chanakya Lens labels confidence (Direct, Likely, Possible), checks sources and scores its stories.");
 
 export default function HowWeRatePage() {
   return (

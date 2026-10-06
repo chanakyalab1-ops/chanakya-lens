@@ -113,6 +113,7 @@ export default function AccountLoginPage() {
               </label>
               <input
                 type="email"
+            aria-label="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
