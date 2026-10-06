@@ -21,14 +21,6 @@ export const metadata: Metadata = {
 
 export const revalidate = 600;
 
-const websiteSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "Chanakya Lens",
-  "url": "https://chanakyalens.com",
-  "description": "Geopolitical news analysis through an Indian strategic lens",
-};
-
 export default async function FeedPage() {
   const [stories, marketRows] = await Promise.all([getAllStories(), getMarketRows()]);
   const signal = pickTodaysSignal(stories);
@@ -38,10 +30,6 @@ export default async function FeedPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-      />
       <NavDrawer />
       <h1 className="sr-only">Chanakya Lens: geopolitics traced to what it means for you</h1>
 

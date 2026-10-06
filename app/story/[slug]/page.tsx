@@ -10,6 +10,7 @@ import { ShareButtons } from "@/components/ShareButtons";
 import { OffLensSection } from "@/components/OffLensSection";
 import { paragraphs } from "@/lib/paragraphs";
 import { groupSources } from "@/lib/groupSources";
+import { hubsForStory } from "@/lib/lens";
 const tagColor: Record<ConfidenceLevel, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
@@ -69,6 +70,8 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
     .slice(0, 3)
     .map((s) => s.story);
 
+  const hubs = hubsForStory(story, allStories);
+
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -78,6 +81,11 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
     "url": `https://chanakyalens.com/story/${slug}`,
     "image": `https://chanakyalens.com/api/og?slug=${slug}`,
     "description": story.dek ?? story.headline,
+    "articleSection": story.category,
+    ...(story.subjectCountries?.length ? { "keywords": story.subjectCountries.join(", ") } : {}),
+    ...(hubs.length
+      ? { "about": hubs.map((h) => ({ "@type": "Thing", "name": h.name, "url": `https://chanakyalens.com/lens/${h.slug}` })) }
+      : {}),
     "author": {
       "@type": "Organization",
       "name": "Chanakya Lens",
@@ -212,6 +220,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         <p className="text-[1.02rem] md:text-xl mb-5 md:mb-7 leading-snug md:leading-snug md:max-w-[46rem]" style={{ color: "var(--text-on-ink-dim)" }}>{story.dek}</p>
 
         <div className="max-md:order-2 mb-6 md:mb-8 space-y-4 md:space-y-5 md:max-w-[42rem]">
+          <h2 className="sr-only">What happened</h2>
           {paragraphs(story.body ?? "").map((para, i) => (
             <p key={i} className="text-[1rem] md:text-[1.125rem] leading-[1.7] md:leading-[1.75]" style={{ color: "var(--text-body)" }}>{para}</p>
           ))}
@@ -222,9 +231,9 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             className="max-md:order-3 mt-2 mb-6 md:mb-9 p-4 md:p-6 rounded-sm border-2 md:max-w-[42rem]"
             style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}
           >
-            <div className="font-display font-bold uppercase tracking-wide text-xl mb-1.5" style={{ color: "var(--brand-soft)" }}>
+            <h2 className="font-display font-bold uppercase tracking-wide text-xl mb-1.5" style={{ color: "var(--brand-soft)" }}>
               Chanakya&apos;s Move
-            </div>
+            </h2>
             <div className="text-[0.78rem] mb-4" style={{ color: "var(--text-on-ink-dim)" }}>
               Whose move this was, what they&apos;re betting on, what could counter it.
             </div>
@@ -236,9 +245,9 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
         {story.impactNodes && story.impactNodes.length > 0 && (
           <section className="max-md:order-4 mt-2 md:mt-9">
-            <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
+            <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
               How could this affect you
-            </div>
+            </h2>
             <div className="text-[0.78rem] mb-6" style={{ color: "var(--text-on-ink-dim)" }}>
               Traced by who&apos;s actually in the path of this — not everyone is.
             </div>
@@ -296,9 +305,9 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
         {story.sources && story.sources.length > 0 && (
           <section className="mt-9 md:mt-2 md:max-w-[42rem]">
-            <div className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
+            <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
               Sources
-            </div>
+            </h2>
             <div className="text-[0.78rem] mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
               Every claim here traces back to reporting you can read yourself.
             </div>
@@ -360,11 +369,31 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </section>
         )}
 
+        {hubs.length > 0 && (
+          <section className="mt-10 md:mt-2 md:max-w-[42rem]">
+            <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
+              On The Lens
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {hubs.map((h) => (
+                <Link
+                  key={h.slug}
+                  href={`/lens/${h.slug}`}
+                  className="font-mono text-[0.72rem] uppercase tracking-wide rounded-full border px-3 py-1.5 hover:opacity-80"
+                  style={{ borderColor: "var(--border)", color: "var(--text-on-ink)" }}
+                >
+                  {h.name}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {related.length > 0 && (
           <section className="mt-10 pt-6 border-t md:mt-2 md:pt-0 md:border-t-0" style={{ borderColor: "var(--border)" }}>
-            <div className="font-display font-bold uppercase tracking-wide text-lg mb-4" style={{ color: "var(--brand-soft)" }}>
+            <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-4" style={{ color: "var(--brand-soft)" }}>
               Related
-            </div>
+            </h2>
             <div className="space-y-3">
               {related.map((r) => (
                 <Link
