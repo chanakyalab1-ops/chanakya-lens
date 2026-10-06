@@ -1,4 +1,5 @@
-﻿import Link from "next/link";
+﻿import { ShowMoreGrid } from "@/components/ShowMoreGrid";
+import Link from "next/link";
 import Image from "next/image";
 import NavDrawer from "@/components/NavDrawer";
 import { getAllStories } from "@/lib/stories";
@@ -57,7 +58,7 @@ export default async function OffLensPage() {
               Nothing qualifies right now -- we only flag a story here when the coverage itself reveals a real gap.
             </p>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <ShowMoreGrid initial={12} step={24} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {offLensStories.map((story) => (
               <Link
                 key={story.slug}
@@ -86,7 +87,7 @@ export default async function OffLensPage() {
                 </div>
               </Link>
             ))}
-          </div>
+          </ShowMoreGrid>
         </section>
 
         <div className="mt-9">
