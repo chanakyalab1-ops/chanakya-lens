@@ -92,6 +92,17 @@ function mapRow(row: StoryRow): Story {
 const LIST_COLUMNS =
   "slug, category, status, headline, dek, read_time, has_video, impact_nodes, sources, chanakya_analysis, off_lens, off_lens_countries, subject_countries, image_url, created_at, quality_score";
 
+// List views only read each source's outlet and country (coverage counts, the
+// regions map), never its url or title, so keep just those. Smaller is not
+// cosmetic: Next's data cache refuses anything over 2 MB, and the full list was
+// over that, which silently turned the cache off.
+export function toListStory(story: Story): Story {
+  return {
+    ...story,
+    sources: story.sources?.map((x) => ({ url: "", title: "", domain: x.domain, sourceCountry: x.sourceCountry, role: x.role })),
+  };
+}
+
 async function fetchAllStories(): Promise<Story[]> {
   // Ranked by quality_score (best-fact-checked first), falling back to
   // recency. Stories published before fact-check scores existed carry
@@ -108,19 +119,32 @@ async function fetchAllStories(): Promise<Story[]> {
     // Throw, so a failed read is never stored in the cache as "no stories".
     throw new Error(`Failed to fetch stories: ${error.message}`);
   }
-  return (data as unknown as Omit<StoryRow, "body">[]).map((row) => mapRow({ ...row, body: "" }));
+  return (data as unknown as Omit<StoryRow, "body">[]).map((row) => toListStory(mapRow({ ...row, body: "" })));
 }
 
-// One shared read for every page and every build, refreshed every 10 minutes
-// or when a story is published, edited or unpublished (updateTag("stories")).
-// Without this each page regeneration and each prerendered page in a deploy
-// re-downloaded the whole table.
+// Shared read across instances and builds, refreshed every 10 minutes or when a
+// story is published, edited or unpublished (updateTag("stories")).
 const cachedStories = unstable_cache(fetchAllStories, ["all-stories"], { revalidate: 600, tags: ["stories"] });
 
+// Second layer, in this process: one read serves every page rendered by the same
+// server instance or build worker for five minutes. This is what stops a deploy
+// (dozens of prerendered pages) or an hour of page regenerations from each
+// downloading the whole table, even if the shared cache is full or cold.
+const MEMO_MS = 5 * 60 * 1000;
+let memo: { at: number; stories: Promise<Story[]> } | null = null;
+
+export function resetStoriesMemo() {
+  memo = null;
+}
+
 export async function getAllStories(): Promise<Story[]> {
+  if (memo && Date.now() - memo.at < MEMO_MS) return memo.stories;
+  const stories = cachedStories();
+  memo = { at: Date.now(), stories };
   try {
-    return await cachedStories();
+    return await stories;
   } catch (e) {
+    memo = null; // never remember a failure
     console.error(e instanceof Error ? e.message : e);
     return [];
   }
