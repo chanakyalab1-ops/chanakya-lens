@@ -143,7 +143,7 @@ export default function PrivacyPage() {
               You can sign out at any time from your account page. Depending on where you live (for example under the EU/UK GDPR or India&apos;s Digital Personal Data Protection Act), you may have the right to access the data we hold about you, correct it, delete it, object to or limit how we use it, withdraw consent, and complain to your local data protection authority.
             </P>
             <P>
-              To use any of these rights, to unsubscribe from the digest, or to delete your account, email <Mail /> from the address on your account and we will act on it promptly.
+              You can unsubscribe from the digest at any time using the Unsubscribe link at the bottom of every digest email. To use any of your other rights, or to delete your account, email <Mail /> from the address on your account and we will act on it promptly.
             </P>
           </Section>
 
