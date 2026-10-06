@@ -44,8 +44,10 @@ export async function logPageView(path: string) {
       }
     );
 
-    await serverSupabase.from("page_views").insert({ path, user_agent: userAgent, referrer });
-  } catch {
-    // silently ignore
+    const { error } = await serverSupabase.from("page_views").insert({ path, user_agent: userAgent, referrer });
+    if (error) console.error("page_views insert failed:", error.message);
+  } catch (err) {
+    // Never break a page view over analytics, but leave a trace in the logs.
+    console.error("logPageView failed:", err);
   }
 }

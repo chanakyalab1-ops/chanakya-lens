@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { describePlan, getBacklog, planGeneration, readBufferSettings } from "@/lib/pipelineBuffer";
 
 export type RecentBatch = { id: number; anthropic_batch_id: string; status: string; created_at: string; processed_at: string | null };
@@ -30,6 +30,32 @@ export type Overview = {
   };
 };
 
+// PostgREST returns at most ~1,000 rows per request whatever .limit() says, so
+// a single query silently drops everything after the first page and the
+// top-stories ranking stops changing once a month passes 1,000 views. Page
+// through with a stable ordering instead, up to a safety cap.
+const VIEW_PAGE_SIZE = 1000;
+const VIEW_ROW_CAP = 200_000;
+
+async function fetchViewPaths(supabase: SupabaseClient, since: string) {
+  const rows: { path: string }[] = [];
+  for (let from = 0; from < VIEW_ROW_CAP; from += VIEW_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("page_views")
+      .select("path")
+      .gte("created_at", since)
+      .order("created_at", { ascending: true })
+      .range(from, from + VIEW_PAGE_SIZE - 1);
+    if (error) {
+      console.error("page_views read failed:", error.message);
+      break;
+    }
+    rows.push(...(data as { path: string }[]));
+    if (!data || data.length < VIEW_PAGE_SIZE) break;
+  }
+  return { data: rows };
+}
+
 export async function getOverview(): Promise<Overview> {
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const head = { count: "exact" as const, head: true };
@@ -45,7 +71,7 @@ export async function getOverview(): Promise<Overview> {
   ] = await Promise.all([
     supabase.from("page_views").select("*", head).gte("created_at", day),
     supabase.from("page_views").select("*", head).gte("created_at", month),
-    supabase.from("page_views").select("path").gte("created_at", month).limit(100000),
+    fetchViewPaths(supabase, month),
     supabase.from("stories").select("*", head),
     supabase.from("digest_signups").select("*", head),
     supabase.from("feedback_submissions").select("*", head),
