@@ -1,4 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("./supabase", () => ({ supabase: {} }));
+vi.mock("next/cache", () => ({ unstable_cache: <T>(fn: T) => fn }));
+
 import { toListStory, type Story } from "./stories";
 
 describe("toListStory", () => {
