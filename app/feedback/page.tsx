@@ -1,6 +1,11 @@
 import NavDrawer from "@/components/NavDrawer";
 import FeedbackForm from "@/components/FeedbackForm";
 
+export const metadata = {
+  title: "Send feedback | Chanakya Lens",
+  description: "Tell us what to fix or cover next. Feedback on Chanakya Lens stories, features and corrections.",
+};
+
 export default function FeedbackPage() {
   return (
     <>

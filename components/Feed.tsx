@@ -1,6 +1,5 @@
 ﻿"use client";
-import { useState, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Story } from "@/lib/stories";
@@ -491,6 +490,27 @@ function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
   );
 }
 
+// The `q` search param, read in the browser after mount instead of with
+// useSearchParams(): that hook makes Next bail the whole feed out to
+// client-only rendering, so the server HTML had no stories in it for crawlers.
+// HeaderSearch announces changes with a "lens-query" event because
+// router.push doesn't fire popstate.
+function useUrlQuery(): string {
+  const [query, setQuery] = useState("");
+  useEffect(() => {
+    const read = () => setQuery(new URLSearchParams(window.location.search).get("q") ?? "");
+    const onQuery = (e: Event) => setQuery((e as CustomEvent<string>).detail ?? "");
+    read();
+    window.addEventListener("popstate", read);
+    window.addEventListener("lens-query", onQuery);
+    return () => {
+      window.removeEventListener("popstate", read);
+      window.removeEventListener("lens-query", onQuery);
+    };
+  }, []);
+  return query;
+}
+
 export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending, lensWeek }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[]; lensWeek?: Record<string, number> }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
@@ -500,8 +520,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
   // Search now lives in the header (see HeaderSearch.tsx), which writes to
   // the `q` URL param -- read it here reactively rather than owning local
   // input state, since Feed no longer renders its own search box.
-  const searchParams = useSearchParams();
-  const query = searchParams.get("q") ?? "";
+  const query = useUrlQuery();
   const categoryFiltered = active === "All" ? stories : stories.filter((s) => s.category === active);
   const filtered = query.trim()
     ? categoryFiltered.filter((s) => {

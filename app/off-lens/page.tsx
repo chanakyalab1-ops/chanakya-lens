@@ -3,6 +3,11 @@ import Image from "next/image";
 import NavDrawer from "@/components/NavDrawer";
 import { getAllStories } from "@/lib/stories";
 export const revalidate = 300;
+export const metadata = {
+  title: "Off-Lens: how different countries covered the same story | Chanakya Lens",
+  description: "See how outlets in different countries reported the same event, where coverage converges and where framing diverges.",
+};
+
 export default async function OffLensPage() {
   const allStories = await getAllStories();
   const offLensStories = allStories.filter((s) => s.offLens);
