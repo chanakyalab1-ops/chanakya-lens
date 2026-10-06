@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath, updateTag } from 'next/cache';
+import { resetStoriesMemo } from '@/lib/stories';
 import { after } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { slugify } from '@/lib/slug';
@@ -289,6 +290,7 @@ export async function publishDraft(slug: string, feedback?: PublishFeedback): Pr
     }
 
     updateTag('stories');
+    resetStoriesMemo();
     revalidatePath('/review');
     revalidatePath('/');
     revalidatePath('/today');
@@ -483,6 +485,7 @@ export async function updatePublishedStory(slug: string, input: UpdatePublishedS
 
     revalidatePath('/review/manage');
     updateTag('stories');
+    resetStoriesMemo();
     revalidatePath(`/story/${slug}`);
     revalidatePath('/');
     return { ok: true };
@@ -503,6 +506,7 @@ export async function unpublishStory(slug: string): Promise<ActionResult> {
     }
 
     updateTag('stories');
+    resetStoriesMemo();
     revalidatePath('/review/manage');
     revalidatePath('/');
     return { ok: true };
