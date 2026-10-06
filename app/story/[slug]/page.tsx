@@ -1,6 +1,7 @@
 ﻿import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import Script from "next/script";
 import NavDrawer from "@/components/NavDrawer";
 import { getStoryBySlug, getAllStories, ConfidenceLevel } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
@@ -98,6 +99,18 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
   return (
     <>
+      {/* Subscribe with Google (Reader Revenue Manager), open access. */}
+      <Script src="https://news.google.com/swg/js/v1/swg-basic.js" strategy="afterInteractive" />
+      <Script id="swg-init" strategy="afterInteractive">{`
+        (self.SWG_BASIC = self.SWG_BASIC || []).push(basicSubscriptions => {
+          basicSubscriptions.init({
+            type: "NewsArticle",
+            isPartOfType: ["Product"],
+            isPartOfProductId: "CAowpLhCw:openaccess",
+            clientOptions: { theme: "light", lang: "en-GB" },
+          });
+        });
+      `}</Script>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
