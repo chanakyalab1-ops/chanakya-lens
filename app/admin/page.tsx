@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { MARKET_SYMBOLS, fetchQuoteFor, getMarketRows } from "@/lib/marketData";
+import { getVercelTraffic } from "@/lib/vercelAnalytics";
 import { getOverview } from "./data";
 import { buildAttention } from "./attention";
 import {
   AttentionBox, BatchList, BufferPanel, FeedbackPanel, Funnel, MarketSkeleton, MarketView,
-  Section, SectionNav, TrafficPanel, type MarketCheck,
+  Section, SectionNav, TrafficPanel, VercelTrafficPanel, type MarketCheck,
 } from "./sections";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,10 @@ async function MarketPanel() {
     await sleep(300);
   }
   return <MarketView checks={checks} />;
+}
+
+async function VercelPanel() {
+  return <VercelTrafficPanel t={await getVercelTraffic()} />;
 }
 
 export default async function AdminPage() {
@@ -79,6 +84,9 @@ export default async function AdminPage() {
       </Section>
 
       <Section id="traffic" title="Traffic">
+        <Suspense fallback={<div className="h-24 mb-8" />}>
+          <VercelPanel />
+        </Suspense>
         <TrafficPanel o={o} />
       </Section>
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { MarketDataRow, QuoteResult } from "@/lib/marketData";
 import { unreviewed } from "@/lib/pipelineBuffer";
+import type { VercelTraffic } from "@/lib/vercelAnalytics";
 import type { Overview } from "./data";
 import type { AttentionItem } from "./attention";
 import { timeAgo } from "./time";
@@ -178,6 +179,45 @@ export function BatchList({ batches }: { batches: Overview["pipeline"]["recentBa
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+export function VercelTrafficPanel({ t }: { t: VercelTraffic }) {
+  if (t.status !== "ok") {
+    return (
+      <div className="rounded-sm border px-3.5 py-3 mb-6" style={card}>
+        <div className={`${mono} mb-1`} style={dim}>Vercel Analytics</div>
+        <p className="text-[0.82rem]" style={{ color: "var(--text-body)" }}>
+          {t.status === "unconfigured"
+            ? "Not connected. Set VERCEL_ANALYTICS_TOKEN and VERCEL_PROJECT_ID (plus VERCEL_TEAM_ID for a team project) in Vercel, then redeploy."
+            : `Could not load Vercel Analytics (${t.message}).`}
+        </p>
+      </div>
+    );
+  }
+  const max = Math.max(1, ...t.referrers.map((r) => r.pageviews));
+  return (
+    <div className="mb-8">
+      <div className={`${mono} mb-2`} style={dim}>Vercel Analytics (real visitors, bots filtered)</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <Stat label="Visitors, 24h" value={t.day.visitors.toLocaleString()} sub={`${t.day.pageviews.toLocaleString()} page views`} />
+        <Stat label="Visitors, 30 days" value={t.month.visitors.toLocaleString()} sub={`${t.month.pageviews.toLocaleString()} page views`} />
+      </div>
+      <div className={`${mono} mb-2`} style={dim}>Where visitors came from, 30 days</div>
+      {t.referrers.length === 0 ? (
+        <p className="text-[0.85rem]" style={dim}>No data yet.</p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {t.referrers.map((r) => (
+            <div key={r.host} className="relative rounded-sm border px-3.5 py-2.5 flex items-center gap-3 overflow-hidden" style={card}>
+              <span aria-hidden className="absolute inset-y-0 left-0 opacity-15" style={{ width: `${(r.pageviews / max) * 100}%`, background: "var(--brand-soft)" }} />
+              <span className="relative text-[0.84rem] min-w-0 flex-1 truncate" style={{ color: "var(--text-body)" }}>{r.host}</span>
+              <span className="relative font-mono text-[0.68rem] shrink-0" style={{ color: "var(--brand-soft)" }}>{r.pageviews.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
