@@ -50,8 +50,8 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
       <Link href="/off-lens" className="hover:opacity-90">
         <div className="mb-3">
           <span className="sr-only">Off-Lens</span>
-          <Image src="/offlens-logo.svg" alt="" width={492} height={90} unoptimized className="logo-for-light h-auto w-full max-w-[230px]" />
-          <Image src="/offlens-logo-dark.svg" alt="" width={492} height={90} unoptimized className="logo-for-dark h-auto w-full max-w-[230px]" />
+          <Image src="/offlens-logo.svg" alt="Off-Lens" width={492} height={90} unoptimized className="logo-for-light h-auto w-full max-w-[230px]" />
+          <Image src="/offlens-logo-dark.svg" alt="Off-Lens" width={492} height={90} unoptimized className="logo-for-dark h-auto w-full max-w-[230px]" />
         </div> </Link>
       <p className="text-[0.88rem] leading-relaxed mb-4" style={{ color: "var(--text-body)" }}>
         Every story is reported from somewhere. Off-Lens shows who&apos;s covering it, from where, and where the framing splits by whose interest is at stake.
@@ -333,8 +333,8 @@ export function SignalPanel({ stories, moreCount, moreLabel = "More from today",
       ) : (
         <h2 className="mb-2">
           <span className="sr-only">Today&apos;s Signal</span>
-          <Image src="/todays-signal-logo.png" alt="" width={924} height={162} className="logo-for-light h-auto w-full max-w-[240px]" />
-          <Image src="/todays-signal-logo-dark.png" alt="" width={924} height={162} className="logo-for-dark h-auto w-full max-w-[240px]" />
+          <Image src="/todays-signal-logo.png" alt="Today's Signal" width={924} height={162} className="logo-for-light h-auto w-full max-w-[240px]" />
+          <Image src="/todays-signal-logo-dark.png" alt="Today's Signal" width={924} height={162} className="logo-for-dark h-auto w-full max-w-[240px]" />
         </h2>
       )}
       <p className="hidden lg:block text-[0.72rem] mb-1" style={{ color: "var(--text-on-ink-dim)" }}>

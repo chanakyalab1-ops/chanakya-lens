@@ -21,8 +21,8 @@ export default async function OffLensPage() {
           </div>
           <h1 className="mb-5">
             <span className="sr-only">Off-Lens</span>
-            <Image src="/offlens-logo.svg" alt="" width={492} height={90} unoptimized priority className="logo-for-light h-auto w-full max-w-[380px]" />
-            <Image src="/offlens-logo-dark.svg" alt="" width={492} height={90} unoptimized priority className="logo-for-dark h-auto w-full max-w-[380px]" />
+            <Image src="/offlens-logo.svg" alt="Off-Lens" width={492} height={90} unoptimized priority className="logo-for-light h-auto w-full max-w-[380px]" />
+            <Image src="/offlens-logo-dark.svg" alt="Off-Lens" width={492} height={90} unoptimized priority className="logo-for-dark h-auto w-full max-w-[380px]" />
           </h1>
           <p className="text-base mb-8" style={{ color: "var(--text-body)" }}>
             Every story is reported from somewhere. Off-Lens is where we make that visible -- who's actually covering an event, from where, and where the framing splits depending on whose interest is at stake.

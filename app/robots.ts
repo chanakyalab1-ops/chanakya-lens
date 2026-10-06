@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/review", "/review/", "/admin", "/admin/", "/account"],
     },
-    sitemap: "https://chanakyalens.com/sitemap.xml",
+    sitemap: ["https://chanakyalens.com/sitemap.xml", "https://chanakyalens.com/news-sitemap.xml"],
   };
 }
