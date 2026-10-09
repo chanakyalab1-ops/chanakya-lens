@@ -5,7 +5,7 @@ import Image from "next/image";
 import NavDrawer from "@/components/NavDrawer";
 import { getAllStories } from "@/lib/stories";
 export const revalidate = 300;
-export const metadata: Metadata = pageMeta("/off-lens", "Off-Lens: how different countries covered the same story | Chanakya Lens", "See how outlets in different countries reported the same event, where coverage converges and where framing diverges.");
+export const metadata: Metadata = pageMeta("/off-lens", "Off-Lens: How Different Countries Cover the Same News", "Compare how outlets in different countries reported the same event: who covered it, where coverage agrees, and where the framing splits.");
 
 export default async function OffLensPage() {
   const allStories = await getAllStories();
