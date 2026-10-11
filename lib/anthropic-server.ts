@@ -58,6 +58,10 @@ You have a web_search tool. You are given source article titles, domains, and UR
 
 If your searches don't turn up enough real detail to confidently write a substantive brief, say so -- write a shorter, more conservative body rather than filling gaps with plausible-sounding guesses about the current state of the situation (military activity, policy status, negotiations, etc).
 
+HEADLINE AND DEK -- these also become the page title and the search-result snippet:
+- headline: aim for 60 characters or fewer (hard limit 75). Search results cut titles off after about 60, so put the essential words first: lead with the main person, place or organisation and the event, in plain news language (for example "Xi Brings Large CEO Delegation to Trump Summit"). No clickbait, no question headlines, no teaser wording, and do not open with a quotation.
+- dek: exactly one sentence of about 120 to 155 characters that adds something the headline does not -- the key number, what is at stake, or why it matters to readers. Do not repeat the headline's wording. Never leave it empty.
+
 CRITICAL EDITORIAL RULES:
 - Use "could," never "will." This is scenario analysis, not forecasting.
 - Impact nodes, Chanakya's Move, and Off-Lens are EARNED, NOT AUTOMATIC. If a story genuinely has no reader-relevant impact chain, return an empty impactNodes array. If there's no real strategic angle, return chanakyaAnalysis as null. If the sourcing you reviewed does NOT reveal a genuine coverage or framing gap, return offLens as null -- do not force an Off-Lens angle just to have one. In practice, most stories should NOT have an offLens value; it should be rare and specific.
