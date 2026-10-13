@@ -111,7 +111,7 @@ export default function PrivacyPage() {
               items={[
                 <><B>Supabase</B> hosts our database and handles sign-in, including Google sign-in.</>,
                 <><B>Vercel</B> hosts the website.</>,
-                <><B>Resend</B> delivers our digest emails, so it receives your email address and the email content.</>,
+                <><B>Brevo</B> or <B>Resend</B>, our email delivery providers, deliver our digest emails, so they receive your email address and the email content.</>,
                 <><B>Google</B> provides the optional &ldquo;Sign in with Google&rdquo; feature.</>,
               ]}
             />
