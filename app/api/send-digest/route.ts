@@ -1,7 +1,8 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { Resend } from "resend";
 import { sendAlert } from "@/lib/alerts";
+import { dailySendLimit, emailProvider, sendEmail } from "@/lib/emailSend";
+import { cohortCount, dayIndex, isSendDay } from "@/lib/digestRotation";
 
 type DigestStory = {
   slug: string;
@@ -80,7 +81,6 @@ export async function GET(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
-  const resend = new Resend(process.env.RESEND_API_KEY!);
 
   // Skip if a digest already went out recently, to avoid duplicate sends
   // from manual re-triggers or accidental double-invocation.
@@ -125,11 +125,27 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ sent: 0, message: "No subscribers yet" });
   }
 
+  // Stay under the provider's daily limit: past it, split subscribers into
+  // groups and send each group on its own day instead of dropping the tail.
+  const dailyLimit = dailySendLimit();
+  const cohorts = cohortCount(subscribers.length, dailyLimit);
+  const today = dayIndex();
+  const recipients = subscribers.filter((sub) => isSendDay(sub.email, cohorts, today));
+
   let sent = 0;
   let failed = 0;
+  let consecutiveFailures = 0;
+  let stoppedEarly = false;
   const failures: string[] = [];
 
-  for (const sub of subscribers) {
+  for (const sub of recipients) {
+    // Repeated failures in a row mean the provider is refusing everything
+    // (limit reached, bad key); stop instead of hammering it.
+    if (consecutiveFailures >= 5) {
+      stoppedEarly = true;
+      break;
+    }
+
     // "regions" column stores chosen topics/categories.
     const subTopics: string[] = sub.regions ?? [];
     const hasPreference = subTopics.length > 0;
@@ -144,31 +160,35 @@ export async function GET(req: NextRequest) {
     const topicLabel = hasPreference ? subTopics.join(", ") : "All Topics";
     const html = buildDigestHtml(digestStories, topicLabel, sub.email);
 
-    try {
-      const result = await resend.emails.send({
-        from: "Chanakya Lens <digest@chanakyalens.com>",
-        to: sub.email,
-        subject: `Today's Signal — Chanakya Lens`,
-        html,
-      });
-      console.log(`[Digest] Sent to ${sub.email}:`, JSON.stringify(result));
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
+    const result = await sendEmail({ to: sub.email, subject: `Today's Signal — Chanakya Lens`, html });
+    if (result.ok) {
       sent++;
-    } catch (err) {
+      consecutiveFailures = 0;
+    } else {
       failed++;
+      consecutiveFailures++;
       failures.push(sub.email);
-      console.error(`Failed to send to ${sub.email}:`, err);
+      console.error(`Failed to send to ${sub.email}: ${result.error}`);
     }
   }
 
   await supabase.from("digest_sends").insert({});
 
-  if (failed > 0) {
-    await sendAlert("send-digest", `${failed}/${subscribers.length} sends failed: ${failures.join(", ")}`);
+  if (failed > 0 || stoppedEarly) {
+    await sendAlert(
+      "send-digest",
+      `${emailProvider()}: ${sent} sent, ${failed} failed${stoppedEarly ? ` (stopped early after 5 failures in a row; the rest were not attempted)` : ""}. ${failures.slice(0, 20).join(", ")}`,
+    );
   }
 
-  return NextResponse.json({ sent, failed, failures });
+  return NextResponse.json({
+    provider: emailProvider(),
+    subscribers: subscribers.length,
+    groups: cohorts,
+    dueToday: recipients.length,
+    sent,
+    failed,
+    stoppedEarly,
+    failures,
+  });
 }
-
