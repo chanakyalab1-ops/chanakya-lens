@@ -5,6 +5,9 @@ export type DigestStory = {
   category: string;
   status: string | null;
   impact_nodes: { confidence: string }[] | null;
+  image_url?: string | null;
+  sources?: { url?: string | null }[] | null;
+  off_lens_countries?: Record<string, number> | null;
 };
 
 function rank(s: DigestStory): number {
