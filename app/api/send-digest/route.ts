@@ -3,30 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 import { sendAlert } from "@/lib/alerts";
 import { brevoConfigured, resendConfigured, resendDailyLimit, sendEmail } from "@/lib/emailSend";
 import { deliverDigest } from "@/lib/digestDelivery";
+import { selectDigestForSubscriber, type DigestStory } from "@/lib/digestStories";
 
-type DigestStory = {
-  slug: string;
-  headline: string;
-  dek: string;
-  category: string;
-  status: string | null;
-  impact_nodes: { confidence: string }[] | null;
-};
-
-function rank(s: DigestStory): number {
-  const hasDirect = s.impact_nodes?.some((n) => n.confidence === "direct");
-  const isDeveloping = s.status === "developing";
-  let score = 0;
-  if (isDeveloping) score += 2;
-  if (hasDirect) score += 1;
-  return score;
-}
-
-function pickDigestStories(stories: DigestStory[], limit: number): DigestStory[] {
-  return [...stories].sort((a, b) => rank(b) - rank(a)).slice(0, limit);
-}
-
-function buildDigestHtml(stories: DigestStory[], topicLabel: string, email: string): string {
+function buildDigestHtml(stories: DigestStory[], topicLabel: string, email: string, fellBack = false): string {
+  const note = fellBack
+    ? `<p style="font-size: 13px; color: #444; text-align: center; margin: 0 0 24px 0;">None of today's stories were in your chosen topics, so here are today's top stories instead.</p>`
+    : "";
   const items = stories
     .map(
       (s) => `
@@ -55,6 +37,7 @@ function buildDigestHtml(stories: DigestStory[], topicLabel: string, email: stri
         <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #7688B4;">Today's Signal — ${topicLabel}</div>
         <h1 style="font-size: 22px; margin: 8px 0 0 0;">Global moves. Local math.</h1>
       </div>
+      ${note}
       ${items}
       <div style="text-align: center; margin-top: 32px;">
         <a href="https://chanakyalens.com" style="color: #5FA8B5; font-size: 13px;">Read more at chanakyalens.com →</a>
@@ -126,31 +109,21 @@ export async function GET(req: NextRequest) {
   }
 
   // Everyone gets the digest every day. Build each subscriber's email first
-  // (skipping anyone with no story in their topics today), then hand the list
-  // to the delivery step, which splits it across Resend and Brevo.
+  // (their topics if there are matching stories, otherwise the top stories),
+  // then hand the list to the delivery step, which splits it across Resend
+  // and Brevo.
   const prepared: { to: string; subject: string; html: string }[] = [];
-  let skippedNoStories = 0;
+  let fellBackToTopStories = 0;
 
   for (const sub of subscribers) {
     // "regions" column stores chosen topics/categories.
-    const subTopics: string[] = sub.regions ?? [];
-    const hasPreference = subTopics.length > 0;
-
-    const relevantStories = hasPreference
-      ? stories.filter((s) => subTopics.includes(s.category))
-      : stories;
-
-    if (relevantStories.length === 0) {
-      skippedNoStories++;
-      continue;
-    }
-
-    const digestStories = pickDigestStories(relevantStories, 6);
-    const topicLabel = hasPreference ? subTopics.join(", ") : "All Topics";
+    const digest = selectDigestForSubscriber(stories, sub.regions);
+    if (!digest) continue;
+    if (digest.fellBack) fellBackToTopStories++;
     prepared.push({
       to: sub.email,
       subject: `Today's Signal — Chanakya Lens`,
-      html: buildDigestHtml(digestStories, topicLabel, sub.email),
+      html: buildDigestHtml(digest.stories, digest.topicLabel, sub.email, digest.fellBack),
     });
   }
 
@@ -176,7 +149,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     subscribers: subscribers.length,
     prepared: prepared.length,
-    skippedNoStories,
+    fellBackToTopStories,
     sent: summary.sent,
     failed: summary.failed,
     notAttempted: summary.notAttempted,
