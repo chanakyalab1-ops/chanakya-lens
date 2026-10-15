@@ -1,8 +1,8 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sendAlert } from "@/lib/alerts";
-import { dailySendLimit, emailProvider, sendEmail } from "@/lib/emailSend";
-import { cohortCount, dayIndex, isSendDay } from "@/lib/digestRotation";
+import { brevoConfigured, resendConfigured, resendDailyLimit, sendEmail } from "@/lib/emailSend";
+import { deliverDigest } from "@/lib/digestDelivery";
 
 type DigestStory = {
   slug: string;
@@ -125,27 +125,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ sent: 0, message: "No subscribers yet" });
   }
 
-  // Stay under the provider's daily limit: past it, split subscribers into
-  // groups and send each group on its own day instead of dropping the tail.
-  const dailyLimit = dailySendLimit();
-  const cohorts = cohortCount(subscribers.length, dailyLimit);
-  const today = dayIndex();
-  const recipients = subscribers.filter((sub) => isSendDay(sub.email, cohorts, today));
+  // Everyone gets the digest every day. Build each subscriber's email first
+  // (skipping anyone with no story in their topics today), then hand the list
+  // to the delivery step, which splits it across Resend and Brevo.
+  const prepared: { to: string; subject: string; html: string }[] = [];
+  let skippedNoStories = 0;
 
-  let sent = 0;
-  let failed = 0;
-  let consecutiveFailures = 0;
-  let stoppedEarly = false;
-  const failures: string[] = [];
-
-  for (const sub of recipients) {
-    // Repeated failures in a row mean the provider is refusing everything
-    // (limit reached, bad key); stop instead of hammering it.
-    if (consecutiveFailures >= 5) {
-      stoppedEarly = true;
-      break;
-    }
-
+  for (const sub of subscribers) {
     // "regions" column stores chosen topics/categories.
     const subTopics: string[] = sub.regions ?? [];
     const hasPreference = subTopics.length > 0;
@@ -154,41 +140,48 @@ export async function GET(req: NextRequest) {
       ? stories.filter((s) => subTopics.includes(s.category))
       : stories;
 
-    if (relevantStories.length === 0) continue;
+    if (relevantStories.length === 0) {
+      skippedNoStories++;
+      continue;
+    }
 
     const digestStories = pickDigestStories(relevantStories, 6);
     const topicLabel = hasPreference ? subTopics.join(", ") : "All Topics";
-    const html = buildDigestHtml(digestStories, topicLabel, sub.email);
-
-    const result = await sendEmail({ to: sub.email, subject: `Today's Signal — Chanakya Lens`, html });
-    if (result.ok) {
-      sent++;
-      consecutiveFailures = 0;
-    } else {
-      failed++;
-      consecutiveFailures++;
-      failures.push(sub.email);
-      console.error(`Failed to send to ${sub.email}: ${result.error}`);
-    }
+    prepared.push({
+      to: sub.email,
+      subject: `Today's Signal — Chanakya Lens`,
+      html: buildDigestHtml(digestStories, topicLabel, sub.email),
+    });
   }
+
+  const summary = await deliverDigest(prepared, sendEmail, {
+    resendLimit: resendDailyLimit(),
+    hasBrevo: brevoConfigured(),
+    hasResend: resendConfigured(),
+  });
 
   await supabase.from("digest_sends").insert({});
 
-  if (failed > 0 || stoppedEarly) {
+  if (summary.failed > 0 || summary.notAttempted > 0 || summary.resend.stopped || summary.brevo.stopped) {
+    const stopped = [
+      summary.resend.stopped && `Resend stopped: ${summary.resend.stopped}`,
+      summary.brevo.stopped && `Brevo stopped: ${summary.brevo.stopped}`,
+    ].filter(Boolean);
     await sendAlert(
       "send-digest",
-      `${emailProvider()}: ${sent} sent, ${failed} failed${stoppedEarly ? ` (stopped early after 5 failures in a row; the rest were not attempted)` : ""}. ${failures.slice(0, 20).join(", ")}`,
+      `${summary.sent}/${prepared.length} sent (Resend ${summary.resend.sent}, Brevo ${summary.brevo.sent}), ${summary.failed} failed, ${summary.notAttempted} not attempted. ${stopped.join("; ")} ${summary.failures.slice(0, 20).join(", ")}`.trim(),
     );
   }
 
   return NextResponse.json({
-    provider: emailProvider(),
     subscribers: subscribers.length,
-    groups: cohorts,
-    dueToday: recipients.length,
-    sent,
-    failed,
-    stoppedEarly,
-    failures,
+    prepared: prepared.length,
+    skippedNoStories,
+    sent: summary.sent,
+    failed: summary.failed,
+    notAttempted: summary.notAttempted,
+    resend: summary.resend,
+    brevo: summary.brevo,
+    failures: summary.failures,
   });
 }
