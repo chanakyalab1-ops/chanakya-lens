@@ -3,56 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { sendAlert } from "@/lib/alerts";
 import { brevoConfigured, resendConfigured, resendDailyLimit, sendEmail } from "@/lib/emailSend";
 import { deliverDigest } from "@/lib/digestDelivery";
-import { selectDigestForSubscriber, type DigestStory } from "@/lib/digestStories";
-
-function buildDigestHtml(stories: DigestStory[], topicLabel: string, email: string, fellBack = false): string {
-  const note = fellBack
-    ? `<p style="font-size: 13px; color: #444; text-align: center; margin: 0 0 24px 0;">None of today's stories were in your chosen topics, so here are today's top stories instead.</p>`
-    : "";
-  const items = stories
-    .map(
-      (s) => `
-      <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #2A3D74;">
-        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #7688B4; margin-bottom: 6px;">
-          ${s.category}
-        </div>
-        <h2 style="font-size: 18px; margin: 0 0 8px 0; color: #0A0D11;">
-          <a href="https://chanakyalens.com/story/${s.slug}" style="color: #0A0D11; text-decoration: none;">
-            ${s.headline}
-          </a>
-        </h2>
-        <p style="font-size: 14px; color: #444; margin: 0;">${s.dek}</p>
-      </div>
-    `
-    )
-    .join("");
-
-  return `
-    <div style="max-width: 560px; margin: 0 auto; font-family: -apple-system, sans-serif; padding: 24px;">
-      <div style="text-align: center; margin-bottom: 32px;">
-        <div style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <img src="https://chanakyalens.com/logo-mark.png" alt="" width="32" height="32" style="border-radius: 50%;" />
-          <span style="font-weight: 800; font-size: 18px; letter-spacing: 0.02em; color: #0A0D11;">CHANAKYA <span style="color: #5FA8B5;">LENS</span></span>
-        </div>
-        <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #7688B4;">Today's Signal — ${topicLabel}</div>
-        <h1 style="font-size: 22px; margin: 8px 0 0 0;">Global moves. Local math.</h1>
-      </div>
-      ${note}
-      ${items}
-      <div style="text-align: center; margin-top: 32px;">
-        <a href="https://chanakyalens.com" style="color: #5FA8B5; font-size: 13px;">Read more at chanakyalens.com →</a>
-      </div>
-      <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #2A3D74;">
-        <p style="font-size: 11px; color: #7688B4; margin: 0 0 6px 0;">
-          You're receiving this because you subscribed at chanakyalens.com.
-        </p>
-        <a href="https://chanakyalens.com/unsubscribe?email=${encodeURIComponent(email)}" style="font-size: 11px; color: #7688B4;">
-          Unsubscribe
-        </a>
-      </div>
-    </div>
-  `;
-}
+import { selectDigestForSubscriber } from "@/lib/digestStories";
+import { buildDigestHtml } from "@/lib/digestHtml";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -83,7 +35,7 @@ export async function GET(req: NextRequest) {
 
   const { data: stories, error: storiesError } = await supabase
     .from("stories")
-    .select("slug, headline, dek, category, status, impact_nodes")
+    .select("slug, headline, dek, category, status, impact_nodes, image_url, sources, off_lens_countries")
     .gte("created_at", oneDayAgo)
     .order("created_at", { ascending: false });
 
