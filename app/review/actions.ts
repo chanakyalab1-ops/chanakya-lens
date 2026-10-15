@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath, updateTag } from 'next/cache';
+import { refreshListingPages, refreshStoryPage } from '@/lib/siteRefresh';
 import { resetStoriesMemo } from '@/lib/stories';
 import { after } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
@@ -292,8 +293,8 @@ export async function publishDraft(slug: string, feedback?: PublishFeedback): Pr
     updateTag('stories');
     resetStoriesMemo();
     revalidatePath('/review');
-    revalidatePath('/');
-    revalidatePath('/today');
+    refreshListingPages();
+    refreshStoryPage(slug);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
@@ -486,8 +487,8 @@ export async function updatePublishedStory(slug: string, input: UpdatePublishedS
     revalidatePath('/review/manage');
     updateTag('stories');
     resetStoriesMemo();
-    revalidatePath(`/story/${slug}`);
-    revalidatePath('/');
+    refreshStoryPage(slug);
+    refreshListingPages();
     return { ok: true };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
@@ -508,7 +509,8 @@ export async function unpublishStory(slug: string): Promise<ActionResult> {
     updateTag('stories');
     resetStoriesMemo();
     revalidatePath('/review/manage');
-    revalidatePath('/');
+    refreshListingPages();
+    refreshStoryPage(slug);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };

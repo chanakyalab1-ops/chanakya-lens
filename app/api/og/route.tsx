@@ -1,12 +1,12 @@
 import { ImageResponse } from 'next/og';
-import { getStoryBySlug } from '@/lib/stories';
+import { getStoryForOg } from '@/lib/stories';
 
 export const runtime = 'edge';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const slug = searchParams.get('slug');
-  const story = slug ? await getStoryBySlug(slug) : null;
+  const story = slug ? await getStoryForOg(slug) : null;
 
   if (!story) {
     return new Response('Not found', { status: 404 });
@@ -47,6 +47,12 @@ export async function GET(req: Request) {
         </div>
       </div>
     ),
-    { width: 1200, height: 630 }
+    {
+      width: 1200,
+      height: 630,
+      // Facebook's link-preview crawler requests these constantly. Let the CDN
+      // keep each image for a week so repeat requests never reach the database.
+      headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400' },
+    }
   );
 }

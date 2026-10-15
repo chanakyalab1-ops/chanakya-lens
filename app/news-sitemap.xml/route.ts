@@ -1,6 +1,8 @@
 import { getAllStories } from '@/lib/stories';
 
-export const revalidate = 600;
+// 12 hours. Publishing, editing and unpublishing refresh the affected pages
+// straight away (lib/siteRefresh.ts), so this is only a safety net.
+export const revalidate = 43200;
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');

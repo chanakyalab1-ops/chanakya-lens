@@ -1,4 +1,5 @@
 ﻿import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { supabase } from "./supabase";
 import { articleHost, resolveSourceCountry } from "./outletCountries";
 
@@ -122,9 +123,9 @@ async function fetchAllStories(): Promise<Story[]> {
   return (data as unknown as Omit<StoryRow, "body">[]).map((row) => toListStory(mapRow({ ...row, body: "" })));
 }
 
-// Shared read across instances and builds, refreshed every 10 minutes or when a
-// story is published, edited or unpublished (updateTag("stories")).
-const cachedStories = unstable_cache(fetchAllStories, ["all-stories"], { revalidate: 600, tags: ["stories"] });
+// Shared read across instances and builds, refreshed every 12 hours or when a
+// story is published, edited, unpublished or backfilled (updateTag / revalidateTag("stories")).
+const cachedStories = unstable_cache(fetchAllStories, ["all-stories"], { revalidate: 43200, tags: ["stories"] });
 
 // Second layer, in this process: one read serves every page rendered by the same
 // server instance or build worker for five minutes. This is what stops a deploy
@@ -150,7 +151,9 @@ export async function getAllStories(): Promise<Story[]> {
   }
 }
 
-export async function getStoryBySlug(slug: string): Promise<Story | null> {
+// Wrapped in React's per-request cache: a story page and its metadata both ask
+// for the same story during one render, and this makes that a single read.
+export const getStoryBySlug = cache(async (slug: string): Promise<Story | null> => {
   const { data, error } = await supabase
     .from("stories")
     .select("*")
@@ -158,4 +161,16 @@ export async function getStoryBySlug(slug: string): Promise<Story | null> {
     .single();
   if (error || !data) return null;
   return mapRow(data as StoryRow);
+});
+
+// The share-image route draws only a headline and a category, so it reads just
+// those two columns instead of the whole story row (body, analysis, sources).
+export async function getStoryForOg(slug: string): Promise<{ headline: string; category: string | null } | null> {
+  const { data, error } = await supabase
+    .from("stories")
+    .select("headline, category")
+    .eq("slug", slug)
+    .single();
+  if (error || !data) return null;
+  return { headline: (data as { headline: string }).headline, category: (data as { category: string | null }).category };
 }

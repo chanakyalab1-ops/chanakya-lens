@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
+import { refreshAfterStoryUpdates } from "@/lib/siteRefresh";
 import {
   describeSources, hasEnoughCoverage, buildOffLensPrompt, parseOffLens, OFF_LENS_SYSTEM, type OffLensInput,
 } from "@/lib/offLensText";
@@ -88,6 +89,8 @@ export async function GET(req: Request) {
   }
 
   const results: { slug: string; status: string; offLens?: string; sources?: string[] }[] = [];
+
+  const savedSlugs: string[] = [];
   for (const story of (data ?? []) as unknown as Row[]) {
     const input: OffLensInput = {
       headline: story.headline,
@@ -145,6 +148,7 @@ export async function GET(req: Request) {
         results.push({ slug: story.slug, status: `error: ${updateError.message}` });
         continue;
       }
+      if (!drafts) savedSlugs.push(story.slug);
     }
     results.push({
       slug: story.slug,
@@ -153,6 +157,9 @@ export async function GET(req: Request) {
       sources: sources.map((s) => `${s.outlet} (${s.country}): ${s.title}`),
     });
   }
+
+  // Published stories only: show the new Off-Lens notes right away.
+  refreshAfterStoryUpdates(savedSlugs);
 
   return NextResponse.json({ apply, target: drafts ? "drafts" : "stories", checked: results.length, results });
 }

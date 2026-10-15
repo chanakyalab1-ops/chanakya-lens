@@ -4,6 +4,7 @@ import { searchGoogleNews } from "@/lib/googleNews";
 import { buildQuery, matchHits, countryCounts, nextOffset, type BackfillSource } from "@/lib/sourceBackfill";
 import { MAX_SOURCES_FOR_STORY } from "@/lib/clustering";
 import { canonicalDomain } from "@/lib/outletCountries";
+import { refreshAfterStoryUpdates } from "@/lib/siteRefresh";
 
 export const maxDuration = 60;
 
@@ -53,6 +54,7 @@ export async function GET(req: Request) {
   const batch = eligible.slice(offset, offset + limit);
 
   const results = [];
+  const writtenSlugs: string[] = [];
   for (const story of batch) {
     const existing = story.sources ?? [];
     const room = MAX_SOURCES_FOR_STORY - existing.length;
@@ -84,7 +86,10 @@ export async function GET(req: Request) {
       }
       const { error: updateError } = await supabase.from("stories").update(update).eq("slug", story.slug);
       if (updateError) writeError = updateError.message;
-      else written = true;
+      else {
+        written = true;
+        writtenSlugs.push(story.slug);
+      }
     }
 
     results.push({
@@ -101,6 +106,9 @@ export async function GET(req: Request) {
     // Be gentle with Google.
     await new Promise((r) => setTimeout(r, 1000));
   }
+
+  // Pages rebuild on a long timer, so show the new sources right away.
+  refreshAfterStoryUpdates(writtenSlugs);
 
   return NextResponse.json({
     mode: apply ? "apply" : "dry-run",
