@@ -2,6 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { selectImageForStory } from "@/lib/imageSelection";
 import { sendAlert } from "@/lib/alerts";
+import { refreshAfterStoryUpdates } from "@/lib/siteRefresh";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -33,6 +34,7 @@ export async function GET(req: NextRequest) {
   let updated = 0;
   let failed = 0;
   let dbErrors = 0;
+  const updatedSlugs: string[] = [];
 
   for (const story of stories) {
     const sources = (story.sources ?? []) as { url: string; domain: string }[];
@@ -49,6 +51,7 @@ export async function GET(req: NextRequest) {
         dbErrors++;
       } else {
         updated++;
+        updatedSlugs.push(story.slug);
       }
     } else {
       failed++; // no candidate cleared the quality bar -- expected, not an error
@@ -64,6 +67,9 @@ export async function GET(req: NextRequest) {
   } else if (failed === stories.length) {
     await sendAlert("backfill-images", `All ${stories.length} stories failed to get an image -- check PEXELS_API_KEY and upstream APIs.`);
   }
+
+  // Pages rebuild on a long timer, so show the new images right away.
+  refreshAfterStoryUpdates(updatedSlugs);
 
   return NextResponse.json({ updated, failed, total: stories.length });
 }

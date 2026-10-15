@@ -7,7 +7,9 @@ import { CompactCard, MobileRow } from "@/components/Feed";
 import { getAllStories } from "@/lib/stories";
 import { ALL_ENTITIES, coverageCounts, getLensEntity, isThinCountry, storiesFor, type LensKind } from "@/lib/lens";
 
-export const revalidate = 3600;
+// 12 hours. Publishing, editing and unpublishing refresh the affected pages
+// straight away (lib/siteRefresh.ts), so this is only a safety net.
+export const revalidate = 43200;
 
 // Build the curated pages (systems, actors, themes) up front. Country pages
 // are rendered the first time someone opens them, so the deploy stays quick

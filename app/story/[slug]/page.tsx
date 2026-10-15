@@ -23,7 +23,9 @@ const tagLabel: Record<ConfidenceLevel, string> = {
   possible: "Possible",
 };
 
-export const revalidate = 3600;
+// 12 hours. Publishing, editing and unpublishing refresh the affected pages
+// straight away (lib/siteRefresh.ts), so this is only a safety net.
+export const revalidate = 43200;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

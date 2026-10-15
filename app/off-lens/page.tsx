@@ -4,7 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import NavDrawer from "@/components/NavDrawer";
 import { getAllStories } from "@/lib/stories";
-export const revalidate = 300;
+// 12 hours. Publishing, editing and unpublishing refresh the affected pages
+// straight away (lib/siteRefresh.ts), so this is only a safety net.
+export const revalidate = 43200;
 export const metadata: Metadata = pageMeta("/off-lens", "Off-Lens: How Different Countries Cover the Same News", "Compare how outlets in different countries reported the same event: who covered it, where coverage agrees, and where the framing splits.");
 
 export default async function OffLensPage() {
