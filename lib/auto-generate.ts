@@ -62,9 +62,10 @@ export type CandidateRow = {
   seen_date: string | null;
   tone?: number | null;
   query_tag?: string | null;
+  summary?: string | null;
 };
 
-const CANDIDATE_COLUMNS = 'id, url, title, source_country, domain, seen_date, tone, query_tag';
+const CANDIDATE_COLUMNS = 'id, url, title, source_country, domain, seen_date, tone, query_tag, summary';
 const SCORE_FLOOR = 35;
 
 // A story proposed for approval: the articles that cover one event, ranked by
@@ -289,7 +290,7 @@ export async function submitGroups(candidateGroups: string[][], options: { enric
     articles: candidateIds
       .map((id) => rows.get(id))
       .filter((c): c is CandidateRow => !!c)
-      .map((c) => ({ title: c.title ?? '', domain: c.domain, sourceCountry: c.source_country, url: c.url })),
+      .map((c) => ({ title: c.title ?? '', domain: c.domain, sourceCountry: c.source_country, url: c.url, summary: c.summary ?? null })),
   }));
 
   const anthropicBatchId = await submitBatchGeneration(batchRequests);

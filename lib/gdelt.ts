@@ -9,6 +9,8 @@ export type GdeltArticle = {
   seendate?: string;
   tone?: number;
   queryTag?: string;
+  // RSS description, when the feed provides one.
+  summary?: string;
 };
 
 export type GdeltFetchResult = {

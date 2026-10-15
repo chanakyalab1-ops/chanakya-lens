@@ -54,7 +54,7 @@ You draft content for Chanakya Lens, a geopolitical news analysis platform. Ever
 5. subjectCountries -- the country or countries this story is substantively ABOUT, not the countries of the outlets reporting it. A story about Morocco covered by a Spanish outlet is about Morocco (and possibly Spain, if Spain is also a real party to the events, e.g. Ceuta). List 1-3 country names, using standard English names (e.g. "United States", "South Korea", "United Kingdom"). This drives regional categorization, so get it right based on what the story is actually about, not who wrote about it.
 
 RESEARCH PROCESS -- this is critical:
-You have a web_search tool. You are given source article titles, domains, and URLs, but NOT the full article text. Before drafting anything, use web_search to find and read the actual reporting on this story -- search for the headline text, the key names/entities involved, and related coverage. Do not draft from the headline alone. Ground every factual claim in what you actually find through search, not what seems plausible.
+You have a web_search tool. You are given source article titles, domains, URLs and, where the outlet's feed provided one, a short feed summary, but NOT the full article text. The feed summaries are a starting point, not enough on their own: use web_search to confirm the facts and fill what they leave out. A search or two is usually enough when the summaries already agree on the basics; search more only when they are thin or conflict. Do not draft from the headline alone. Ground every factual claim in what you actually find through search, not what seems plausible.
 
 If your searches don't turn up enough real detail to confidently write a substantive brief, say so -- write a shorter, more conservative body rather than filling gaps with plausible-sounding guesses about the current state of the situation (military activity, policy status, negotiations, etc).
 
@@ -91,13 +91,13 @@ After you finish researching, your FINAL message must contain NOTHING except the
 }
 
 function buildUserPrompt(
-  articles: { title: string; domain: string; sourceCountry: string | null; url: string }[],
+  articles: { title: string; domain: string; sourceCountry: string | null; url: string; summary?: string | null }[],
   gdeltArticles: GdeltArticle[] = [],
 ) {
   const articleList = articles
     .map(
       (a, i) =>
-        `${i + 1}. "${a.title}" -- ${a.domain}${a.sourceCountry ? ` (${a.sourceCountry})` : ""}\n   URL: ${a.url}`,
+        `${i + 1}. "${a.title}" -- ${a.domain}${a.sourceCountry ? ` (${a.sourceCountry})` : ""}\n   URL: ${a.url}${a.summary ? `\n   Feed summary: ${a.summary}` : ""}`,
     )
     .join("\n");
 
@@ -206,7 +206,7 @@ function extractDraftFromTextBlocks(content: { type: string; text?: string }[]):
 
 // Live, synchronous generation -- used by manual "Generate Draft" clicks in /review.
 export async function generateStoryDraft(input: {
-  articles: { title: string; domain: string; sourceCountry: string | null; url: string }[];
+  articles: { title: string; domain: string; sourceCountry: string | null; url: string; summary?: string | null }[];
 }): Promise<GeneratedDraft> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -252,7 +252,7 @@ export async function generateStoryDraft(input: {
 // Batch generation -- submits many stories at once for ~50% lower cost.
 // Results arrive asynchronously; see checkAndProcessBatches for retrieval.
 export async function submitBatchGeneration(
-  groups: { customId: string; articles: { title: string; domain: string; sourceCountry: string | null; url: string }[] }[]
+  groups: { customId: string; articles: { title: string; domain: string; sourceCountry: string | null; url: string; summary?: string | null }[] }[]
 ): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
