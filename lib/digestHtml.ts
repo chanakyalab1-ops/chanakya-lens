@@ -111,9 +111,9 @@ export function buildDigestHtml(stories: DigestStory[], topicLabel: string, emai
     <div style="background:#f0f0ea;padding:24px 28px;font-family:${FONT};color:${INK};">
       <div style="margin-bottom:6px;">
         <img src="${SITE}/logo-mark.png" alt="" width="28" height="28" style="vertical-align:middle;border-radius:50%;" />
-        <span style="vertical-align:middle;font-weight:800;font-size:22px;letter-spacing:0.02em;margin-left:6px;">CHANAKYA <span style="color:#5FA8B5;">LENS</span></span>
+        <span style="vertical-align:middle;font-weight:800;font-size:26px;letter-spacing:0.02em;margin-left:6px;color:#000;">DAILY DIGEST</span>
       </div>
-      <p style="font-size:13px;line-height:1.5;color:#333;margin:0 0 18px 0;">Today's stories, with what they mean for you and how different countries cover the same news. ${esc(topicLabel)}.</p>
+      <p style="font-size:13px;line-height:1.5;color:#333;margin:0 0 18px 0;">Chanakya Lens daily digest: today's stories, with what they mean for you and how different countries cover the same news. ${esc(topicLabel)}.</p>
       <div style="border-top:1px solid ${RULE};margin:0 0 18px 0;"></div>
       ${note}
       ${heading("Top Stories")}

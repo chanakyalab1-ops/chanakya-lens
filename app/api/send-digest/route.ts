@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
     if (digest.fellBack) fellBackToTopStories++;
     prepared.push({
       to: sub.email,
-      subject: `Today's Signal — Chanakya Lens`,
+      subject: `Daily Digest — Chanakya Lens`,
       html: buildDigestHtml(digest.stories, digest.topicLabel, sub.email, digest.fellBack),
     });
   }
