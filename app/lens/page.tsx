@@ -5,7 +5,9 @@ import NavDrawer from "@/components/NavDrawer";
 import { getAllStories } from "@/lib/stories";
 import { THEMES, SYSTEMS, ACTORS, countriesByRegion, storiesFor, type LensEntity } from "@/lib/lens";
 
-export const revalidate = 3600;
+// 12 hours. Publishing, editing and unpublishing refresh the affected pages
+// straight away (lib/siteRefresh.ts), so this is only a safety net.
+export const revalidate = 43200;
 
 export const metadata: Metadata = pageMeta("/lens", "The Lens", "Permanent pages for the countries, actors and strategic systems that keep coming up: Hormuz, the Red Sea, Taiwan, semiconductors, trade corridors and more.");
 

@@ -1,6 +1,9 @@
 ﻿import { getAllStories } from '@/lib/stories';
 import { ALL_ENTITIES, isThinCountry, storiesFor } from '@/lib/lens';
 
+// 12 hours; refreshed on publish (lib/siteRefresh.ts).
+export const revalidate = 43200;
+
 export async function GET() {
   const stories = await getAllStories();
   

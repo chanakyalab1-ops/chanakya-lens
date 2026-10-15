@@ -4,7 +4,9 @@ import NavDrawer from "@/components/NavDrawer";
 import RegionsBrowser from "@/components/RegionsBrowser";
 import { getAllStories } from "@/lib/stories";
 
-export const revalidate = 300;
+// 12 hours. Publishing, editing and unpublishing refresh the affected pages
+// straight away (lib/siteRefresh.ts), so this is only a safety net.
+export const revalidate = 43200;
 
 export const metadata: Metadata = pageMeta("/regions", "Geopolitics by region -- Asia, Europe, Middle East and more | Chanakya Lens", "Browse the latest geopolitics news and analysis by region: Asia, Europe, the Middle East, Africa and the Americas.");
 

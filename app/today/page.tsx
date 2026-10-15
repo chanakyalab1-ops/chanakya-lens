@@ -7,7 +7,9 @@ import { CompactCard, MobileRow, SignalPanel } from "@/components/Feed";
 import { getAllStories } from "@/lib/stories";
 import { pickTodaysSignal, recentWindow } from "@/lib/signal";
 
-export const revalidate = 600;
+// 12 hours. Publishing, editing and unpublishing refresh the affected pages
+// straight away (lib/siteRefresh.ts), so this is only a safety net.
+export const revalidate = 43200;
 
 export const metadata: Metadata = pageMeta("/today", "Today's Signal", "Everything published in the last day on Chanakya Lens, with the stories that matter most on top.");
 
