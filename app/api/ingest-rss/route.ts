@@ -49,6 +49,7 @@ export async function GET(req: NextRequest) {
         seen_date: a.seendate,
         tone: 0,
         query_tag: "rss",
+        summary: a.summary ?? null,
       }));
 
     for (let i = 0; i < rows.length; i += UPSERT_CHUNK) {

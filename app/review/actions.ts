@@ -360,7 +360,7 @@ export async function generateDraft(candidateIds: string[]): Promise<ActionResul
 
     const { data: candidateRows, error: candidatesError } = await supabase
       .from('story_candidates')
-      .select('id, title, domain, source_country, url')
+      .select('id, title, domain, source_country, url, summary')
       .in('id', candidateIds);
 
     if (candidatesError || !candidateRows || candidateRows.length === 0) {
@@ -373,6 +373,7 @@ export async function generateDraft(candidateIds: string[]): Promise<ActionResul
         domain: c.domain,
         sourceCountry: c.source_country,
         url: c.url,
+        summary: c.summary,
       })),
     });
 

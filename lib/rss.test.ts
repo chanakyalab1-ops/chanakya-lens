@@ -19,7 +19,7 @@ describe("parseFeed", () => {
       <link rel="alternate" href="https://example.com/atom"/>
       <updated>2026-10-01T08:30:00Z</updated></entry></feed>`;
     expect(parseFeed(xml)).toEqual([
-      { title: "Atom story", url: "https://example.com/atom", publishedAt: "2026-10-01T08:30:00.000Z" },
+      { title: "Atom story", url: "https://example.com/atom", publishedAt: "2026-10-01T08:30:00.000Z", summary: null },
     ]);
   });
 
@@ -51,5 +51,18 @@ describe("isOffTopic", () => {
   it("keeps geopolitics headlines, including ones with look-alike words", () => {
     expect(isOffTopic("Pakistan rejects commission report on Afghan war")).toBe(false);
     expect(isOffTopic("Golfstrom shift alarms scientists")).toBe(false);
+  });
+});
+
+describe("parseFeed summaries", () => {
+  it("captures the description, stripped of markup and capped", () => {
+    const xml = `<rss><channel><item><title>T</title><link>https://a.com/x</link><description><![CDATA[<p>Hello &amp; <b>world</b></p>]]></description></item></channel></rss>`;
+    expect(parseFeed(xml)[0].summary).toBe("Hello & world");
+    const long = `<rss><channel><item><title>T</title><link>https://a.com/x</link><description>${"a".repeat(900)}</description></item></channel></rss>`;
+    expect(parseFeed(long)[0].summary?.length).toBe(400);
+  });
+  it("is null when missing or just the title", () => {
+    const xml = `<rss><channel><item><title>Same</title><link>https://a.com/x</link><description>Same</description></item></channel></rss>`;
+    expect(parseFeed(xml)[0].summary).toBeNull();
   });
 });
