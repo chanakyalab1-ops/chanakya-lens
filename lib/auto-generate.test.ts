@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildGroups, toProposal, type CandidateRow } from "./auto-generate";
+import { buildGroups, flagRepeats, toProposal, type CandidateRow } from "./auto-generate";
+import type { KnownStory } from "./duplicates";
 
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3600e3).toISOString();
 let n = 0;
@@ -57,5 +58,31 @@ describe("toProposal", () => {
   });
   it("returns null when none of the articles exist any more", () => {
     expect(toProposal(["gone"], new Map())).toBeNull();
+  });
+});
+
+
+describe("flagRepeats", () => {
+  const row = (id: string, title: string, url: string): CandidateRow => ({ id, url, title, source_country: null, domain: `${id}.com`, seen_date: null });
+  const rows = new Map([
+    row("1", "Yemen government launches offensive to recapture Houthi territory", "https://a.com/1"),
+    row("2", "Brazil senate passes budget after long debate", "https://b.com/2"),
+    row("3", "Yemeni government forces open offensive against Houthis to retake territory", "https://c.com/3"),
+  ].map((r) => [r.id, r] as const));
+
+  const known: KnownStory[] = [
+    { slug: "old-yemen", headline: "Yemen offensive", state: "in_review", titles: ["Yemen government launches offensive to recapture Houthi territory"], urls: [] },
+  ];
+
+  it("flags a group that repeats a story already in the pipeline, and leaves new ones alone", () => {
+    const out = flagRepeats([["1"], ["2"]], rows, known);
+    expect(out[0]).toMatchObject({ slug: "old-yemen", state: "in_review" });
+    expect(out[1]).toBeNull();
+  });
+
+  it("flags a later group that repeats an earlier one in the same list", () => {
+    const out = flagRepeats([["1"], ["3"]], rows, []);
+    expect(out[0]).toBeNull();
+    expect(out[1]).toMatchObject({ state: "proposed" });
   });
 });
