@@ -64,6 +64,10 @@ export default async function AdminPage() {
         </Link>
       </div>
 
+      <Link href="/review/duplicates" className="inline-block mb-6 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+        Possible duplicate stories →
+      </Link>
+
       <SectionNav
         links={[
           { href: "#pipeline", label: "Pipeline", badge: o.pipeline.inReview },

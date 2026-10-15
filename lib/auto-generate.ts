@@ -4,6 +4,8 @@ import { fetchRelatedArticles } from '@/lib/thenewsapi';
 import { describePlan, getBacklog, planGeneration, readBufferSettings } from '@/lib/pipelineBuffer';
 import { submitBatchGeneration } from '@/lib/anthropic-server';
 import { TRUSTED_DOMAINS } from '@/lib/trustedDomains';
+import { findSimilarStory, type KnownStory, type SimilarStory } from './duplicates';
+import { loadKnownStories } from './knownStories';
 
 const TOPIC_KEYWORDS = [
   // Geopolitics & conflict
@@ -76,6 +78,9 @@ export type Proposal = {
   countries: number;
   newestAt: string | null;
   sources: { id: string; domain: string; country: string | null; title: string }[];
+  // Set when this looks like a story we already have (or an earlier proposal).
+  // It only warns: a person can still approve it, e.g. a real development.
+  similarTo?: SimilarStory;
 };
 
 export function toProposal(ids: string[], rows: Map<string, CandidateRow>): Proposal | null {
@@ -106,18 +111,18 @@ async function loadCandidates(supabase: ReturnType<typeof supabaseServer>): Prom
   return (data ?? []) as CandidateRow[];
 }
 
-async function recentHeadlineFilter(supabase: ReturnType<typeof supabaseServer>) {
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: recentStories } = await supabase.from('stories').select('headline').gte('created_at', sevenDaysAgo);
-  const recentWords = new Set(
-    (recentStories ?? []).flatMap((s: { headline: string }) =>
-      s.headline.toLowerCase().split(/\s+/).filter((w: string) => w.length > 4),
-    ),
-  );
-  return (title: string | null): boolean => {
-    const words = (title ?? '').toLowerCase().split(/\s+/).filter((w) => w.length > 4);
-    return words.filter((w) => recentWords.has(w)).length >= 4;
-  };
+// Marks each group that repeats a story we already have (published, in review,
+// or being generated), or a higher-ranked group in the same list. Pure, so it
+// can be tested without a database.
+export function flagRepeats(groups: string[][], rows: Map<string, CandidateRow>, known: KnownStory[]): (SimilarStory | null)[] {
+  const pool = [...known];
+  return groups.map((ids) => {
+    const members = ids.map((id) => rows.get(id)).filter((r): r is CandidateRow => !!r);
+    const group = { titles: members.map((m) => m.title ?? '').filter(Boolean), urls: members.map((m) => m.url) };
+    const hit = findSimilarStory(group, pool);
+    pool.push({ slug: null, headline: group.titles[0] ?? '', state: 'proposed', titles: group.titles, urls: group.urls });
+    return hit;
+  });
 }
 
 // Ranks the pending pool into story groups: clusters first, most widely
@@ -188,12 +193,18 @@ export function buildGroups(
 // The stories worth generating right now, best first. Costs nothing.
 export async function proposeStories(limit = 20): Promise<Proposal[]> {
   const supabase = supabaseServer();
-  const [candidates, isDuplicate] = await Promise.all([loadCandidates(supabase), recentHeadlineFilter(supabase)]);
-  const { groups, pool } = buildGroups(candidates, limit, isDuplicate);
+  const [candidates, known] = await Promise.all([loadCandidates(supabase), loadKnownStories(supabase)]);
+  const { groups, pool } = buildGroups(candidates, limit);
   // Free top-up from articles we already hold; no paid lookups just to browse.
   const grouped = attachRelated(groups, pool as unknown as (Candidate & { id: string })[]);
   const rows = new Map(pool.map((c) => [c.id, c]));
-  return grouped.map((ids) => toProposal(ids, rows)).filter((p): p is Proposal => !!p);
+  const repeats = flagRepeats(grouped, rows, known);
+  return grouped
+    .map((ids, i) => {
+      const proposal = toProposal(ids, rows);
+      return proposal && repeats[i] ? { ...proposal, similarTo: repeats[i]! } : proposal;
+    })
+    .filter((p): p is Proposal => !!p);
 }
 
 // Free-tier TheNewsAPI is ~100 requests/day, so the extra lookups are
@@ -325,9 +336,19 @@ export async function autoGenerateBatch(
     limit = plan.allow;
   }
 
-  const [candidates, isDuplicate] = await Promise.all([loadCandidates(supabase), recentHeadlineFilter(supabase)]);
-  const { groups, pool } = buildGroups(candidates, limit, isDuplicate);
+  const [candidates, known] = await Promise.all([loadCandidates(supabase), loadKnownStories(supabase)]);
+  // Ask for spares: groups that repeat an existing story are skipped, and the
+  // run should still fill its quota from the rest.
+  const { groups, pool } = buildGroups(candidates, limit * 2);
   if (groups.length === 0) throw new Error('No pending candidates above score threshold available.');
 
-  return submitGroups(attachRelated(groups, pool as unknown as (Candidate & { id: string })[]), { enrich: true });
+  const grouped = attachRelated(groups, pool as unknown as (Candidate & { id: string })[]);
+  const rows = new Map(pool.map((c) => [c.id, c]));
+  const repeats = flagRepeats(grouped, rows, known);
+  const fresh = grouped.filter((_, i) => !repeats[i]).slice(0, limit);
+  if (fresh.length === 0) {
+    throw new Error('Every proposed story repeats one we already have, so nothing was generated. They are still listed at /review/proposals.');
+  }
+
+  return submitGroups(fresh, { enrich: true });
 }

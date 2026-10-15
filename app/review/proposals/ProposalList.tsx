@@ -1,12 +1,20 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Proposal } from '@/lib/auto-generate';
 import { timeAgo } from '../../admin/time';
 import { approveProposals, skipProposals } from '../proposalActions';
 
 const MAX_PER_APPROVAL = 15;
+
+const REPEAT_LABEL: Record<string, string> = {
+  published: 'a published story',
+  in_review: 'a draft in review',
+  generating: 'a story being generated',
+  proposed: 'a proposal above',
+};
 
 export function ProposalList({ proposals }: { proposals: Proposal[] }) {
   const router = useRouter();
@@ -138,6 +146,19 @@ export function ProposalList({ proposals }: { proposals: Proposal[] }) {
                 </span>
               </button>
               <div className="px-4 pb-3 pl-12">
+                {p.similarTo && (
+                  <p className="text-[0.74rem] leading-snug mb-2" style={{ color: 'var(--developing)' }}>
+                    ⚠ Looks like {REPEAT_LABEL[p.similarTo.state] ?? 'an existing story'}
+                    {p.similarTo.reason === 'shared_article' ? ' (uses the same article)' : ''}
+                    {p.similarTo.state === 'generating' ? '' : ': '}
+                    {p.similarTo.state === 'published' && p.similarTo.slug ? (
+                      <Link href={`/story/${p.similarTo.slug}`} className="underline">{p.similarTo.headline}</Link>
+                    ) : p.similarTo.state === 'generating' ? null : (
+                      p.similarTo.headline
+                    )}
+                    . You can still generate it if it is a real development.
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? null : p.id)}
