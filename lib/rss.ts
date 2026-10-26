@@ -10,7 +10,9 @@ const MAX_AGE_HOURS = 72;
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
-export type RssItem = { title: string; url: string; publishedAt: string | null };
+export type RssItem = { title: string; url: string; publishedAt: string | null; summary: string | null };
+
+const SUMMARY_MAX = 400;
 
 const ENTITIES: Record<string, string> = {
   amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
@@ -70,10 +72,14 @@ export function parseFeed(xml: string): RssItem[] {
     const dateRaw = tag(block, "pubDate") ?? tag(block, "dc:date") ?? tag(block, "published") ?? tag(block, "updated");
     const time = dateRaw ? new Date(dateRaw).getTime() : NaN;
 
+    const rawSummary = tag(block, "description") ?? tag(block, "summary");
+    const summary = rawSummary && rawSummary.toLowerCase() !== title.toLowerCase() ? rawSummary.slice(0, SUMMARY_MAX) : null;
+
     items.push({
       title,
       url: stripTracking(url),
       publishedAt: Number.isNaN(time) ? null : new Date(time).toISOString(),
+      summary: summary || null,
     });
   }
   return items;
@@ -119,6 +125,7 @@ export async function fetchRssCandidates(feeds: RssFeed[] = RSS_FEEDS): Promise<
           seendate: item.publishedAt ?? new Date().toISOString(),
           tone: 0,
           queryTag: "rss",
+          summary: item.summary ?? undefined,
         });
       }
     });
