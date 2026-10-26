@@ -64,6 +64,9 @@ export default async function AdminPage() {
         </Link>
       </div>
 
+      <a href="/api/weekly-card" target="_blank" rel="noreferrer" className="inline-block mb-2 mr-5 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+        Weekly story card →
+      </a>
       <Link href="/review/duplicates" className="inline-block mb-6 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
         Possible duplicate stories →
       </Link>

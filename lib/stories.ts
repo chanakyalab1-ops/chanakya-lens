@@ -174,3 +174,24 @@ export async function getStoryForOg(slug: string): Promise<{ headline: string; c
   if (error || !data) return null;
   return { headline: (data as { headline: string }).headline, category: (data as { category: string | null }).category };
 }
+
+export type WeeklyItem = { slug: string; headline: string; category: string | null; status: string | null; hasDirect: boolean };
+
+// Headline-only read for the weekly recap card.
+export async function getWeeklyItems(days = 7): Promise<WeeklyItem[]> {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("stories")
+    .select("slug, headline, category, status, impact_nodes")
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(80);
+  if (error || !data) return [];
+  return (data as { slug: string; headline: string; category: string | null; status: string | null; impact_nodes: { confidence: string }[] | null }[]).map((r) => ({
+    slug: r.slug,
+    headline: r.headline,
+    category: r.category,
+    status: r.status,
+    hasDirect: !!r.impact_nodes?.some((n) => n.confidence === "direct"),
+  }));
+}
