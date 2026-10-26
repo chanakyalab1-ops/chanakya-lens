@@ -69,6 +69,7 @@ const JSON_LD = JSON.stringify([
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Chanakya Lens",
+    "alternateName": ["ChanakyaLens", "Chanakya Lens Daily Digest"],
     "url": "https://chanakyalens.com",
     "potentialAction": {
       "@type": "SearchAction",
