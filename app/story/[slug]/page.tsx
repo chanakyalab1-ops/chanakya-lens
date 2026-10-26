@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { relatedStories } from "@/lib/relatedStories";
 import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
@@ -60,18 +61,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
   const allStories = await getAllStories();
 
-  const related = allStories
-    .filter((s) => s.slug !== slug)
-    .map((s) => ({
-      story: s,
-      score:
-        (s.category === story.category ? 2 : 0) +
-        (s.subjectCountries?.some((c) => story.subjectCountries?.includes(c)) ? 1 : 0),
-    }))
-    .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score || new Date(b.story.publishedAt).getTime() - new Date(a.story.publishedAt).getTime())
-    .slice(0, 3)
-    .map((s) => s.story);
+  const related = relatedStories(story, allStories);
 
   const hubs = hubsForStory(story, allStories);
 
