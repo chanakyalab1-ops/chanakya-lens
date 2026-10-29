@@ -242,7 +242,7 @@ export async function publishDraft(slug: string, feedback?: PublishFeedback): Pr
       draft.body,
       draft.category ?? '',
       draft.subject_countries ?? undefined,
-      sources.map((s) => ({ url: s.url, domain: s.domain })),
+      sources.map((s) => ({ url: s.url, domain: s.domain, title: s.title })),
     );
 
     const { error: insertError } = await supabase.from('stories').insert({
