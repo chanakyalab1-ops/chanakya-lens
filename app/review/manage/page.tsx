@@ -8,7 +8,7 @@ export default async function ManagePage() {
 
   const { data: stories, error } = await supabase
     .from('stories')
-    .select('slug, headline, dek, body, category, status, read_time, has_video, impact_nodes, chanakya_analysis, off_lens, created_at')
+    .select('slug, headline, dek, body, category, status, read_time, has_video, impact_nodes, chanakya_analysis, off_lens, image_url, created_at')
     .order('created_at', { ascending: false });
 
   if (error) {

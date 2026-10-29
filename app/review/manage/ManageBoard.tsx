@@ -23,6 +23,7 @@ type PublishedStory = {
   impact_nodes: ImpactNode[] | null;
   chanakya_analysis: string | null;
   off_lens: string | null;
+  image_url: string | null;
   created_at: string;
 };
 
@@ -183,6 +184,7 @@ function EditPublishedModal({
   const [impactNodes, setImpactNodes] = useState<ImpactNode[]>(story.impact_nodes ?? []);
   const [chanakyaAnalysis, setChanakyaAnalysis] = useState(story.chanakya_analysis ?? '');
   const [offLens, setOffLens] = useState(story.off_lens ?? '');
+  const [imageUrl, setImageUrl] = useState(story.image_url ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -211,6 +213,7 @@ function EditPublishedModal({
         impactNodes: impactNodes.filter((n) => n.audience.trim() && n.mechanism.trim()),
         chanakyaAnalysis,
         offLens,
+        imageUrl,
       });
       if (!result.ok) throw new Error(result.error);
       onSaved();
@@ -236,6 +239,25 @@ function EditPublishedModal({
             {error}
           </div>
         )}
+
+        <div>
+          <label className="font-mono text-xs uppercase tracking-wider text-[#8A93A6]">Image address (empty = no image)</label>
+          {imageUrl.trim() && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={imageUrl.trim()} alt="" className="mt-2 w-full max-h-48 object-cover rounded border border-white/10" />
+          )}
+          <input
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="https://..."
+            className="mt-1 w-full bg-white/[0.03] border border-white/10 rounded px-3 py-2 text-sm"
+          />
+          {imageUrl && (
+            <button type="button" onClick={() => setImageUrl('')} className="mt-1 text-xs text-red-300 underline">
+              Remove image
+            </button>
+          )}
+        </div>
 
         <div>
           <label className="font-mono text-xs uppercase tracking-wider text-[#8A93A6]">Headline</label>
