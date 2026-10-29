@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   const updatedSlugs: string[] = [];
 
   for (const story of stories) {
-    const sources = (story.sources ?? []) as { url: string; domain: string }[];
+    const sources = (story.sources ?? []) as { url: string; domain: string; title?: string | null }[];
     const image = await selectImageForStory(story.headline, story.body, story.category ?? "", story.subject_countries ?? undefined, sources);
 
     if (image) {

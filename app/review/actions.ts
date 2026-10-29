@@ -242,7 +242,7 @@ export async function publishDraft(slug: string, feedback?: PublishFeedback): Pr
       draft.body,
       draft.category ?? '',
       draft.subject_countries ?? undefined,
-      sources.map((s) => ({ url: s.url, domain: s.domain })),
+      sources.map((s) => ({ url: s.url, domain: s.domain, title: s.title })),
     );
 
     const { error: insertError } = await supabase.from('stories').insert({
@@ -455,6 +455,8 @@ export type UpdatePublishedStoryInput = {
   impactNodes: ImpactNode[];
   chanakyaAnalysis: string;
   offLens: string;
+  // Empty clears the picture; otherwise an https image address.
+  imageUrl: string;
 };
 
 export async function updatePublishedStory(slug: string, input: UpdatePublishedStoryInput): Promise<ActionResult> {
@@ -465,9 +467,15 @@ export async function updatePublishedStory(slug: string, input: UpdatePublishedS
       throw new Error('Headline and body are required.');
     }
 
+    const imageUrl = input.imageUrl.trim();
+    if (imageUrl && !/^https:\/\/\S+$/i.test(imageUrl)) {
+      throw new Error('Image must be an https address, or empty for no image.');
+    }
+
     const { error } = await supabase
       .from('stories')
       .update({
+        image_url: imageUrl || null,
         headline: input.headline.trim(),
         dek: input.dek.trim() || input.headline.trim(),
         body: input.body.trim(),

@@ -2,11 +2,27 @@
 import { fetchImageForCategory, logImageUsage } from "./pexels";
 import { fetchSourceOgImage } from "./ogImage";
 import { TRUSTED_DOMAINS } from "./trustedDomains";
+import { tokenize } from "./clustering";
 
 const MIN_ACCEPTABLE_SCORE = 35;
 const MAX_SOURCE_PHOTOS_TO_TRY = 4;
 
-export type ImageSource = { url: string; domain: string };
+export type ImageSource = { url: string; domain: string; title?: string | null };
+
+const MIN_SHARED_WORDS = 2;
+
+// A cluster can hold loosely related articles, and an outlet's lead photo is
+// whatever it ran on that page. Only take a photo from a source whose own title
+// shares wording with this story, so a stray article cannot supply the picture.
+export function sourcesAboutStory(headline: string, body: string, sources: ImageSource[]): ImageSource[] {
+  const story = tokenize(`${headline} ${body}`);
+  return sources.filter((s) => {
+    if (!s.title) return true;
+    let shared = 0;
+    for (const t of tokenize(s.title)) if (story.has(t)) shared++;
+    return shared >= MIN_SHARED_WORDS;
+  });
+}
 
 export async function selectImageForStory(
   headline: string,
@@ -21,8 +37,9 @@ export async function selectImageForStory(
   // only fall back to stock if none of them have a usable image. "Primary"
   // in the articles list is often just whichever article clustered first,
   // not necessarily the best-sourced one, so we don't rely on it alone.
-  if (sources && sources.length > 0) {
-    const ordered = [...sources].sort((a, b) => {
+  const relevant = sources ? sourcesAboutStory(headline, body, sources) : [];
+  if (relevant.length > 0) {
+    const ordered = [...relevant].sort((a, b) => {
       const aTrusted = TRUSTED_DOMAINS.has(a.domain) ? 0 : 1;
       const bTrusted = TRUSTED_DOMAINS.has(b.domain) ? 0 : 1;
       return aTrusted - bTrusted;
