@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Footer from "@/components/Footer";
 import MobileTabBar from "@/components/MobileTabBar";
 import StickyDigestBar from "@/components/StickyDigestBar";
+import WelcomePopup from "@/components/WelcomePopup";
 import Script from "next/script";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { Barlow_Condensed, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
@@ -99,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Footer />
         <StickyDigestBar />
+        <WelcomePopup />
         <MobileTabBar />
         {/* Vercel Web Analytics, loaded directly so it needs no npm package.
             It only reports once Web Analytics is turned on for the project in
