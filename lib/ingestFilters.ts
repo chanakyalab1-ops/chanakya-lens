@@ -18,7 +18,30 @@ const OFF_TOPIC = [
 ];
 const OFF_TOPIC_RE = new RegExp(`\\b(?:${OFF_TOPIC.join("|")})\\b`, "i");
 
+// A sports headline is a story for us only when sport meets power: sanctions,
+// boycotts, hosting rights, state money, diplomacy. Both halves must be present,
+// so match reports and transfers stay out.
+const SPORT_TERMS = [
+  "olympic", "olympics", "paralympic", "paralympics", "fifa", "uefa", "ioc", "wada", "icc",
+  "world cup", "asian games", "commonwealth games", "asia cup", "premier league",
+  "champions league", "formula 1", "grand prix", "cricket", "football", "tennis",
+];
+const POWER_TERMS = [
+  "sanction", "sanctions", "sanctioned", "boycott", "boycotts", "boycotted",
+  "geopolitics", "geopolitical", "diplomacy", "diplomatic", "diplomats", "minister", "ministry",
+  "government", "sovereign wealth", "pif", "state-owned", "state-backed", "human rights",
+  "visa", "visas", "embassy", "hosting rights", "bid to host", "awarded hosting", "ban", "bans", "banned",
+];
+const termRe = (terms: string[]) => new RegExp(`(?:^|[^a-z0-9])(?:${terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?:$|[^a-z0-9])`, "i");
+const SPORT_RE = termRe(SPORT_TERMS);
+const POWER_RE = termRe(POWER_TERMS);
+
+export function isSportsPower(title: string): boolean {
+  return SPORT_RE.test(title) && POWER_RE.test(title);
+}
+
 export function isOffTopic(title: string): boolean {
+  if (isSportsPower(title)) return false;
   return OFF_TOPIC_RE.test(title);
 }
 
