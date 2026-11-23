@@ -5,13 +5,14 @@ import NavDrawer from "@/components/NavDrawer";
 
 const tags = [
   { label: "Direct", color: "var(--direct)", desc: "This is simply how it works. The mechanism isn't in dispute — e.g., import tariffs are paid by the importer, not the exporting country." },
-  { label: "Likely", color: "var(--likely)", desc: "Follows from precedent or stated policy, but depends on something not yet confirmed — a bill passing, a pricing decision, a competitor's move." },
-  { label: "Possible", color: "var(--possible)", desc: "A reasonable read further down the chain. More speculative, but worth knowing. We include it because it's relevant — not because we're confident it will happen." },
+  { label: "Likely", color: "var(--likely)", desc: "Follows from precedent or stated policy, but depends on exactly one step not yet confirmed — a bill passing, a pricing decision, a competitor's move." },
+  { label: "Possible", color: "var(--possible)", desc: "A reasonable read further down the chain. Two or more steps are still unconfirmed, so it\'s more speculative, but worth knowing. We include it because it's relevant — not because we're confident it will happen." },
 ];
 
 const principles = [
   { title: "Why \"could,\" never \"will\"", body: "We're not forecasters. Every impact section is written as a scenario — a plausible chain of cause and effect — not a prediction. If we're not confident something will happen, we don't say it will." },
   { title: "Not every story earns this treatment", body: "We only add impact tags when a story has a genuine, traceable chain to a reader's life. If we can't make a real case for relevance, we don't force one — the story runs as a plain brief instead." },
+  { title: "How to read Off-Lens", body: "Off-Lens maps the sources we could find for a story and the countries they come from. It is a sample, not a census: we don't read every outlet in every language. A country listed as missing may still have covered the story, in an outlet or language we didn't see. We use it to show whose voices are in the picture we have, not to claim anyone stayed silent." },
   { title: "One story, any source", body: "A story might come from wire reporting, or from one of our own video briefs. Either way, it goes through the same rating system." },
 ];
 
