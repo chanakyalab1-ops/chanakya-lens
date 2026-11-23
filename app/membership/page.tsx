@@ -83,7 +83,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
               {user?.email ? (
                 <SubscribeButton token={token} priceId={priceId} sandbox={isSandboxToken(token)} email={user.email} userId={user.id} />
               ) : (
-                <Link href="/account/login" className="inline-block px-5 py-2.5 rounded-sm text-sm font-semibold text-white" style={{ background: "#0E7080" }}>
+                <Link href="/account/login" className="inline-block px-5 py-2.5 rounded-sm text-sm font-semibold text-white" style={{ background: "#0E7080", color: "#fff" }}>
                   Sign in to join
                 </Link>
               )}

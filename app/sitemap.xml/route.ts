@@ -60,6 +60,16 @@ export async function GET() {
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://chanakyalens.com/start-here</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://chanakyalens.com/whats-new</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
     <loc>https://chanakyalens.com/digest</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>

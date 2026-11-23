@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import NavDrawer from "@/components/NavDrawer";
 import Feed from "@/components/Feed";
+import FirstVisitStrip from "@/components/FirstVisitStrip";
 import LiveMarketTicker from "@/components/LiveMarketTicker";
 import { filterFreshRows } from "@/components/MarketTicker";
 import { getAllStories } from "@/lib/stories";
@@ -34,6 +35,8 @@ export default async function FeedPage() {
     <>
       <NavDrawer />
       <h1 className="sr-only">Chanakya Lens: geopolitics traced to what it means for you</h1>
+
+      <FirstVisitStrip />
 
       <LiveMarketTicker initialRows={filterFreshRows(marketRows)} />
 
