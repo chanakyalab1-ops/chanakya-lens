@@ -7,3 +7,7 @@ export function membershipVisibleTo(email: string | null | undefined, isPublic =
   if (isPublic) return true;
   return !!email && OWNER_EMAILS.includes(email.toLowerCase());
 }
+
+export function isOwnerEmail(email: string | null | undefined): boolean {
+  return !!email && OWNER_EMAILS.includes(email.toLowerCase());
+}

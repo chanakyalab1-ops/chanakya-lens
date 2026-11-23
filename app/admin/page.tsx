@@ -64,6 +64,9 @@ export default async function AdminPage() {
         </Link>
       </div>
 
+      <Link href="/admin/push" className="inline-block mb-2 mr-5 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+        Notifications →
+      </Link>
       <Link href="/review/duplicates" className="inline-block mb-6 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
         Possible duplicate stories →
       </Link>

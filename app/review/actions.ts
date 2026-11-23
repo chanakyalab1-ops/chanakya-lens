@@ -8,6 +8,7 @@ import { supabaseServer } from '@/lib/supabase-server';
 import { slugify } from '@/lib/slug';
 import { generateStoryDraft } from '@/lib/anthropic-server';
 import { selectImageForStory } from '@/lib/imageSelection';
+import { notifyForStory } from '@/lib/push';
 
 // Every path that creates a draft holds it at workflow_status='fact_checking'
 // (invisible to the /review queue) and fires this so a reviewer never sees
@@ -295,6 +296,27 @@ export async function publishDraft(slug: string, feedback?: PublishFeedback): Pr
     revalidatePath('/review');
     refreshListingPages();
     refreshStoryPage(slug);
+
+    // Alert readers who follow this topic. Runs after the response, and a failure
+    // here never undoes a publish.
+    after(async () => {
+      try {
+        await notifyForStory(
+          {
+            slug: draft.slug,
+            headline: draft.headline,
+            dek: draft.dek ?? draft.headline,
+            category: draft.category ?? '',
+            status: draft.status,
+            impactNodes: draft.impact_nodes ?? [],
+            subjectCountries: draft.subject_countries ?? [],
+          },
+          'new',
+        );
+      } catch (e) {
+        console.error(`Push alerts failed for ${slug}:`, e);
+      }
+    });
     return { ok: true };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
@@ -499,6 +521,34 @@ export async function updatePublishedStory(slug: string, input: UpdatePublishedS
     refreshStoryPage(slug);
     refreshListingPages();
     return { ok: true };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
+// Tells readers who follow this story's topic that it has new developments. A
+// separate, deliberate step: ordinary edits (typos, wording) never send an alert.
+export async function sendUpdateAlert(slug: string): Promise<ActionResult<{ sent: number }>> {
+  try {
+    const { data, error } = await supabaseServer()
+      .from('stories')
+      .select('slug, headline, dek, category, status, impact_nodes, subject_countries')
+      .eq('slug', slug)
+      .single();
+    if (error || !data) throw new Error('Story not found.');
+    const r = await notifyForStory(
+      {
+        slug: data.slug,
+        headline: data.headline,
+        dek: data.dek,
+        category: data.category ?? '',
+        status: data.status,
+        impactNodes: data.impact_nodes ?? [],
+        subjectCountries: data.subject_countries ?? [],
+      },
+      'update',
+    );
+    return { ok: true, data: { sent: r.sent } };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
