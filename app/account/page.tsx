@@ -82,6 +82,16 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </section>
         )}
 
+        <section className="mb-8">
+          <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
+            Interests
+          </h2>
+          <p className="text-sm">
+            <Link href="/account/interests" className="underline">Choose what you follow</Link>
+            <span style={{ color: 'var(--text-on-ink-dim)' }}> to build your For you tab.</span>
+          </p>
+        </section>
+
         <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
           Saved stories
         </h2>

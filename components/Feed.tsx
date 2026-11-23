@@ -6,6 +6,7 @@ import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 import { isOptimizableImageUrl } from "@/lib/imageHost";
 import { SYSTEMS } from "@/lib/lens";
+import { matchInterests, type Interest } from "@/lib/interests";
 import type { TrendingTopic } from "@/lib/trending";
 const dotColor: Record<string, string> = {
   direct: "var(--direct)",
@@ -490,6 +491,32 @@ function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
   );
 }
 
+const FOR_YOU = "For you";
+
+// The homepage is cached for everyone, so a reader's interests are fetched in the
+// browser. Visitors without a Supabase session cookie skip the request entirely.
+function useInterests(): { status: "loading" | "anon" | "ready"; interests: Interest[] } {
+  const [state, setState] = useState<{ status: "loading" | "anon" | "ready"; interests: Interest[] }>({ status: "loading", interests: [] });
+  useEffect(() => {
+    let cancelled = false;
+    const hasSession = /(^|;\s*)sb-[^=]*-auth-token/.test(document.cookie);
+    const load: Promise<{ signedIn: boolean; interests: Interest[] }> = hasSession
+      ? fetch("/api/interests", { cache: "no-store" }).then((r) => r.json())
+      : Promise.resolve({ signedIn: false, interests: [] });
+    load
+      .then((d) => {
+        if (!cancelled) setState(d.signedIn ? { status: "ready", interests: d.interests } : { status: "anon", interests: [] });
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: "anon", interests: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return state;
+}
+
 // The `q` search param, read in the browser after mount instead of with
 // useSearchParams(): that hook makes Next bail the whole feed out to
 // client-only rendering, so the server HTML had no stories in it for crawlers.
@@ -517,11 +544,13 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
     [stories]
   );
   const [active, setActive] = useState("All");
+  const me = useInterests();
   // Search now lives in the header (see HeaderSearch.tsx), which writes to
   // the `q` URL param -- read it here reactively rather than owning local
   // input state, since Feed no longer renders its own search box.
   const query = useUrlQuery();
-  const categoryFiltered = active === "All" ? stories : stories.filter((s) => s.category === active);
+  const categoryFiltered =
+    active === FOR_YOU ? matchInterests(stories, me.interests) : active === "All" ? stories : stories.filter((s) => s.category === active);
   const filtered = query.trim()
     ? categoryFiltered.filter((s) => {
         const q = query.trim().toLowerCase();
@@ -575,10 +604,43 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
         }}
       >
         <div className="flex gap-2 w-max">
+          {me.status === "anon" && (
+            <Link
+              href="/account/login"
+              className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5"
+              style={{ color: "var(--brand-soft)", borderColor: "var(--brand-soft)" }}
+            >
+              For you
+            </Link>
+          )}
+          {me.status === "ready" && (
+            <button
+              onClick={() => {
+                setActive(FOR_YOU);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
+              style={
+                active === FOR_YOU
+                  ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
+                  : { color: "var(--brand-soft)", borderColor: "var(--brand-soft)", background: "transparent" }
+              }
+            >
+              For you
+            </button>
+          )}
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => {
+                if (active === FOR_YOU) {
+                  setActive("All");
+                  setTimeout(() => {
+                    if (cat === "All") window.scrollTo({ top: 0, behavior: "smooth" });
+                    else document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }, 60);
+                  return;
+                }
                 if (cat === "All") {
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 } else {
@@ -681,7 +743,17 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
 
           {filtered.length === 0 && (
             <div className="mt-8 text-center text-sm" style={{ color: "var(--text-on-ink-dim)" }}>
-              {query ? `No stories match "${query}".` : "Nothing in this category today."}
+              {query ? (
+                `No stories match "${query}".`
+              ) : active === FOR_YOU ? (
+                me.interests.length === 0 ? (
+                  <>You are not following anything yet. <Link href="/account/interests" className="underline">Choose your interests</Link>.</>
+                ) : (
+                  <>Nothing new for your interests yet. <Link href="/account/interests" className="underline">Edit interests</Link>.</>
+                )
+              ) : (
+                "Nothing in this category today."
+              )}
             </div>
           )}
 
