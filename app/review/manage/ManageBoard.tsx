@@ -33,6 +33,7 @@ const CATEGORIES = [
   'Resources',
   'Tech & Regulation',
   'Security & Conflict',
+  'Sports & Power',
 ];
 
 const CONFIDENCE_LABEL: Record<Confidence, string> = {

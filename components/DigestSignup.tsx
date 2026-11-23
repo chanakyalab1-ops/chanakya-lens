@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-const TOPICS = ["Trade & Tariffs", "Security & Conflict", "Political", "Resources", "Tech & Regulation"];
+const TOPICS = ["Trade & Tariffs", "Security & Conflict", "Political", "Resources", "Tech & Regulation", "Sports & Power"];
 
 export default function DigestSignup() {
   const [email, setEmail] = useState("");

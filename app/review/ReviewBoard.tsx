@@ -69,6 +69,7 @@ const CATEGORIES = [
   'Resources',
   'Tech & Regulation',
   'Security & Conflict',
+  'Sports & Power',
 ];
 
 function formatDate(iso: string) {

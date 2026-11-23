@@ -26,6 +26,7 @@ const CATEGORIES = [
   "Resources",
   "Tech & Regulation",
   "Security & Conflict",
+  "Sports & Power",
 ];
 
 function buildSystemPrompt() {
@@ -71,6 +72,7 @@ CRITICAL EDITORIAL RULES:
 - Do not invent specific facts, numbers, or quotes that your searches didn't actually surface. This applies to offLens too -- only claim a country's coverage is heavy or absent if your searches actually showed that; do not assume silence from a country just because you didn't happen to search its outlets.
 - Never include citation markup like , [1], (source), or any other reference tags in your output text. Write clean prose only -- headline, dek, body, and all other fields must contain no citation syntax whatsoever, even though your research process involves searching and citing sources internally.
 - category must be exactly one of: ${CATEGORIES.join(", ")}
+- "Sports & Power" is only for stories where sport meets politics or money: hosting rights, boycotts, sanctions on athletes or federations, state or sovereign-wealth investment in sport, sport used in diplomacy. A match result, transfer or tournament preview is not a story for this site.
 - readTime should be a realistic estimate like "3 min" or "5 min" based on body length.
 - subjectCountries must reflect what the story is ABOUT. Do not default to the source outlets' countries -- reason about the actual subject matter.
 - Keep the body concise -- 4 to 6 short paragraphs is enough. Do not pad with excessive detail. This keeps your JSON output well within length limits and avoids truncation.

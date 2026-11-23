@@ -3,7 +3,9 @@
 // were left out. `country` is the outlet's home country, which is what the
 // Off-Lens coverage bar counts. Feeds break over time: when the ingest run
 // reports a feed failing repeatedly, fix its URL or drop it here.
-export type RssFeed = { domain: string; country: string; url: string };
+// `sports: true` feeds are mostly match coverage; only headlines where sport meets
+// power (see isSportsPower) are kept from them.
+export type RssFeed = { domain: string; country: string; url: string; sports?: boolean };
 
 export const RSS_FEEDS: RssFeed[] = [
   { domain: "bbc.com", country: "United Kingdom", url: "http://feeds.bbci.co.uk/news/world/rss.xml" },
@@ -106,4 +108,10 @@ export const RSS_FEEDS: RssFeed[] = [
   { domain: "riotimesonline.com", country: "Brazil", url: "https://www.riotimesonline.com/feed/" },
   { domain: "colombiareports.com", country: "Colombia", url: "https://colombiareports.com/feed/" },
   { domain: "venezuelanalysis.com", country: "Venezuela", url: "https://venezuelanalysis.com/feed" },
+  // Sports feeds, kept only for sport-meets-power headlines (the Sports & Power category).
+  { domain: "bbc.com", country: "United Kingdom", url: "https://feeds.bbci.co.uk/sport/rss.xml", sports: true },
+  { domain: "skysports.com", country: "United Kingdom", url: "https://www.skysports.com/rss/12040", sports: true },
+  { domain: "thehindu.com", country: "India", url: "https://www.thehindu.com/sport/feeder/default.rss", sports: true },
+  { domain: "espn.com", country: "United States", url: "https://www.espn.com/espn/rss/news", sports: true },
+  { domain: "france24.com", country: "France", url: "https://www.france24.com/en/sport/rss", sports: true },
 ];
