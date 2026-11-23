@@ -1,19 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import NavDrawer from "@/components/NavDrawer";
 import { ManageButton, SubscribeButton } from "@/components/MembershipButtons";
 import { isSandboxToken, paddleConfigured } from "@/lib/paddle";
 import { getMembership, isActiveMember } from "@/lib/membership";
 import { getSessionUser } from "@/lib/supabase-user";
 import { pageMeta } from "@/lib/seo";
+import { membershipVisibleTo } from "@/lib/memberAccess";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = pageMeta(
+export const metadata: Metadata = {
+  ...pageMeta(
   "/membership",
   "Membership | Chanakya Lens",
   "Support independent geopolitics reporting and get member features as they launch."
-);
+  ),
+  // Kept out of search until membership is opened to the public.
+  robots: process.env.MEMBERSHIP_PUBLIC === "true" ? undefined : { index: false, follow: false },
+};
 
 // Perks are listed honestly: what is live, and what is coming.
 const PERKS: { text: string; live: boolean }[] = [
@@ -28,7 +34,9 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
   const open = paddleConfigured();
   const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN ?? "";
   const priceId = process.env.NEXT_PUBLIC_PADDLE_PRICE_ID ?? "";
-  const user = open ? await getSessionUser() : null;
+  const user = await getSessionUser();
+  // Hidden from everyone but the owner until MEMBERSHIP_PUBLIC=true.
+  if (!membershipVisibleTo(user?.email)) return notFound();
   const membership = user ? await getMembership(user.id) : null;
   const member = isActiveMember(membership);
   const price = process.env.MEMBERSHIP_PRICE_LABEL;
