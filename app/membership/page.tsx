@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import NavDrawer from "@/components/NavDrawer";
 import { ManageButton, SubscribeButton } from "@/components/MembershipButtons";
-import { stripeConfigured } from "@/lib/stripe";
+import { isSandboxToken, paddleConfigured } from "@/lib/paddle";
 import { getMembership, isActiveMember } from "@/lib/membership";
 import { getSessionUser } from "@/lib/supabase-user";
 import { pageMeta } from "@/lib/seo";
@@ -25,7 +25,9 @@ const PERKS: { text: string; live: boolean }[] = [
 
 export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ canceled?: string }> }) {
   const { canceled } = await searchParams;
-  const open = stripeConfigured();
+  const open = paddleConfigured();
+  const token = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN ?? "";
+  const priceId = process.env.NEXT_PUBLIC_PADDLE_PRICE_ID ?? "";
   const user = open ? await getSessionUser() : null;
   const membership = user ? await getMembership(user.id) : null;
   const member = isActiveMember(membership);
@@ -70,9 +72,15 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
           ) : (
             <div className="space-y-3">
               {canceled && <p className="text-sm" style={{ color: "var(--text-on-ink-dim)" }}>Checkout canceled. You have not been charged.</p>}
-              <SubscribeButton />
+              {user?.email ? (
+                <SubscribeButton token={token} priceId={priceId} sandbox={isSandboxToken(token)} email={user.email} userId={user.id} />
+              ) : (
+                <Link href="/account/login" className="inline-block px-5 py-2.5 rounded-sm text-sm font-semibold text-white" style={{ background: "#0E7080" }}>
+                  Sign in to join
+                </Link>
+              )}
               <p className="text-xs" style={{ color: "var(--text-on-ink-dim)" }}>
-                Secure checkout by Stripe. Cancel any time from your account.
+                Secure checkout by Paddle, our payment partner, which also handles sales tax. Cancel any time from your account.
               </p>
             </div>
           )}

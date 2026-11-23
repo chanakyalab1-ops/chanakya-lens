@@ -4,7 +4,7 @@ export type Membership = {
   status: string;
   cancelAtPeriodEnd: boolean;
   currentPeriodEnd: string | null;
-  stripeCustomerId: string;
+  providerCustomerId: string;
 };
 
 // A member is anyone whose subscription is paid up or in a trial, and whose
@@ -20,12 +20,12 @@ export async function getMembership(userId: string): Promise<Membership | null> 
   try {
     const { data, error } = await supabaseServer()
       .from("memberships")
-      .select("status, cancel_at_period_end, current_period_end, stripe_customer_id")
+      .select("status, cancel_at_period_end, current_period_end, provider_customer_id")
       .eq("user_id", userId)
       .maybeSingle();
     if (error || !data) return null;
-    const r = data as { status: string; cancel_at_period_end: boolean; current_period_end: string | null; stripe_customer_id: string };
-    return { status: r.status, cancelAtPeriodEnd: r.cancel_at_period_end, currentPeriodEnd: r.current_period_end, stripeCustomerId: r.stripe_customer_id };
+    const r = data as { status: string; cancel_at_period_end: boolean; current_period_end: string | null; provider_customer_id: string };
+    return { status: r.status, cancelAtPeriodEnd: r.cancel_at_period_end, currentPeriodEnd: r.current_period_end, providerCustomerId: r.provider_customer_id };
   } catch {
     return null;
   }

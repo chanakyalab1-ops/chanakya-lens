@@ -5,7 +5,7 @@ import { createServerClient } from '@supabase/ssr';
 import NavDrawer from '@/components/NavDrawer';
 import { SignOutButton } from './SignOutButton';
 import { ManageButton } from '@/components/MembershipButtons';
-import { stripeConfigured } from '@/lib/stripe';
+import { paddleConfigured } from '@/lib/paddle';
 import { getMembership, isActiveMember } from '@/lib/membership';
 
 async function getSupabaseServerReader() {
@@ -55,7 +55,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <h1 className="font-display text-2xl font-bold mb-1">Your account</h1>
         <p className="text-sm mb-6" style={{ color: 'var(--text-on-ink-dim)' }}>{user.email}</p>
 
-        {(member || stripeConfigured() || justJoined) && (
+        {(member || paddleConfigured() || justJoined) && (
           <section className="mb-8">
             <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
               Membership
