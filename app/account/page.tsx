@@ -4,6 +4,9 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import NavDrawer from '@/components/NavDrawer';
 import { SignOutButton } from './SignOutButton';
+import { ManageButton } from '@/components/MembershipButtons';
+import { stripeConfigured } from '@/lib/stripe';
+import { getMembership, isActiveMember } from '@/lib/membership';
 
 async function getSupabaseServerReader() {
   const cookieStore = await cookies();
@@ -25,7 +28,8 @@ async function getSupabaseServerReader() {
 
 export const dynamic = 'force-dynamic';
 
-export default async function AccountPage() {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ membership?: string }> }) {
+  const { membership: justJoined } = await searchParams;
   const supabase = await getSupabaseServerReader();
   const {
     data: { user },
@@ -41,12 +45,41 @@ export default async function AccountPage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
+  const membership = await getMembership(user.id);
+  const member = isActiveMember(membership);
+
   return (
     <>
       <NavDrawer />
       <div className="max-w-xl mx-auto px-5 pt-7 pb-16">
         <h1 className="font-display text-2xl font-bold mb-1">Your account</h1>
         <p className="text-sm mb-6" style={{ color: 'var(--text-on-ink-dim)' }}>{user.email}</p>
+
+        {(member || stripeConfigured() || justJoined) && (
+          <section className="mb-8">
+            <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
+              Membership
+            </h2>
+            {member && membership ? (
+              <div className="rounded-sm border p-4 space-y-3" style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}>
+                <div className="text-sm font-semibold">Strategist</div>
+                <div className="text-sm" style={{ color: 'var(--text-on-ink-dim)' }}>
+                  {membership.cancelAtPeriodEnd ? 'Ends' : 'Renews'}{' '}
+                  {membership.currentPeriodEnd ? new Date(membership.currentPeriodEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
+                </div>
+                <ManageButton />
+              </div>
+            ) : justJoined ? (
+              <p className="text-sm" style={{ color: 'var(--text-on-ink-dim)' }}>
+                Thank you. Your membership can take a few seconds to appear; refresh this page shortly.
+              </p>
+            ) : (
+              <p className="text-sm">
+                <Link href="/membership" className="underline">Become a Strategist</Link>
+              </p>
+            )}
+          </section>
+        )}
 
         <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
           Saved stories
