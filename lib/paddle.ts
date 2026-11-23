@@ -76,6 +76,25 @@ export function isNewerEvent(stored: string | null | undefined, incoming: string
   return new Date(incoming).getTime() >= new Date(stored).getTime();
 }
 
+// Environment values pasted into dashboards often pick up surrounding
+// whitespace or quotes; neither is part of the real secret.
+export function cleanSecret(raw: string): string {
+  return raw.trim().replace(/^['"]|['"]$/g, "").trim();
+}
+
+// Never includes the secret: only shapes and timing, for debugging a rejected webhook.
+export function signatureDebug(header: string | null, secret: string, now = Date.now()) {
+  const parts = (header ?? "").split(";").map((p) => p.split("=") as [string, string]);
+  const ts = Number(parts.find(([k]) => k === "ts")?.[1]);
+  return {
+    hasHeader: !!header,
+    h1Count: parts.filter(([k]) => k === "h1").length,
+    ageSeconds: Number.isFinite(ts) ? Math.round(now / 1000 - ts) : null,
+    secretLength: secret.length,
+    secretPrefix: secret.slice(0, 11),
+  };
+}
+
 // Paddle-Signature header: "ts=<unix>;h1=<hex hmac-sha256 of `${ts}:${rawBody}`>".
 export function verifyPaddleSignature(body: string, header: string | null, secret: string, toleranceSec = 300, now = Date.now()): boolean {
   if (!header) return false;

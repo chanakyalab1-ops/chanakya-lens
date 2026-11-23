@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
-import { isNewerEvent, membershipRow, verifyPaddleSignature, type PaddleSubscription } from "@/lib/paddle";
+import { cleanSecret, isNewerEvent, membershipRow, signatureDebug, verifyPaddleSignature, type PaddleSubscription } from "@/lib/paddle";
 import { sendAlert } from "@/lib/alerts";
 
 type PaddleEvent = {
@@ -27,11 +27,14 @@ async function save(sub: PaddleSubscription, occurredAt: string) {
 }
 
 export async function POST(req: Request) {
-  const secret = process.env.PADDLE_WEBHOOK_SECRET;
+  const rawSecret = process.env.PADDLE_WEBHOOK_SECRET;
+  const secret = rawSecret ? cleanSecret(rawSecret) : "";
   if (!secret) return NextResponse.json({ error: "Webhook not configured." }, { status: 503 });
 
   const body = await req.text();
-  if (!verifyPaddleSignature(body, req.headers.get("paddle-signature"), secret)) {
+  const header = req.headers.get("paddle-signature");
+  if (!verifyPaddleSignature(body, header, secret)) {
+    console.error("paddle webhook bad signature", signatureDebug(header, secret));
     return NextResponse.json({ error: "Bad signature." }, { status: 400 });
   }
 
