@@ -45,12 +45,18 @@ export const metadata: Metadata = {
   verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION },
   icons: {
     icon: "/logo-mark.png",
+    apple: "/icons/apple-touch-icon.png",
   },
+  appleWebApp: { capable: true, title: "Chanakya Lens", statusBarStyle: "default" },
 };
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A112A" },
+  ],
 };
 const JSON_LD = JSON.stringify([
   {
