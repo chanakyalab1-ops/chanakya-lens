@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  sendUpdateAlert,
   unpublishStory,
   updatePublishedStory,
   type Confidence,
@@ -188,6 +189,16 @@ function EditPublishedModal({
   const [imageUrl, setImageUrl] = useState(story.image_url ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [alertNote, setAlertNote] = useState<string | null>(null);
+  const [alerting, setAlerting] = useState(false);
+
+  async function handleAlert() {
+    setAlerting(true);
+    setAlertNote(null);
+    const res = await sendUpdateAlert(story.slug);
+    setAlertNote(res.ok ? `Alert sent to ${res.data?.sent ?? 0} reader${res.data?.sent === 1 ? '' : 's'}.` : res.error);
+    setAlerting(false);
+  }
 
   function updateNode(i: number, patch: Partial<ImpactNode>) {
     setImpactNodes((n) => n.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
@@ -389,7 +400,15 @@ function EditPublishedModal({
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+        <div className="flex items-center justify-between gap-3 pt-4 border-t border-white/10">
+          <div className="text-xs text-[#8A93A6]">
+            <button onClick={handleAlert} disabled={alerting} className="underline hover:text-[#EDE7DA] disabled:opacity-50">
+              {alerting ? 'Sending…' : 'Alert followers of this story'}
+            </button>
+            {alertNote && <span className="ml-2">{alertNote}</span>}
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 pt-4">
           <button onClick={onClose} className="text-sm px-4 py-2 rounded border border-white/15 hover:bg-white/5">
             Cancel
           </button>

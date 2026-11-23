@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import ThemeToggle from "@/components/ThemeToggle";
+import NotifyBell from "@/components/NotifyBell";
 import ThemeSegmentedControl from "@/components/ThemeSegmentedControl";
 import { HeaderSearchDesktop, HeaderSearchMobile } from "@/components/HeaderSearch";
 
@@ -61,6 +62,7 @@ export default function NavDrawer() {
             <div className="hidden md:block"><HeaderSearchDesktop /></div>
           </Suspense>
           <div className="md:hidden"><ThemeToggle /></div>
+          <NotifyBell />
           <Link href="/account" className="hidden md:inline-block font-mono text-[0.68rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
             Account
           </Link>
