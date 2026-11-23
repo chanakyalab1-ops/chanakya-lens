@@ -1,11 +1,26 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function StickyDigestBar() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [dismissed, setDismissed] = useState(false);
+  // Stay out of the way on arrival: show once the reader has scrolled a little
+  // or has been on the page a while.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const show = () => setReady(true);
+    const timer = window.setTimeout(show, 20000);
+    const onScroll = () => {
+      if (window.scrollY > 600) show();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,7 +37,7 @@ export default function StickyDigestBar() {
     setStatus("done");
   }
 
-  if (dismissed) return null;
+  if (dismissed || !ready) return null;
 
   return (
     <div
