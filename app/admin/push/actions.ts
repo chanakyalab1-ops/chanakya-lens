@@ -1,6 +1,6 @@
 'use server';
 
-import webpush from 'web-push';
+import { generateVAPIDKeys } from 'web-push';
 import { getSessionUser } from '@/lib/supabase-user';
 import { isOwnerEmail } from '@/lib/memberAccess';
 
@@ -9,6 +9,6 @@ import { isOwnerEmail } from '@/lib/memberAccess';
 export async function generateVapidKeys(): Promise<{ ok: true; publicKey: string; privateKey: string } | { ok: false; error: string }> {
   const user = await getSessionUser();
   if (!isOwnerEmail(user?.email)) return { ok: false, error: 'Not allowed.' };
-  const keys = webpush.generateVAPIDKeys();
+  const keys = generateVAPIDKeys();
   return { ok: true, publicKey: keys.publicKey, privateKey: keys.privateKey };
 }

@@ -1,4 +1,4 @@
-import webpush from "web-push";
+import { sendNotification, setVapidDetails } from "web-push";
 import { supabaseServer } from "./supabase-server";
 import { buildPayload, canSendToday, matchesPrefs, nextCounter, type PushPrefs, type PushStory, type PushTopic } from "./pushMatch";
 
@@ -10,7 +10,7 @@ export function pushConfigured(): boolean {
 
 function configure(): boolean {
   if (!pushConfigured()) return false;
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT ?? "mailto:chanakya.lab1@gmail.com", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!);
+  setVapidDetails(process.env.VAPID_SUBJECT ?? "mailto:chanakya.lab1@gmail.com", process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!);
   return true;
 }
 
@@ -49,7 +49,7 @@ export async function notifyForStory(story: PushStory, kind: "new" | "update"): 
           return;
         }
         try {
-          await webpush.sendNotification({ endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } }, payload, { TTL: 6 * 60 * 60 });
+          await sendNotification({ endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } }, payload, { TTL: 6 * 60 * 60 });
           await supabase.from("push_subscriptions").update({ ...nextCounter(row), last_sent_at: new Date().toISOString() }).eq("id", row.id);
           result.sent++;
         } catch (e) {
