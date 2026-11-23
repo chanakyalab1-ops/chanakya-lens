@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { supabaseServer } from '@/lib/supabase-server';
 import { findSimilarPairs } from '@/lib/duplicates';
+import { GroupButton } from './GroupButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +9,7 @@ export const dynamic = 'force-dynamic';
 // other. To remove one, unpublish it from Manage stories.
 const WINDOW_DAYS = 14;
 
-type Row = { slug: string; headline: string; sources: { url?: string | null; title?: string | null }[] | null };
+type Row = { slug: string; headline: string; created_at: string; sources: { url?: string | null; title?: string | null }[] | null };
 
 const windowStart = () => new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
@@ -16,12 +17,15 @@ export default async function DuplicatesPage() {
   const since = windowStart();
   const { data } = await supabaseServer()
     .from('stories')
-    .select('slug, headline, sources')
+    .select('slug, headline, sources, created_at, thread_slug')
     .gte('created_at', since)
     .order('created_at', { ascending: false })
     .limit(300);
 
-  const stories = ((data ?? []) as Row[]).map((s) => ({
+  const rows = (data ?? []) as (Row & { thread_slug?: string | null })[];
+  const born = new Map(rows.map((r) => [r.slug, r.created_at]));
+  const filed = new Map(rows.map((r) => [r.slug, r.thread_slug ?? null]));
+  const stories = rows.map((s) => ({
     slug: s.slug,
     headline: s.headline,
     titles: [s.headline, ...(s.sources ?? []).map((x) => x.title ?? '').filter(Boolean)],
@@ -56,6 +60,15 @@ export default async function DuplicatesPage() {
                   {s.headline}
                 </Link>
               ))}
+              {(() => {
+                const [older, newer] = (born.get(p.a.slug) ?? '') <= (born.get(p.b.slug) ?? '') ? [p.a, p.b] : [p.b, p.a];
+                const already = filed.get(newer.slug) === older.slug || (filed.get(newer.slug) && filed.get(newer.slug) === filed.get(older.slug));
+                return already ? (
+                  <div className="mt-2 text-[0.75rem]" style={{ color: 'var(--text-on-ink-dim)' }}>Already grouped in one timeline.</div>
+                ) : (
+                  <GroupButton newerSlug={newer.slug} olderSlug={older.slug} />
+                );
+              })()}
             </div>
           ))}
         </div>
