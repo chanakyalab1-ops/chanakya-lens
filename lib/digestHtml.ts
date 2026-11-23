@@ -71,7 +71,24 @@ function heading(label: string): string {
   return `<div style="font-size:26px;font-weight:800;color:${INK};margin:8px 0 18px 0;">${label}</div>`;
 }
 
-export function buildDigestHtml(stories: DigestStory[], topicLabel: string, email: string, fellBack = false): string {
+export type DigestAnnouncement = { text: string; url?: string };
+
+// Reads the one-off announcement from the environment. Clear DIGEST_ANNOUNCEMENT
+// in Vercel (and redeploy) once it has gone out. Only https links are kept.
+export function announcementFromEnv(env: Record<string, string | undefined> = process.env): DigestAnnouncement | undefined {
+  const text = env.DIGEST_ANNOUNCEMENT?.trim();
+  if (!text) return undefined;
+  const url = env.DIGEST_ANNOUNCEMENT_URL?.trim();
+  return { text, url: url && /^https:\/\//i.test(url) ? url : undefined };
+}
+
+function announcementBlock(a?: DigestAnnouncement): string {
+  if (!a) return "";
+  const link = a.url ? ` <a href="${esc(a.url)}" style="color:#0E7080;font-weight:700;">Take a look →</a>` : "";
+  return `<div style="border-left:4px solid #0E7080;background:#e6f0f1;padding:12px 14px;margin:0 0 20px 0;font-size:13px;line-height:1.5;color:#0A0D11;"><b>New on Chanakya Lens:</b> ${esc(a.text)}${link}</div>`;
+}
+
+export function buildDigestHtml(stories: DigestStory[], topicLabel: string, email: string, fellBack = false, announcement?: DigestAnnouncement): string {
   const top = stories.slice(0, 3);
   const rest = stories.slice(3);
   const offLens = [...stories]
@@ -115,6 +132,7 @@ export function buildDigestHtml(stories: DigestStory[], topicLabel: string, emai
       </div>
       <p style="font-size:13px;line-height:1.5;color:#333;margin:0 0 18px 0;">Chanakya Lens daily digest: today's stories, with what they mean for you and how different countries cover the same news. ${esc(topicLabel)}.</p>
       <div style="border-top:1px solid ${RULE};margin:0 0 18px 0;"></div>
+      ${announcementBlock(announcement)}
       ${note}
       ${heading("Top Stories")}
       ${top.map(topStory).join("")}
