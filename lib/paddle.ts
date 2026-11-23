@@ -22,7 +22,9 @@ export function apiBase(apiKey: string): string {
 }
 
 export async function createPortalLink(customerId: string): Promise<string> {
-  const key = process.env.PADDLE_API_KEY;
+  // A pasted key often carries a trailing space, newline or quotes; Paddle then
+  // rejects it as "authentication malformed".
+  const key = cleanSecret(process.env.PADDLE_API_KEY ?? "");
   if (!key) throw new Error("Missing PADDLE_API_KEY env var.");
   const res = await fetch(`${apiBase(key)}/customers/${encodeURIComponent(customerId)}/portal-sessions`, {
     method: "POST",
