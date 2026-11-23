@@ -55,3 +55,16 @@ describe("membership state", () => {
     expect(isActiveMember(null)).toBe(false);
   });
 });
+
+import { cleanSecret, signatureDebug } from "./paddle";
+describe("secret handling", () => {
+  it("removes stray whitespace and quotes", () => {
+    expect(cleanSecret("  pdl_ntfset_abc \n")).toBe("pdl_ntfset_abc");
+    expect(cleanSecret('"pdl_ntfset_abc"')).toBe("pdl_ntfset_abc");
+  });
+  it("debug info never contains the secret", () => {
+    const d = signatureDebug("ts=1700000000;h1=abc", "pdl_ntfset_supersecretvalue", 1_700_000_010_000);
+    expect(JSON.stringify(d)).not.toContain("supersecretvalue");
+    expect(d).toMatchObject({ hasHeader: true, h1Count: 1, ageSeconds: 10, secretLength: 27 });
+  });
+});
