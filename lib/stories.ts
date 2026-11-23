@@ -97,11 +97,42 @@ const LIST_COLUMNS =
 // regions map), never its url or title, so keep just those. Smaller is not
 // cosmetic: Next's data cache refuses anything over 2 MB, and the full list was
 // over that, which silently turned the cache off.
+const clip = (text: string, max: number) => (text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`);
+
+// Cards show a clamped Chanakya's Move line, an Off-Lens preview of a few lines,
+// and the mechanism only as a hover tooltip; the story page reads the full text.
 export function toListStory(story: Story): Story {
   return {
     ...story,
+    chanakyaAnalysis: story.chanakyaAnalysis ? clip(story.chanakyaAnalysis, 220) : story.chanakyaAnalysis,
+    offLens: story.offLens ? clip(story.offLens, 600) : story.offLens,
+    impactNodes: story.impactNodes?.map((n) => ({ ...n, mechanism: clip(n.mechanism ?? "", 160) })),
     sources: story.sources?.map((x) => ({ url: "", title: "", domain: x.domain, sourceCountry: x.sourceCountry, role: x.role })),
   };
+}
+
+// Next's data cache refuses anything over 2 MB and fails silently, which would send
+// every page render back to the database for the whole table. Keep the list safely
+// under that as the archive grows: first shorter previews, then no tooltip text,
+// and only then fewer of the oldest stories (the sitemap has its own light list).
+export const LIST_CACHE_BUDGET = 1_800_000;
+
+const bytes = (value: unknown) => new TextEncoder().encode(JSON.stringify(value)).length;
+
+export function fitToBytes(stories: Story[], max = LIST_CACHE_BUDGET): Story[] {
+  if (bytes(stories) <= max) return stories;
+  const shorter = stories.map((s) => ({
+    ...s,
+    chanakyaAnalysis: s.chanakyaAnalysis ? clip(s.chanakyaAnalysis, 140) : s.chanakyaAnalysis,
+    offLens: s.offLens ? clip(s.offLens, 240) : s.offLens,
+    impactNodes: s.impactNodes?.map((n) => ({ ...n, mechanism: "" })),
+  }));
+  if (bytes(shorter) <= max) return shorter;
+  const newestFirst = [...shorter].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+  let keep = newestFirst.length;
+  while (keep > 150 && bytes(newestFirst.slice(0, keep)) > max) keep = Math.max(150, Math.floor(keep * 0.9));
+  const kept = new Set(newestFirst.slice(0, keep).map((s) => s.slug));
+  return shorter.filter((s) => kept.has(s.slug));
 }
 
 async function fetchAllStories(): Promise<Story[]> {
@@ -120,7 +151,28 @@ async function fetchAllStories(): Promise<Story[]> {
     // Throw, so a failed read is never stored in the cache as "no stories".
     throw new Error(`Failed to fetch stories: ${error.message}`);
   }
-  return (data as unknown as Omit<StoryRow, "body">[]).map((row) => toListStory(mapRow({ ...row, body: "" })));
+  const list = (data as unknown as Omit<StoryRow, "body">[]).map((row) => toListStory(mapRow({ ...row, body: "" })));
+  const fitted = fitToBytes(list);
+  if (fitted.length < list.length) console.warn(`Story list trimmed to fit the 2 MB cache: kept ${fitted.length} of ${list.length} stories.`);
+  return fitted;
+}
+
+// Every story's address and date, for the sitemap: tiny, so it never has to drop old stories.
+async function fetchSitemapEntries(): Promise<{ slug: string; publishedAt: string }[]> {
+  const { data, error } = await supabase.from("stories").select("slug, created_at").order("created_at", { ascending: false });
+  if (error) throw new Error(`Failed to fetch sitemap entries: ${error.message}`);
+  return (data as { slug: string; created_at: string }[]).map((r) => ({ slug: r.slug, publishedAt: r.created_at }));
+}
+
+const cachedSitemapEntries = unstable_cache(fetchSitemapEntries, ["sitemap-entries"], { revalidate: 43200, tags: ["stories"] });
+
+export async function getSitemapEntries(): Promise<{ slug: string; publishedAt: string }[]> {
+  try {
+    return await cachedSitemapEntries();
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : e);
+    return [];
+  }
 }
 
 // Shared read across instances and builds, refreshed every 12 hours or when a
