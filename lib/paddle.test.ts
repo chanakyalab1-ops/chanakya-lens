@@ -68,3 +68,11 @@ describe("secret handling", () => {
     expect(d).toMatchObject({ hasHeader: true, h1Count: 1, ageSeconds: 10, secretLength: 27 });
   });
 });
+
+describe("api key cleaning", () => {
+  it("accepts a pasted key with whitespace and still picks the sandbox", () => {
+    const pasted = "  pdl_sdbx_apikey_abc123 \n";
+    expect(apiBase(cleanSecret(pasted))).toBe("https://sandbox-api.paddle.com");
+    expect(cleanSecret(pasted)).toBe("pdl_sdbx_apikey_abc123");
+  });
+});
