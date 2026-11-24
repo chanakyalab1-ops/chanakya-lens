@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 const PERKS: { icon: string; title: string; text: string; live: boolean }[] = [
   { icon: "🛡", title: "Back independent reporting", text: "No ads, no sponsored stories. Your membership pays for the research behind every story.", live: true },
   { icon: "🎯", title: "Follow unlimited interests", text: "Pick the countries, topics and places you care about, and get a For you feed and digest built around them.", live: false },
-  { icon: "📬", title: "The full weekly analyst briefing", text: "A longer email each week on the stories that will matter most, with the connections between them. Everyone gets a short preview; Strategists get the whole briefing.", live: false },
+  { icon: "📬", title: "The full weekly analyst briefing", text: "A longer email each week on the stories that will matter most, with the connections between them. Everyone gets a short preview; Lens+ members get the whole briefing.", live: false },
   { icon: "🔎", title: "Full Off-Lens archive and search", text: "Search every story's coverage map by country, outlet and date.", live: false },
 ];
 
@@ -40,10 +40,10 @@ const COMPARE: { row: string; free: string; paid: string }[] = [
 ];
 
 const FAQ: { q: string; a: string }[] = [
-  { q: "What do I get today?", a: "Today your membership supports the site, and you are a Strategist as each feature marked Coming soon launches. We add them one at a time and say so on the What's new page." },
+  { q: "What do I get today?", a: "Today your membership supports the site, and you get each feature marked Coming soon launches. We add them one at a time and say so on the What's new page." },
   { q: "Can I cancel?", a: "Yes, any time. Open your account and choose Manage billing. You keep your membership until the end of the period you have paid for." },
   { q: "Who handles the payment?", a: "Paddle, our payment partner. It processes your card, collects any sales tax, and sends your receipt. We never see your card details." },
-  { q: "Will every story stay free?", a: "Yes. Strategists back the work and get extra tools. Reading the news is never locked." },
+  { q: "Will every story stay free?", a: "Yes. Lens+ members back the work and get extra tools. Reading the news is never locked." },
 ];
 
 export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ canceled?: string }> }) {
@@ -71,7 +71,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
           <div className="font-mono text-[0.68rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Membership</div>
           <h1 className="font-display font-extrabold text-4xl md:text-5xl leading-[1.05] mb-4">Read the world a step ahead.</h1>
           <p className="text-[1.02rem] leading-relaxed max-w-xl mx-auto" style={{ color: "var(--text-body)" }}>
-            Every story stays free. Strategists back independent, ad-free geopolitics reporting, and get member tools as we build them.
+            Every story stays free. Lens+ members back independent, ad-free geopolitics reporting, and get member tools as we build them.
           </p>
         </section>
 
@@ -85,7 +85,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
             </div>
           ) : member ? (
             <div className="p-6 border rounded-sm text-center" style={{ borderColor: "#0E7080", background: "var(--ink-card)", boxShadow: "0 0 0 2px #0E7080" }}>
-              <div className="font-display font-extrabold text-2xl mb-1">You are a Strategist. Thank you.</div>
+              <div className="font-display font-extrabold text-2xl mb-1">You are a Lens+ member. Thank you.</div>
               {renews && (
                 <p className="text-sm mb-4" style={{ color: "var(--text-on-ink-dim)" }}>
                   {membership?.cancelAtPeriodEnd ? "Ends" : "Renews"} {renews}
@@ -132,12 +132,12 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
         </section>
 
         <section className="mb-12">
-          <h2 className="font-display font-bold uppercase tracking-wide text-xl mb-4 text-center" style={{ color: "var(--brand-soft)" }}>Free and Strategist</h2>
+          <h2 className="font-display font-bold uppercase tracking-wide text-xl mb-4 text-center" style={{ color: "var(--brand-soft)" }}>Free and Lens+</h2>
           <div className="border rounded-sm overflow-hidden text-[0.88rem]" style={{ borderColor: "var(--border)" }}>
             <div className="grid grid-cols-[1.6fr_1fr_1fr] font-mono text-[0.62rem] uppercase tracking-wide p-3" style={{ background: "var(--ink-card)", color: "var(--text-on-ink-dim)" }}>
               <div />
               <div className="text-center">Free</div>
-              <div className="text-center" style={{ color: "#0E7080" }}>Strategist</div>
+              <div className="text-center" style={{ color: "#0E7080" }}>Lens+</div>
             </div>
             {COMPARE.map((c) => (
               <div key={c.row} className="grid grid-cols-[1.6fr_1fr_1fr] p-3 border-t items-center" style={{ borderColor: "var(--border)" }}>
