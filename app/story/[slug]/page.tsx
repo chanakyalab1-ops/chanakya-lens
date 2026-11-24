@@ -10,6 +10,8 @@ import { PageViewBeacon } from "@/components/PageViewBeacon";
 import { ShareButtons } from "@/components/ShareButtons";
 import { SaveButton } from "@/components/SaveButton";
 import { ReadMarker } from "@/components/ReadMarker";
+import { ConnectionsSection } from "@/components/ConnectionsSection";
+import { connectionsFor } from "@/lib/connections";
 import { OffLensSection } from "@/components/OffLensSection";
 import { paragraphs } from "@/lib/paragraphs";
 import { groupSources } from "@/lib/groupSources";
@@ -66,6 +68,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
   const related = relatedStories(story, allStories);
 
   const hubs = hubsForStory(story, allStories);
+  const connections = connectionsFor(story, allStories);
 
   const schemaData = {
     "@context": "https://schema.org",
@@ -384,6 +387,8 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             </div>
           </section>
         )}
+
+        <ConnectionsSection connections={connections} open={process.env.MEMBERSHIP_PUBLIC === "true"} />
 
         {related.length > 0 && (
           <section className="mt-10 pt-6 border-t md:mt-2 md:pt-0 md:border-t-0" style={{ borderColor: "var(--border)" }}>
