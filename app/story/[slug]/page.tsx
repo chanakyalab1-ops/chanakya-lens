@@ -8,6 +8,7 @@ import { getStoryBySlug, getAllStories, ConfidenceLevel } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 import { PageViewBeacon } from "@/components/PageViewBeacon";
 import { ShareButtons } from "@/components/ShareButtons";
+import { SaveButton } from "@/components/SaveButton";
 import { ReadMarker } from "@/components/ReadMarker";
 import { OffLensSection } from "@/components/OffLensSection";
 import { paragraphs } from "@/lib/paragraphs";
@@ -192,11 +193,11 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             <span className="hidden md:inline text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>·</span>
             <span className="hidden md:inline font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(story.publishedAt)}</span>
           </div>
-          <div className="hidden md:block"><ShareButtons slug={slug} headline={story.headline} /></div>
+          <div className="hidden md:flex items-center gap-4"><SaveButton slug={slug} open={process.env.MEMBERSHIP_PUBLIC === "true"} /><ShareButtons slug={slug} headline={story.headline} /></div>
         </div>
         <div className="md:hidden flex items-center justify-between mb-2 font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>
           <span>{formatStoryDate(story.publishedAt)}</span>
-          <span className="-mr-2"><ShareButtons slug={slug} headline={story.headline} compact /></span>
+          <span className="-mr-2 flex items-center"><SaveButton slug={slug} compact open={process.env.MEMBERSHIP_PUBLIC === "true"} /><ShareButtons slug={slug} headline={story.headline} compact /></span>
         </div>
         {story.subjectCountries && story.subjectCountries.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
