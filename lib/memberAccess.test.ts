@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { membershipVisibleTo } from "./memberAccess";
+import { membershipVisibleTo, testEmails } from "./memberAccess";
 
 describe("membershipVisibleTo", () => {
   it("shows membership only to the owner by default", () => {
@@ -12,5 +12,17 @@ describe("membershipVisibleTo", () => {
   it("shows it to everyone once public", () => {
     expect(membershipVisibleTo("someone@else.com", true)).toBe(true);
     expect(membershipVisibleTo(null, true)).toBe(true);
+  });
+});
+
+describe("test accounts", () => {
+  it("reads a comma-separated list, ignoring case and spaces", () => {
+    expect(testEmails(" A@x.com, b@y.com ,,")).toEqual(["a@x.com", "b@y.com"]);
+    expect(testEmails(undefined)).toEqual([]);
+  });
+  it("lets listed accounts see membership while it is private", () => {
+    expect(membershipVisibleTo("a@x.com", false, ["a@x.com"])).toBe(true);
+    expect(membershipVisibleTo("A@X.com", false, ["a@x.com"])).toBe(true);
+    expect(membershipVisibleTo("z@x.com", false, ["a@x.com"])).toBe(false);
   });
 });
