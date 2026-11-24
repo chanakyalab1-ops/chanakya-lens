@@ -9,6 +9,7 @@ import { formatStoryDate } from "@/lib/formatDate";
 import { PageViewBeacon } from "@/components/PageViewBeacon";
 import { ShareButtons } from "@/components/ShareButtons";
 import { SaveButton } from "@/components/SaveButton";
+import { ReadMarker } from "@/components/ReadMarker";
 import { OffLensSection } from "@/components/OffLensSection";
 import { paragraphs } from "@/lib/paragraphs";
 import { groupSources } from "@/lib/groupSources";
@@ -118,6 +119,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
       <PageViewBeacon path={`/story/${slug}`} />
+      <ReadMarker slug={slug} />
       <NavDrawer />
       {/* Phones: sticky back / category / share bar */}
       <div

@@ -98,6 +98,16 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </p>
         </section>
 
+        <section className="mb-8">
+          <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
+            Reading Map
+          </h2>
+          <p className="text-sm">
+            <Link href="/account/reading" className="underline">See what you read</Link>
+            <span style={{ color: 'var(--text-on-ink-dim)' }}> and which countries you miss.</span>
+          </p>
+        </section>
+
           </>
         )}
 
