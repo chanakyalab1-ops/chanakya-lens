@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { MARKET_SYMBOLS, fetchQuoteFor, getMarketRows } from "@/lib/marketData";
 import { getVercelTraffic } from "@/lib/vercelAnalytics";
 import { getOverview } from "./data";
+import { supabaseServer } from "@/lib/supabase-server";
 import { buildAttention } from "./attention";
 import {
   AttentionBox, BatchList, BufferPanel, FeedbackPanel, Funnel, MarketSkeleton, MarketView,
@@ -34,8 +35,18 @@ async function VercelPanel() {
   return <VercelTrafficPanel t={await getVercelTraffic()} />;
 }
 
+async function waitlistCount(): Promise<number | null> {
+  try {
+    const { count, error } = await supabaseServer().from("lens_plus_waitlist").select("email", { count: "exact", head: true });
+    return error ? null : count ?? 0;
+  } catch {
+    return null;
+  }
+}
+
 export default async function AdminPage() {
   const o = await getOverview();
+  const waitlist = await waitlistCount();
   const attention = buildAttention(o);
 
   return (
@@ -67,6 +78,9 @@ export default async function AdminPage() {
       <Link href="/admin/push" className="inline-block mb-2 mr-5 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
         Notifications →
       </Link>
+      <a href="/api/admin/waitlist" className="inline-block mb-2 mr-5 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+        Lens+ waitlist{waitlist === null ? " (run waitlist.sql)" : ` (${waitlist})`}: download CSV →
+      </a>
       <Link href="/review/duplicates" className="inline-block mb-6 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
         Possible duplicate stories →
       </Link>

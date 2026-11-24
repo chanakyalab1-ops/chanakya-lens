@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import NavDrawer from "@/components/NavDrawer";
 import { ManageButton } from "@/components/MembershipButtons";
 import PlanPicker from "@/components/PlanPicker";
@@ -9,6 +8,7 @@ import { getMembership, isActiveMember } from "@/lib/membership";
 import { getSessionUser } from "@/lib/supabase-user";
 import { pageMeta } from "@/lib/seo";
 import { Icon } from "@/components/Icon";
+import { WaitlistPage } from "@/components/WaitlistPage";
 import { membershipVisibleTo } from "@/lib/memberAccess";
 
 export const dynamic = "force-dynamic";
@@ -19,8 +19,6 @@ export const metadata: Metadata = {
   "Membership | Chanakya Lens",
   "Support independent geopolitics reporting and get member features as they launch."
   ),
-  // Kept out of search until membership is opened to the public.
-  robots: process.env.MEMBERSHIP_PUBLIC === "true" ? undefined : { index: false, follow: false },
 };
 
 // Perks are listed honestly: what is live, and what is coming.
@@ -32,8 +30,6 @@ const PERKS: { icon: string; title: string; text: string; live: boolean }[] = [
   { icon: "offline", title: "Offline reading", text: "Saved stories open on your device even without a connection.", live: true },
   { icon: "mail", title: "A digest built from your Watchlist", text: "Your daily email leads with today's stories on the places, actors and topics you watch.", live: true },
   { icon: "chat", title: "Ask the Lens", text: "Ask a question and get an answer built only from our own stories, with the stories it came from. 5 questions a day.", live: true },
-  { icon: "mail", title: "The full weekly analyst briefing", text: "A longer email each week on the stories that will matter most, with the connections between them. Everyone gets a short preview; Lens+ members get the whole briefing.", live: false },
-  { icon: "search", title: "Full Off-Lens archive and search", text: "Search every story's coverage map by country, outlet and date.", live: false },
 ];
 
 const COMPARE: { row: string; free: string; paid: string }[] = [
@@ -41,8 +37,6 @@ const COMPARE: { row: string; free: string; paid: string }[] = [
   { row: "Off-Lens coverage maps", free: "✓", paid: "✓" },
   { row: "Daily digest and notifications", free: "✓", paid: "✓" },
   { row: "Watchlist and My Lens feed", free: "Up to 3 items", paid: "Unlimited" },
-  { row: "Weekly analyst briefing", free: "Preview (soon)", paid: "Full briefing (soon)" },
-  { row: "Archive search", free: "–", paid: "✓ (soon)" },
 ];
 
 const FAQ: { q: string; a: string }[] = [
@@ -59,7 +53,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
   const priceId = process.env.NEXT_PUBLIC_PADDLE_PRICE_ID ?? "";
   const user = await getSessionUser();
   // Hidden from everyone but the owner until MEMBERSHIP_PUBLIC=true.
-  if (!membershipVisibleTo(user?.email)) return notFound();
+  if (!membershipVisibleTo(user?.email)) return <WaitlistPage perks={PERKS} />;
   const membership = user ? await getMembership(user.id) : null;
   const member = isActiveMember(membership);
   const price = process.env.MEMBERSHIP_PRICE_LABEL;

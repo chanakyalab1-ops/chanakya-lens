@@ -21,6 +21,7 @@ export default function Footer() {
               <Link href="/off-lens" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Off-Lens</Link>
               <Link href="/lens" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>The Lens</Link>
               <Link href="/digest" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Daily digest</Link>
+              <Link href="/membership" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Lens+ {process.env.MEMBERSHIP_PUBLIC === "true" ? "membership" : "waitlist"}</Link>
             </div>
           </div>
           <div>
