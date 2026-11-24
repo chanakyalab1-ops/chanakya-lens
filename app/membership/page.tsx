@@ -8,6 +8,7 @@ import { isSandboxToken, paddleConfigured } from "@/lib/paddle";
 import { getMembership, isActiveMember } from "@/lib/membership";
 import { getSessionUser } from "@/lib/supabase-user";
 import { pageMeta } from "@/lib/seo";
+import { Icon } from "@/components/Icon";
 import { membershipVisibleTo } from "@/lib/memberAccess";
 
 export const dynamic = "force-dynamic";
@@ -24,15 +25,15 @@ export const metadata: Metadata = {
 
 // Perks are listed honestly: what is live, and what is coming.
 const PERKS: { icon: string; title: string; text: string; live: boolean }[] = [
-  { icon: "🛡", title: "Back independent reporting", text: "No ads, no sponsored stories. Your membership pays for the research behind every story.", live: true },
-  { icon: "🎯", title: "An unlimited Watchlist", text: "Watch the countries, chokepoints, actors and topics you care about, and get a My Lens feed built around them.", live: true },
-  { icon: "🔗", title: "Connected stories", text: "Every story shows what else is happening on the same places, actors and themes, so you can follow one thread across the news.", live: true },
-  { icon: "👁", title: "Watch single stories", text: "Get an alert when one specific story is updated, plus a plain note on what changed.", live: true },
-  { icon: "📴", title: "Offline reading", text: "Saved stories open on your device even without a connection.", live: true },
-  { icon: "📨", title: "A digest built from your Watchlist", text: "Your daily email leads with today's stories on the places, actors and topics you watch.", live: true },
-  { icon: "💬", title: "Ask the Lens", text: "Ask a question and get an answer built only from our own stories, with the stories it came from. 5 questions a day.", live: true },
-  { icon: "📬", title: "The full weekly analyst briefing", text: "A longer email each week on the stories that will matter most, with the connections between them. Everyone gets a short preview; Lens+ members get the whole briefing.", live: false },
-  { icon: "🔎", title: "Full Off-Lens archive and search", text: "Search every story's coverage map by country, outlet and date.", live: false },
+  { icon: "shield", title: "Back independent reporting", text: "No ads, no sponsored stories. Your membership pays for the research behind every story.", live: true },
+  { icon: "target", title: "An unlimited Watchlist", text: "Watch the countries, chokepoints, actors and topics you care about, and get a My Lens feed built around them.", live: true },
+  { icon: "link", title: "Connected stories", text: "Every story shows what else is happening on the same places, actors and themes, so you can follow one thread across the news.", live: true },
+  { icon: "eye", title: "Watch single stories", text: "Get an alert when one specific story is updated, plus a plain note on what changed.", live: true },
+  { icon: "offline", title: "Offline reading", text: "Saved stories open on your device even without a connection.", live: true },
+  { icon: "mail", title: "A digest built from your Watchlist", text: "Your daily email leads with today's stories on the places, actors and topics you watch.", live: true },
+  { icon: "chat", title: "Ask the Lens", text: "Ask a question and get an answer built only from our own stories, with the stories it came from. 5 questions a day.", live: true },
+  { icon: "mail", title: "The full weekly analyst briefing", text: "A longer email each week on the stories that will matter most, with the connections between them. Everyone gets a short preview; Lens+ members get the whole briefing.", live: false },
+  { icon: "search", title: "Full Off-Lens archive and search", text: "Search every story's coverage map by country, outlet and date.", live: false },
 ];
 
 const COMPARE: { row: string; free: string; paid: string }[] = [
@@ -73,7 +74,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
       <NavDrawer />
       <main className="max-w-3xl mx-auto px-5 pt-8 pb-20">
         <section className="text-center mb-10">
-          <div className="font-mono text-[0.68rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Membership</div>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Membership</div>
           <h1 className="font-display font-extrabold text-4xl md:text-5xl leading-[1.05] mb-4">Read the world a step ahead.</h1>
           <p className="text-[1.02rem] leading-relaxed max-w-xl mx-auto" style={{ color: "var(--text-body)" }}>
             Every story stays free. Lens+ members back independent, ad-free geopolitics reporting, and get member tools as we build them.
@@ -121,9 +122,9 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
             {PERKS.map((p) => (
               <div key={p.title} className="p-4 border rounded-sm" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
                 <div className="flex items-start justify-between gap-3 mb-1.5">
-                  <div className="text-2xl" aria-hidden>{p.icon}</div>
+                  <div style={{ color: "#0E7080" }}><Icon name={p.icon} size={26} /></div>
                   <span
-                    className="font-mono text-[0.58rem] uppercase tracking-wide px-2 py-0.5 rounded-full border"
+                    className="font-mono text-[0.6875rem] uppercase tracking-wide px-2 py-0.5 rounded-full border"
                     style={p.live ? { color: "#0E7080", borderColor: "#0E7080" } : { color: "var(--text-on-ink-dim)", borderColor: "var(--border)" }}
                   >
                     {p.live ? "Live" : "Coming soon"}
@@ -139,7 +140,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
         <section className="mb-12">
           <h2 className="font-display font-bold uppercase tracking-wide text-xl mb-4 text-center" style={{ color: "var(--brand-soft)" }}>Free and Lens+</h2>
           <div className="border rounded-sm overflow-hidden text-[0.88rem]" style={{ borderColor: "var(--border)" }}>
-            <div className="grid grid-cols-[1.6fr_1fr_1fr] font-mono text-[0.62rem] uppercase tracking-wide p-3" style={{ background: "var(--ink-card)", color: "var(--text-on-ink-dim)" }}>
+            <div className="grid grid-cols-[1.6fr_1fr_1fr] font-mono text-[0.6875rem] uppercase tracking-wide p-3" style={{ background: "var(--ink-card)", color: "var(--text-on-ink-dim)" }}>
               <div />
               <div className="text-center">Free</div>
               <div className="text-center" style={{ color: "#0E7080" }}>Lens+</div>

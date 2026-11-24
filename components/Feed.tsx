@@ -16,9 +16,9 @@ const dotColor: Record<string, string> = {
   possible: "var(--possible)",
 };
 const dotLabel: Record<string, string> = {
-  direct: "Direct — a concrete, near-certain mechanism",
-  likely: "Likely — a plausible mechanism, real but less certain",
-  possible: "Possible — a speculative but reasonable connection",
+  direct: "Direct: a concrete, near-certain mechanism",
+  likely: "Likely: a plausible mechanism, real but less certain",
+  possible: "Possible: a speculative but reasonable connection",
 };
 function Pill({
   children,
@@ -35,7 +35,7 @@ function Pill({
 }) {
   return (
     <span
-      className="font-mono text-[0.58rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1"
+      className="font-mono text-[0.6875rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1"
       style={{ color, borderColor, background }}
     >
       {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />}
@@ -75,7 +75,7 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
       ) : null}
       <Link
         href="/off-lens"
-        className="mt-4 font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80"
+        className="mt-4 font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80"
         style={{ color: "var(--text-on-ink-dim)" }}
       >
         {offLensStories.length > 0 ? "See all →" : "Learn more →"}
@@ -106,8 +106,8 @@ function CategoryBadge({ category }: { category: string }) {
 }
 function ImpactLegend() {
   return (
-    <div className="flex items-center gap-3 font-mono text-[0.6rem]" style={{ color: "var(--text-on-ink-dim)" }}>
-      <span className="uppercase tracking-wide">Affects you if —</span>
+    <div className="flex items-center gap-3 font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+      <span className="uppercase tracking-wide">Affects you if:</span>
       {(["direct", "likely", "possible"] as const).map((level) => (
         <span key={level} className="flex items-center gap-1" title={dotLabel[level]}>
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: dotColor[level] }} />
@@ -153,7 +153,7 @@ function MoveLine({ analysis }: { analysis: string }) {
     <p className="flex items-start gap-1.5 text-[0.78rem] leading-snug mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
       <span aria-hidden className="shrink-0" style={{ color: "var(--brand-soft)" }}>♟</span>
       <span>
-        <span className="font-mono text-[0.6rem] uppercase tracking-wide mr-1.5" style={{ color: "var(--brand-soft)" }}>
+        <span className="font-mono text-[0.6875rem] uppercase tracking-wide mr-1.5" style={{ color: "var(--brand-soft)" }}>
           Move
         </span>
         {truncate(firstSentence(analysis), 120)}
@@ -170,14 +170,14 @@ function ImpactChips({ nodes }: { nodes: Story["impactNodes"] }) {
   const top = [...nodes!].sort((a, b) => CONFIDENCE_PRIORITY[a.confidence] - CONFIDENCE_PRIORITY[b.confidence]).slice(0, 3);
   return (
     <div className="flex items-center gap-1.5 flex-wrap mb-2">
-      <span className="font-mono text-[0.58rem] uppercase tracking-wide shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>
+      <span className="font-mono text-[0.6875rem] uppercase tracking-wide shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>
         Affects:
       </span>
       {top.map((n, i) => (
         <span
           key={i}
           title={n.mechanism}
-          className="inline-flex items-start gap-1 font-mono text-[0.62rem] leading-snug rounded-xl border px-2 py-0.5 max-w-full text-left"
+          className="inline-flex items-start gap-1 font-mono text-[0.6875rem] leading-snug rounded-xl border px-2 py-0.5 max-w-full text-left"
           style={{ color: dotColor[n.confidence], borderColor: dotColor[n.confidence], background: "transparent" }}
         >
           <span className="h-1.5 w-1.5 rounded-full shrink-0 mt-[0.3rem]" style={{ background: dotColor[n.confidence] }} />
@@ -208,7 +208,7 @@ function HeroCard({ story }: { story: Story }) {
           <p className="text-[0.9rem] line-clamp-2 mb-3" style={{ color: "var(--text-body)" }}>{story.dek}</p>
           <div className="flex items-center gap-2.5">
             {story.impactNodes && story.impactNodes.length > 0 && <ImpactDots story={story} />}
-            <span className="font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+            <span className="font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
               {formatStoryDate(story.publishedAt)}
             </span>
           </div>
@@ -234,9 +234,9 @@ function HeroCard({ story }: { story: Story }) {
         {story.chanakyaAnalysis && <MoveLine analysis={story.chanakyaAnalysis} />}
         {story.impactNodes && story.impactNodes.length > 0 && <ImpactChips nodes={story.impactNodes} />}
         <div className="flex items-center gap-2.5 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
-          <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if —</span>
+          <span className="font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if:</span>
           <ImpactDots story={story} />
-          <span className="ml-auto font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+          <span className="ml-auto font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
             {formatStoryDate(story.publishedAt)}
           </span>
         </div>
@@ -267,7 +267,7 @@ export function CompactCard({ story }: { story: Story }) {
       {story.impactNodes && story.impactNodes.length > 0 && <ImpactChips nodes={story.impactNodes} />}
       <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
         <ImpactDots story={story} />
-        <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+        <span className="ml-auto font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
           {formatStoryDate(story.publishedAt)}
         </span>
       </div>
@@ -285,7 +285,7 @@ export function MobileRow({ story }: { story: Story }) {
       style={{ borderColor: "var(--border)" }}
     >
       <div className="flex-1 min-w-0 flex flex-col">
-        <div className="flex items-center gap-2 mb-1.5 font-mono text-[0.58rem] uppercase tracking-wide">
+        <div className="flex items-center gap-2 mb-1.5 font-mono text-[0.6875rem] uppercase tracking-wide">
           <span style={{ color: "var(--brand-soft)" }}>{story.category}</span>
           {story.status === "developing" && (
             <span className="flex items-center gap-1" style={{ color: "var(--developing)" }}>
@@ -303,7 +303,7 @@ export function MobileRow({ story }: { story: Story }) {
         <h3 className="font-display font-bold text-[1.08rem] leading-[1.2] line-clamp-4">{story.headline}</h3>
         <div className="mt-auto pt-2 flex items-center gap-2">
           {story.impactNodes && story.impactNodes.length > 0 && <ImpactDots story={story} />}
-          <span className="font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+          <span className="font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
             {formatStoryDate(story.publishedAt)}
           </span>
         </div>
@@ -330,7 +330,7 @@ export function SignalPanel({ stories, moreCount, moreLabel = "More from today",
       {/* The logo comes in a dark-ink and a light-ink version; globals.css shows the one that suits the theme. */}
       {plainHeading ? (
         // The page already shows the logo (e.g. /today), so don't repeat it.
-        <h2 className="font-mono text-[0.68rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>
+        <h2 className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>
           Top signals
         </h2>
       ) : (
@@ -352,7 +352,7 @@ export function SignalPanel({ stories, moreCount, moreLabel = "More from today",
                 {i + 1}
               </span>
               <span className="min-w-0">
-                <span className="flex items-center gap-2 font-mono text-[0.58rem] uppercase tracking-wide mb-1" style={{ color: "var(--text-on-ink-dim)" }}>
+                <span className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide mb-1" style={{ color: "var(--text-on-ink-dim)" }}>
                   {story.category}
                   {story.status === "developing" && (
                     <span className="flex items-center gap-1" style={{ color: "var(--developing)" }}>
@@ -362,7 +362,7 @@ export function SignalPanel({ stories, moreCount, moreLabel = "More from today",
                   )}
                 </span>
                 <span className="block font-display font-bold text-[1rem] leading-tight line-clamp-2 lg:line-clamp-3">{story.headline}</span>
-                <span className="hidden lg:block font-mono text-[0.58rem] mt-1.5" style={{ color: "var(--text-on-ink-dim)" }}>
+                <span className="hidden lg:block font-mono text-[0.6875rem] mt-1.5" style={{ color: "var(--text-on-ink-dim)" }}>
                   {formatStoryDate(story.publishedAt)}
                 </span>
               </span>
@@ -409,7 +409,7 @@ function CategoryRail({
         {hasMore && (
           <button
             onClick={onSeeAll}
-            className="font-mono text-[0.62rem] uppercase tracking-wide hover:opacity-80"
+            className="font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80"
             style={{ color: "var(--brand-soft)" }}
           >
             See all {stories.length} →
@@ -442,7 +442,7 @@ function LensBand({ weekly }: { weekly?: Record<string, number> }) {
             The places, powers and supply chains behind the news.
           </p>
         </div>
-        <Link href="/lens" className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
+        <Link href="/lens" className="shrink-0 font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
           See all →
         </Link>
       </div>
@@ -458,7 +458,7 @@ function LensBand({ weekly }: { weekly?: Record<string, number> }) {
             >
               <span className="font-display font-bold text-[1.05rem] leading-tight" style={{ color: "var(--text-on-ink)" }}>{e.name}</span>
               <span className="text-[0.76rem] leading-snug mt-1.5 line-clamp-3" style={{ color: "var(--text-body)" }}>{e.tagline}</span>
-              <span className="mt-auto pt-2.5 font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+              <span className="mt-auto pt-2.5 font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
                 {n > 0 ? `${n} ${n === 1 ? "story" : "stories"} this week` : "Explore →"}
               </span>
             </Link>
@@ -472,7 +472,7 @@ function LensBand({ weekly }: { weekly?: Record<string, number> }) {
 function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
   return (
     <div className="max-w-7xl mx-auto px-4 pt-3 flex items-center gap-2.5 overflow-x-auto no-scrollbar">
-      <span className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
+      <span className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
           <path d="M2 12l4-4 3 3 5-6" />
           <path d="M10 5h4v4" />
@@ -483,7 +483,7 @@ function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
         <Link
           key={t.slug}
           href={`/lens/${t.slug}`}
-          className="shrink-0 font-mono text-[0.68rem] whitespace-nowrap rounded-full border px-3 py-1 transition-colors hover:opacity-80"
+          className="shrink-0 font-mono text-[0.6875rem] whitespace-nowrap rounded-full border px-3 py-1 transition-colors hover:opacity-80"
           style={{ color: "var(--text-body)", borderColor: "var(--border)" }}
         >
           {t.name}
@@ -617,7 +617,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
           {me.status === "anon" && (
             <Link
               href="/account/login"
-              className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5"
+              className="shrink-0 font-mono text-[0.6875rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5"
               style={{ color: "var(--brand-soft)", borderColor: "var(--brand-soft)" }}
             >
               My Lens
@@ -629,7 +629,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
                 setActive(FOR_YOU);
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
+              className="shrink-0 font-mono text-[0.6875rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
               style={
                 active === FOR_YOU
                   ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
@@ -657,7 +657,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
                   document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }
               }}
-              className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
+              className="shrink-0 font-mono text-[0.6875rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
               style={
                 active === cat
                   ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
@@ -670,7 +670,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
         </div>
       </div>
       {me.status === "ready" && (
-        <div className="max-w-7xl mx-auto px-4 pt-3 flex flex-wrap items-center gap-2 font-mono text-[0.64rem] uppercase tracking-wide">
+        <div className="max-w-7xl mx-auto px-4 pt-3 flex flex-wrap items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide">
           <span style={{ color: "var(--text-on-ink-dim)" }}>Focus</span>
           <button
             onClick={() => setFocus((f) => ({ ...f, freshOnly: !f.freshOnly }))}
@@ -759,7 +759,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
           )}
 
           {briefs.length > 0 && (
-            <div className="flex items-center gap-2 font-mono text-[0.62rem] pt-5.5 pb-1" style={{ color: "var(--text-on-ink-dim)" }}>
+            <div className="flex items-center gap-2 font-mono text-[0.6875rem] pt-5.5 pb-1" style={{ color: "var(--text-on-ink-dim)" }}>
               More stories
               <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
             </div>
@@ -784,8 +784,8 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
                 <h3 className="font-display font-bold text-[0.95rem] leading-tight mb-2">{story.headline}</h3>
                 {story.chanakyaAnalysis && <MoveLine analysis={story.chanakyaAnalysis} />}
                 <div className="flex items-center pt-2 border-t" style={{ borderColor: "var(--border)" }}>
-                  <span className="font-mono text-[0.58rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Brief</span>
-                  <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(story.publishedAt)}</span>
+                  <span className="font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Brief</span>
+                  <span className="ml-auto font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(story.publishedAt)}</span>
                 </div>
               </Link>
             ))}

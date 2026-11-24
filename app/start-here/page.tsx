@@ -30,7 +30,7 @@ export default function StartHerePage() {
     <>
       <NavDrawer />
       <main className="max-w-2xl mx-auto px-5 pt-7 pb-16">
-        <div className="font-mono text-[0.68rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Start here</div>
+        <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Start here</div>
         <h1 className="font-display font-bold text-3xl leading-tight mb-3">Geopolitics, traced to what it means for you</h1>
         <p className="text-[0.95rem] leading-relaxed mb-8" style={{ color: "var(--text-body)" }}>
           Most news tells you what happened. Chanakya Lens follows the chain from the headline to the place it reaches you, and shows who else is telling the story.

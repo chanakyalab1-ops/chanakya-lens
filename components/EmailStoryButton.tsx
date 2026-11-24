@@ -35,7 +35,7 @@ export function EmailStoryButton({ slug, open }: { slug: string; open: boolean }
           setTimeout(() => setMsg(null), 4000);
         })
       }
-      className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80 disabled:opacity-60"
+      className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80 disabled:opacity-60"
       style={{ color: msg ? 'var(--brand-soft)' : 'var(--text-on-ink-dim)' }}
     >
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>

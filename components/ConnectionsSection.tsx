@@ -31,14 +31,14 @@ export function ConnectionsSection({ connections, open }: { connections: Connect
       <div className="space-y-5">
         {connections.map((c) => (
           <div key={c.entity.slug}>
-            <Link href={`/lens/${c.entity.slug}`} className="font-mono text-[0.68rem] uppercase tracking-widest hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
+            <Link href={`/lens/${c.entity.slug}`} className="font-mono text-[0.6875rem] uppercase tracking-widest hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
               {c.entity.name} →
             </Link>
             <ul className="mt-2 space-y-2">
               {c.stories.map((s) => (
                 <li key={s.slug}>
                   <Link href={`/story/${s.slug}`} className="block p-3 rounded-sm border hover:opacity-80 text-[0.9rem] leading-snug" style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}>
-                    <span className="font-mono text-[0.58rem] uppercase tracking-wide block mb-1" style={{ color: 'var(--brand-soft)' }}>{s.category}</span>
+                    <span className="font-mono text-[0.6875rem] uppercase tracking-wide block mb-1" style={{ color: 'var(--brand-soft)' }}>{s.category}</span>
                     {s.headline}
                   </Link>
                 </li>

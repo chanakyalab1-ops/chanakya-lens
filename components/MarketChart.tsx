@@ -155,7 +155,7 @@ export default function MarketChart({ label, onClose }: { label: string; onClose
           )}
         </div>
         {geom && (
-          <div className="font-mono text-[0.68rem] mt-1.5" style={{ color: "var(--text-on-ink-dim)" }}>
+          <div className="font-mono text-[0.6875rem] mt-1.5" style={{ color: "var(--text-on-ink-dim)" }}>
             Low {formatValue(label, geom.lo)} · High {formatValue(label, geom.hi)}
           </div>
         )}
@@ -249,7 +249,7 @@ export default function MarketChart({ label, onClose }: { label: string; onClose
                   }}
                 >
                   <div className="font-display font-bold text-[1rem] leading-tight">{formatValue(label, data[idx].v)}</div>
-                  <div className="font-mono text-[0.62rem] mt-0.5" style={{ color: "var(--text-on-ink-dim)" }}>
+                  <div className="font-mono text-[0.6875rem] mt-0.5" style={{ color: "var(--text-on-ink-dim)" }}>
                     {TIP_FMT[dataRange].format(data[idx].t)}
                   </div>
                 </div>
@@ -264,12 +264,12 @@ export default function MarketChart({ label, onClose }: { label: string; onClose
 
         {data && (
           <details className="mt-3">
-            <summary className="cursor-pointer font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+            <summary className="cursor-pointer font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
               View as table
             </summary>
             <table className="w-full mt-2 text-[0.78rem]" style={{ color: "var(--text-body)" }}>
               <thead>
-                <tr style={{ color: "var(--text-on-ink-dim)" }} className="text-left font-mono text-[0.62rem] uppercase">
+                <tr style={{ color: "var(--text-on-ink-dim)" }} className="text-left font-mono text-[0.6875rem] uppercase">
                   <th className="py-1 font-normal">Date</th>
                   <th className="py-1 font-normal text-right">Price</th>
                 </tr>

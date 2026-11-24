@@ -44,15 +44,15 @@ export default function PlanPicker({
         }}
       >
         {badge && (
-          <span className="absolute -top-2.5 right-3 font-mono text-[0.6rem] uppercase tracking-wide px-2 py-0.5" style={{ background: '#C97B4A', color: '#fff' }}>
+          <span className="absolute -top-2.5 right-3 font-mono text-[0.6875rem] uppercase tracking-wide px-2 py-0.5" style={{ background: '#C97B4A', color: '#fff' }}>
             {badge}
           </span>
         )}
         <div className="flex items-center justify-between mb-2">
-          <span className="font-mono text-[0.68rem] uppercase tracking-widest" style={{ color: 'var(--text-on-ink-dim)' }}>{title}</span>
+          <span className="font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: 'var(--text-on-ink-dim)' }}>{title}</span>
           <span
             aria-hidden
-            className="h-4 w-4 rounded-full border flex items-center justify-center text-[0.6rem]"
+            className="h-4 w-4 rounded-full border flex items-center justify-center text-[0.6875rem]"
             style={{ borderColor: on ? '#0E7080' : 'var(--border)', background: on ? '#0E7080' : 'transparent', color: '#fff' }}
           >
             {on ? '✓' : ''}

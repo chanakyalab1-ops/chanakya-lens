@@ -14,7 +14,7 @@ export default function Footer() {
             </p>
           </div>
           <div>
-            <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Read</div>
+            <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Read</div>
             <div className="space-y-2">
               <Link href="/" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Latest stories</Link>
               <Link href="/regions" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Browse by region</Link>
@@ -24,7 +24,7 @@ export default function Footer() {
             </div>
           </div>
           <div>
-            <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>About</div>
+            <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>About</div>
             <div className="space-y-2">
               <Link href="/start-here" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Start here</Link>
               <Link href="/about" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Our approach</Link>
@@ -37,7 +37,7 @@ export default function Footer() {
             </div>
           </div>
           <div>
-            <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Follow</div>
+            <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Follow</div>
             <div className="space-y-2">
               <a href="https://www.instagram.com/chanakya.lab/" target="_blank" rel="noreferrer" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Instagram</a>
               <a href="https://www.youtube.com/@Chanakya_lab" target="_blank" rel="noreferrer" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>YouTube</a>
@@ -46,10 +46,10 @@ export default function Footer() {
           </div>
         </div>
         <div className="pt-6 border-t flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
-          <span className="font-mono text-[0.65rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+          <span className="font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
             © 2026 Chanakya Labs. All rights reserved.
           </span>
-          <span className="font-mono text-[0.65rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+          <span className="font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
             Market prices are indicative only. Not investment advice.
           </span>
         </div>

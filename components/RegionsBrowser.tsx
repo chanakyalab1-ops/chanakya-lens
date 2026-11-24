@@ -32,7 +32,7 @@ export default function RegionsBrowser({ stories }: { stories: Story[] }) {
             <button
               key={tab}
               onClick={() => setActive(tab)}
-              className="font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
+              className="font-mono text-[0.6875rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
               style={
                 active === tab
                   ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
@@ -55,14 +55,14 @@ export default function RegionsBrowser({ stories }: { stories: Story[] }) {
               style={{ background: "var(--ink-card)", borderColor: "var(--border)" }}
             >
               <div className="flex items-center gap-2 mb-2.5">
-                <span className="font-mono text-[0.62rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+                <span className="font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
                   {story.category}
                 </span>
               </div>
               <h2 className="font-display font-bold text-lg leading-tight mb-2">{story.headline}</h2>
               <p className="text-[0.83rem] mb-3" style={{ color: "var(--text-body)" }}>{story.dek}</p>
               <div className="flex items-center pt-2.5 border-t" style={{ borderColor: "var(--border)" }}>
-                <span className="ml-auto font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+                <span className="ml-auto font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
                   {formatStoryDate(story.publishedAt)}
                 </span>
               </div>

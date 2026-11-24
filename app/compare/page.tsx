@@ -37,7 +37,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
     <>
       <NavDrawer />
       <div className="max-w-3xl mx-auto px-5 pt-7 pb-16">
-        <Link href="/account" className="font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>← Your account</Link>
+        <Link href="/account" className="font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>← Your account</Link>
         <h1 className="font-display text-3xl font-bold mt-4 mb-2">Compare</h1>
         <p className="text-[0.95rem] mb-5" style={{ color: 'var(--text-body)' }}>Pick two countries, places or actors to see the stories they share and where they differ.</p>
         <form className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 mb-8">

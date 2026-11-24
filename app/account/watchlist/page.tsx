@@ -39,7 +39,7 @@ export default async function InterestsPage() {
     <>
       <NavDrawer />
       <div className="max-w-2xl mx-auto px-5 pt-7 pb-16">
-        <Link href="/account" className="font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
+        <Link href="/account" className="font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
           ← Your account
         </Link>
         <h1 className="font-display text-3xl font-bold mt-4 mb-2">Your Watchlist</h1>

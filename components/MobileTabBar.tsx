@@ -72,7 +72,7 @@ export default function MobileTabBar() {
                 style={{ color: active ? "var(--brand-soft)" : "var(--text-on-ink-dim)" }}
               >
                 <TabIcon active={active} />
-                <span className="text-[0.62rem] font-medium tracking-wide">{label}</span>
+                <span className="text-[0.6875rem] font-medium tracking-wide">{label}</span>
               </Link>
             </li>
           );

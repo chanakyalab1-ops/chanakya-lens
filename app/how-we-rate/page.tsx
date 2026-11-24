@@ -23,7 +23,7 @@ export default function HowWeRatePage() {
     <>
       <NavDrawer />
       <div className="max-w-xl mx-auto px-5 pt-8 pb-16">
-        <div className="font-mono text-[0.66rem] uppercase tracking-widest mb-2.5" style={{ color: "var(--brand-soft)" }}>Methodology</div>
+        <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2.5" style={{ color: "var(--brand-soft)" }}>Methodology</div>
         <h1 className="font-display font-bold text-4xl leading-tight mb-4">How we rate this</h1>
         <p className="text-base max-w-md mb-2" style={{ color: "var(--text-body)" }}>
           Every &quot;How Could This Affect You&quot; story breaks a news event into specific ways it could reach you. Here&apos;s exactly what the tags mean.
@@ -44,7 +44,7 @@ export default function HowWeRatePage() {
                 <div className="h-full w-full rounded-full scale-50" style={{ background: t.color }} />
               </div>
               <div>
-                <span className="block font-mono text-[0.62rem] uppercase tracking-wide mb-1" style={{ color: t.color }}>{t.label}</span>
+                <span className="block font-mono text-[0.6875rem] uppercase tracking-wide mb-1" style={{ color: t.color }}>{t.label}</span>
                 <div className="text-[0.88rem]" style={{ color: "var(--text-body)" }}>{t.desc}</div>
               </div>
             </div>

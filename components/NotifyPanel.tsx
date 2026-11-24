@@ -122,7 +122,7 @@ export default function NotifyPanel({ vapidKey, onClose, onSubscribedChange }: {
       key={label}
       onClick={onClick}
       aria-pressed={on}
-      className="font-mono text-[0.62rem] uppercase tracking-wide rounded-full border px-2.5 py-1.5"
+      className="font-mono text-[0.6875rem] uppercase tracking-wide rounded-full border px-2.5 py-1.5"
       style={on ? { color: '#fff', background: '#0E7080', borderColor: '#0E7080' } : { borderColor: 'var(--border)' }}
     >
       {on ? '✓ ' : ''}
@@ -170,12 +170,12 @@ export default function NotifyPanel({ vapidKey, onClose, onSubscribedChange }: {
             </button>
           )}
 
-          <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>And these topics</div>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>And these topics</div>
           <div className="flex flex-wrap gap-1.5 mb-3">
             {PUSH_CATEGORIES.map((c) => chip(c, has({ kind: 'category', slug: c }), () => toggleTopic({ kind: 'category', slug: c })))}
           </div>
 
-          <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>Places and themes</div>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>Places and themes</div>
           <div className="flex flex-wrap gap-1.5 mb-3">
             {[...SYSTEMS, ...THEMES].map((e) => chip(e.name, has({ kind: 'lens', slug: e.slug }), () => toggleTopic({ kind: 'lens', slug: e.slug })))}
           </div>
