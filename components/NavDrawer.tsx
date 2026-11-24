@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import { insertDigestSignup, readRefCookie } from "@/lib/referral";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotifyBell from "@/components/NotifyBell";
 import ThemeSegmentedControl from "@/components/ThemeSegmentedControl";
@@ -38,7 +39,7 @@ export default function NavDrawer() {
     e.preventDefault();
     if (!email.trim()) return;
     setSubStatus("loading");
-    const { error } = await supabase.from("digest_signups").insert({ email: email.trim(), regions: [] });
+    const { error } = await insertDigestSignup(supabase, { email: email.trim(), regions: [] }, readRefCookie(document.cookie));
     if (error && error.code !== "23505") { setSubStatus("error"); return; }
     setSubStatus("done");
   }

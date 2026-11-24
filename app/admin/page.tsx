@@ -81,6 +81,12 @@ export default async function AdminPage() {
       <a href="/api/admin/waitlist" className="inline-block mb-2 mr-5 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
         Lens+ waitlist{waitlist === null ? " (run waitlist.sql)" : ` (${waitlist})`}: download CSV →
       </a>
+      <a href="/api/admin/creators" className="inline-block mb-2 mr-5 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+        Creator applications: CSV →
+      </a>
+      <a href="/api/admin/creators?type=referrals" className="inline-block mb-2 mr-5 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+        Sign-ups per creator link: CSV →
+      </a>
       <Link href="/review/duplicates" className="inline-block mb-6 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
         Possible duplicate stories →
       </Link>

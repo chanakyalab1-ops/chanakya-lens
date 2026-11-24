@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { insertDigestSignup, readRefCookie } from "@/lib/referral";
 
 const TOPICS = ["Trade & Tariffs", "Security & Conflict", "Political", "Resources", "Tech & Regulation", "Sports & Power"];
 
@@ -20,10 +21,7 @@ export default function DigestSignup() {
     e.preventDefault();
     if (!email.trim()) return;
     setStatus("loading");
-    const { error } = await supabase.from("digest_signups").insert({
-      email: email.trim(),
-      regions: selectedTopics,
-    });
+    const { error } = await insertDigestSignup(supabase, { email: email.trim(), regions: selectedTopics }, readRefCookie(document.cookie));
     if (error) {
       if (error.code === "23505") {
         setStatus("done");

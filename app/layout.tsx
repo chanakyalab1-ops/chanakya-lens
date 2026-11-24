@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Footer from "@/components/Footer";
 import MobileTabBar from "@/components/MobileTabBar";
 import StickyDigestBar from "@/components/StickyDigestBar";
+import RefCapture from "@/components/RefCapture";
 import Script from "next/script";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { Barlow_Condensed, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
@@ -99,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('cl_text');if(t&&/^1[0-3][0-9]%$/.test(t))document.documentElement.style.fontSize=t}catch(e){}" }} />
         {children}
         <Footer />
+        <RefCapture />
         <StickyDigestBar />
         <MobileTabBar />
         {/* Vercel Web Analytics, loaded directly so it needs no npm package.

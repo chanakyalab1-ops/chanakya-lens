@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { readRefCookie } from '@/lib/referral';
 
 export function WaitlistForm({ source }: { source: string }) {
   const [email, setEmail] = useState('');
@@ -13,7 +14,7 @@ export function WaitlistForm({ source }: { source: string }) {
     const form = e.target as HTMLFormElement;
     const website = (form.elements.namedItem('website') as HTMLInputElement | null)?.value ?? '';
     try {
-      const res = await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, website, source }) });
+      const res = await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, website, source, ref: readRefCookie(document.cookie) }) });
       const data = (await res.json()) as { ok: boolean; error?: string };
       if (data.ok) setStatus('done');
       else {
