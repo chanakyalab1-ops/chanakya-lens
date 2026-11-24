@@ -6,8 +6,8 @@ import { toggleShelf } from '@/app/account/shelf/actions';
 
 // "Keep" a story on your Shelf. The story page is cached for everyone, so whether
 // it is already kept is asked for in the browser, and only when a session cookie exists.
-export function SaveButton({ slug, compact }: { slug: string; compact?: boolean }) {
-  const [state, setState] = useState<'loading' | 'anon' | 'ready'>('loading');
+export function SaveButton({ slug, compact, open }: { slug: string; compact?: boolean; open: boolean }) {
+  const [state, setState] = useState<'loading' | 'anon' | 'ready' | 'off'>('loading');
   const [saved, setSaved] = useState(false);
   const [msg, setMsg] = useState<{ text: string; limit?: boolean } | null>(null);
   const [pending, start] = useTransition();
@@ -16,21 +16,23 @@ export function SaveButton({ slug, compact }: { slug: string; compact?: boolean 
     let off = false;
     const hasSession = /(^|;\s*)sb-[^=]*-auth-token/.test(document.cookie);
     if (!hasSession) {
-      setTimeout(() => !off && setState('anon'), 0);
+      setTimeout(() => !off && setState(open ? 'anon' : 'off'), 0);
       return;
     }
     fetch('/api/me', { cache: 'no-store' })
       .then((r) => r.json())
-      .then((d: { signedIn: boolean; shelf: string[] }) => {
+      .then((d: { signedIn: boolean; enabled: boolean; shelf: string[] }) => {
         if (off) return;
         setSaved(d.shelf.includes(slug));
-        setState(d.signedIn ? 'ready' : 'anon');
+        setState(!d.enabled ? (d.signedIn ? 'off' : open ? 'anon' : 'off') : 'ready');
       })
-      .catch(() => !off && setState('anon'));
+      .catch(() => !off && setState('off'));
     return () => {
       off = true;
     };
-  }, [slug]);
+  }, [slug, open]);
+
+  if (state === 'off') return null;
 
   const icon = (
     <svg viewBox="0 0 24 24" width="18" height="18" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8">

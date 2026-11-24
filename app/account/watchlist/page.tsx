@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { membershipVisibleTo } from '@/lib/memberAccess';
 import NavDrawer from '@/components/NavDrawer';
 import { getSessionUser } from '@/lib/supabase-user';
 import { getUserInterests } from '@/lib/userInterests';
@@ -19,6 +20,7 @@ const isRecent = (at: string) => Date.now() - new Date(at).getTime() < 7 * 24 * 
 export default async function InterestsPage() {
   const user = await getSessionUser();
   if (!user) redirect('/account/login');
+  if (!membershipVisibleTo(user.email)) notFound();
 
   const [stories, interests, membership] = await Promise.all([getAllStories(), getUserInterests(user.id), getMembership(user.id)]);
 

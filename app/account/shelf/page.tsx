@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { membershipVisibleTo } from '@/lib/memberAccess';
 import NavDrawer from '@/components/NavDrawer';
 import { getSessionUser } from '@/lib/supabase-user';
 import { supabaseServer } from '@/lib/supabase-server';
@@ -15,6 +16,7 @@ export const metadata: Metadata = { title: 'Your Shelf | Chanakya Lens', robots:
 export default async function ShelfPage() {
   const user = await getSessionUser();
   if (!user) redirect('/account/login');
+  if (!membershipVisibleTo(user.email)) notFound();
 
   const [shelf, membership] = await Promise.all([getShelf(user.id), getMembership(user.id)]);
   const { data } = shelf.length

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { getSessionUser } from '@/lib/supabase-user';
 import { supabaseServer } from '@/lib/supabase-server';
 import { canAddInterest, isValidInterest, type InterestKind } from '@/lib/interests';
+import { membershipVisibleTo } from '@/lib/memberAccess';
 import { getMembership, isActiveMember } from '@/lib/membership';
 
 export type ToggleResult =
@@ -13,6 +14,7 @@ export type ToggleResult =
 export async function toggleInterest(kind: InterestKind, slug: string): Promise<ToggleResult> {
   const user = await getSessionUser();
   if (!user) return { ok: false, error: 'Sign in first.' };
+  if (!membershipVisibleTo(user.email)) return { ok: false, error: 'Not available yet.' };
   if (!isValidInterest({ kind, slug })) return { ok: false, error: 'Unknown interest.' };
 
   const supabase = supabaseServer();

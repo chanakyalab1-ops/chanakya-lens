@@ -495,20 +495,20 @@ const FOR_YOU = "My Lens";
 
 // The homepage is cached for everyone, so a reader's interests are fetched in the
 // browser. Visitors without a Supabase session cookie skip the request entirely.
-function useInterests(): { status: "loading" | "anon" | "ready"; interests: Interest[] } {
-  const [state, setState] = useState<{ status: "loading" | "anon" | "ready"; interests: Interest[] }>({ status: "loading", interests: [] });
+function useInterests(open: boolean): { status: "loading" | "anon" | "ready" | "off"; interests: Interest[] } {
+  const [state, setState] = useState<{ status: "loading" | "anon" | "ready" | "off"; interests: Interest[] }>({ status: "loading", interests: [] });
   useEffect(() => {
     let cancelled = false;
     const hasSession = /(^|;\s*)sb-[^=]*-auth-token/.test(document.cookie);
-    const load: Promise<{ signedIn: boolean; interests: Interest[] }> = hasSession
+    const load: Promise<{ signedIn: boolean; enabled?: boolean; interests: Interest[] }> = hasSession
       ? fetch("/api/me", { cache: "no-store" }).then((r) => r.json())
       : Promise.resolve({ signedIn: false, interests: [] });
     load
       .then((d) => {
-        if (!cancelled) setState(d.signedIn ? { status: "ready", interests: d.interests } : { status: "anon", interests: [] });
+        if (!cancelled) setState(d.signedIn && d.enabled ? { status: "ready", interests: d.interests } : !d.signedIn && open ? { status: "anon", interests: [] } : { status: "off", interests: [] });
       })
       .catch(() => {
-        if (!cancelled) setState({ status: "anon", interests: [] });
+        if (!cancelled) setState({ status: "off", interests: [] });
       });
     return () => {
       cancelled = true;
@@ -538,13 +538,13 @@ function useUrlQuery(): string {
   return query;
 }
 
-export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending, lensWeek }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[]; lensWeek?: Record<string, number> }) {
+export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending, lensWeek, toolsOpen }: { toolsOpen?: boolean; stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[]; lensWeek?: Record<string, number> }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
     [stories]
   );
   const [active, setActive] = useState("All");
-  const me = useInterests();
+  const me = useInterests(!!toolsOpen);
   // Search now lives in the header (see HeaderSearch.tsx), which writes to
   // the `q` URL param -- read it here reactively rather than owning local
   // input state, since Feed no longer renders its own search box.

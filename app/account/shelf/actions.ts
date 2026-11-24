@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getSessionUser } from '@/lib/supabase-user';
 import { supabaseServer } from '@/lib/supabase-server';
+import { membershipVisibleTo } from '@/lib/memberAccess';
 import { getMembership, isActiveMember } from '@/lib/membership';
 import { canAddToShelf, cleanNote } from '@/lib/shelf';
 
@@ -11,6 +12,7 @@ export type ShelfResult = { ok: true; saved: boolean } | { ok: false; error: str
 export async function toggleShelf(slug: string): Promise<ShelfResult> {
   const user = await getSessionUser();
   if (!user) return { ok: false, error: 'Sign in to use your Shelf.' };
+  if (!membershipVisibleTo(user.email)) return { ok: false, error: 'Not available yet.' };
   if (!/^[a-z0-9-]{1,200}$/.test(slug)) return { ok: false, error: 'Unknown story.' };
 
   const db = supabaseServer();
@@ -37,7 +39,7 @@ export async function toggleShelf(slug: string): Promise<ShelfResult> {
 
 export async function saveShelfNote(slug: string, note: string): Promise<{ ok: boolean }> {
   const user = await getSessionUser();
-  if (!user) return { ok: false };
+  if (!user || !membershipVisibleTo(user.email)) return { ok: false };
   const { error } = await supabaseServer().from('shelf_items').update({ note: cleanNote(note) }).eq('user_id', user.id).eq('slug', slug);
   return { ok: !error };
 }

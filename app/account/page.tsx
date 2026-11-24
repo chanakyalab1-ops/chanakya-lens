@@ -76,6 +76,8 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </section>
         )}
 
+        {membershipVisibleTo(user.email) && (
+          <>
         <section className="mb-8">
           <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
             Watchlist
@@ -95,6 +97,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             <span style={{ color: 'var(--text-on-ink-dim)' }}> for the stories you kept.</span>
           </p>
         </section>
+
+          </>
+        )}
 
         <SignOutButton />
       </div>
