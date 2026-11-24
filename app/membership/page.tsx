@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 const PERKS: { icon: string; title: string; text: string; live: boolean }[] = [
   { icon: "🛡", title: "Back independent reporting", text: "No ads, no sponsored stories. Your membership pays for the research behind every story.", live: true },
   { icon: "🎯", title: "Follow unlimited interests", text: "Pick the countries, topics and places you care about, and get a For you feed and digest built around them.", live: false },
-  { icon: "📬", title: "A weekly analyst briefing", text: "One longer email each week on the stories that will matter most, with the connections between them.", live: false },
+  { icon: "📬", title: "The full weekly analyst briefing", text: "A longer email each week on the stories that will matter most, with the connections between them. Everyone gets a short preview; Strategists get the whole briefing.", live: false },
   { icon: "🔎", title: "Full Off-Lens archive and search", text: "Search every story's coverage map by country, outlet and date.", live: false },
 ];
 
@@ -35,7 +35,7 @@ const COMPARE: { row: string; free: string; paid: string }[] = [
   { row: "Off-Lens coverage maps", free: "✓", paid: "✓" },
   { row: "Daily digest and notifications", free: "✓", paid: "✓" },
   { row: "Follow interests", free: "Up to 3 (soon)", paid: "Unlimited (soon)" },
-  { row: "Weekly analyst briefing", free: "–", paid: "✓ (soon)" },
+  { row: "Weekly analyst briefing", free: "Preview (soon)", paid: "Full briefing (soon)" },
   { row: "Archive search", free: "–", paid: "✓ (soon)" },
 ];
 
