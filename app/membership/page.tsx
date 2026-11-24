@@ -29,6 +29,8 @@ const PERKS: { icon: string; title: string; text: string; live: boolean }[] = [
   { icon: "🔗", title: "Connected stories", text: "Every story shows what else is happening on the same places, actors and themes, so you can follow one thread across the news.", live: true },
   { icon: "👁", title: "Watch single stories", text: "Get an alert when one specific story is updated, plus a plain note on what changed.", live: true },
   { icon: "📴", title: "Offline reading", text: "Saved stories open on your device even without a connection.", live: true },
+  { icon: "📨", title: "A digest built from your Watchlist", text: "Your daily email leads with today's stories on the places, actors and topics you watch.", live: true },
+  { icon: "💬", title: "Ask the Lens", text: "Ask a question and get an answer built only from our own stories, with the stories it came from. 5 questions a day.", live: true },
   { icon: "📬", title: "The full weekly analyst briefing", text: "A longer email each week on the stories that will matter most, with the connections between them. Everyone gets a short preview; Lens+ members get the whole briefing.", live: false },
   { icon: "🔎", title: "Full Off-Lens archive and search", text: "Search every story's coverage map by country, outlet and date.", live: false },
 ];
