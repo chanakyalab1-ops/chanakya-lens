@@ -73,7 +73,7 @@ export default function PlanPicker({
         {card('monthly', 'Monthly', m.amount, m.period)}
       </div>
       {user ? (
-        <SubscribeButton key={plan.priceId} token={token} priceId={plan.priceId} sandbox={sandbox} email={user.email} userId={user.id} label="Become a Strategist" wide />
+        <SubscribeButton key={plan.priceId} token={token} priceId={plan.priceId} sandbox={sandbox} email={user.email} userId={user.id} label="Upgrade to Lens+" wide />
       ) : (
         <Link href="/account/login" className="block text-center px-5 py-3 rounded-sm text-[0.95rem] font-semibold transition-opacity hover:opacity-90" style={{ background: '#0E7080', color: '#fff' }}>
           Sign in to join

@@ -63,7 +63,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             </h2>
             {member && membership ? (
               <div className="rounded-sm border p-4 space-y-3" style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}>
-                <div className="text-sm font-semibold">Strategist</div>
+                <div className="text-sm font-semibold">Lens+</div>
                 <div className="text-sm" style={{ color: 'var(--text-on-ink-dim)' }}>
                   {membership.cancelAtPeriodEnd ? 'Ends' : 'Renews'}{' '}
                   {membership.currentPeriodEnd ? new Date(membership.currentPeriodEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
@@ -76,7 +76,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
               </p>
             ) : (
               <p className="text-sm">
-                <Link href="/membership" className="underline">Become a Strategist</Link>
+                <Link href="/membership" className="underline">Upgrade to Lens+</Link>
               </p>
             )}
           </section>
