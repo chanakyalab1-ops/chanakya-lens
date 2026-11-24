@@ -9,6 +9,7 @@ import { slugify } from '@/lib/slug';
 import { generateStoryDraft } from '@/lib/anthropic-server';
 import { selectImageForStory } from '@/lib/imageSelection';
 import { notifyForStory } from '@/lib/push';
+import { cleanUpdateNote } from '@/lib/storyUpdates';
 
 // Every path that creates a draft holds it at workflow_status='fact_checking'
 // (invisible to the /review queue) and fires this so a reviewer never sees
@@ -549,6 +550,22 @@ export async function sendUpdateAlert(slug: string): Promise<ActionResult<{ sent
       'update',
     );
     return { ok: true, data: { sent: r.sent } };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
+// Adds a short "what changed" note to a published story, shown to readers on the
+// story page, and optionally alerts readers who follow or watch it.
+export async function postStoryUpdate(slug: string, note: string, alert: boolean): Promise<ActionResult<{ sent: number }>> {
+  try {
+    const text = cleanUpdateNote(note);
+    if (!text) throw new Error('Write what changed first.');
+    const { error } = await supabaseServer().from('story_updates').insert({ slug, note: text });
+    if (error) throw new Error('Could not save the update. Has the SQL been run?');
+    refreshStoryPage(slug);
+    if (!alert) return { ok: true, data: { sent: 0 } };
+    return sendUpdateAlert(slug);
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }

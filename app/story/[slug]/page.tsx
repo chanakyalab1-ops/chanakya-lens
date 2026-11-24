@@ -10,6 +10,8 @@ import { PageViewBeacon } from "@/components/PageViewBeacon";
 import { ShareButtons } from "@/components/ShareButtons";
 import { SaveButton } from "@/components/SaveButton";
 import { EmailStoryButton } from "@/components/EmailStoryButton";
+import { WatchButton } from "@/components/WatchButton";
+import { getStoryUpdates } from "@/lib/storyUpdates";
 import { ReadMarker } from "@/components/ReadMarker";
 import { ConnectionsSection } from "@/components/ConnectionsSection";
 import { connectionsFor } from "@/lib/connections";
@@ -70,6 +72,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
   const hubs = hubsForStory(story, allStories);
   const connections = connectionsFor(story, allStories);
+  const updates = await getStoryUpdates(slug);
 
   const schemaData = {
     "@context": "https://schema.org",
@@ -197,12 +200,25 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             <span className="hidden md:inline text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>·</span>
             <span className="hidden md:inline font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(story.publishedAt)}</span>
           </div>
-          <div className="hidden md:flex items-center gap-4"><SaveButton slug={slug} open={process.env.MEMBERSHIP_PUBLIC === "true"} /><EmailStoryButton slug={slug} open={false} /><ShareButtons slug={slug} headline={story.headline} /></div>
+          <div className="hidden md:flex items-center gap-4"><SaveButton slug={slug} open={process.env.MEMBERSHIP_PUBLIC === "true"} /><EmailStoryButton slug={slug} open={false} /><WatchButton slug={slug} /><ShareButtons slug={slug} headline={story.headline} /></div>
         </div>
         <div className="md:hidden flex items-center justify-between mb-2 font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>
           <span>{formatStoryDate(story.publishedAt)}</span>
           <span className="-mr-2 flex items-center"><SaveButton slug={slug} compact open={process.env.MEMBERSHIP_PUBLIC === "true"} /><ShareButtons slug={slug} headline={story.headline} compact /></span>
         </div>
+        {updates.length > 0 && (
+          <section className="mb-5 border-l-4 p-4" style={{ borderColor: "var(--developing)", background: "var(--ink-card)" }}>
+            <div className="font-mono text-[0.62rem] uppercase tracking-widest mb-2" style={{ color: "var(--developing)" }}>What changed</div>
+            <ul className="space-y-2">
+              {updates.map((u) => (
+                <li key={u.createdAt} className="text-[0.92rem] leading-snug">
+                  <span className="font-mono text-[0.68rem] mr-2" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(u.createdAt)}</span>
+                  {u.note}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {story.subjectCountries && story.subjectCountries.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {story.subjectCountries.map((country) => (

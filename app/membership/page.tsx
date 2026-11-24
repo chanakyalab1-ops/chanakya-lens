@@ -27,6 +27,8 @@ const PERKS: { icon: string; title: string; text: string; live: boolean }[] = [
   { icon: "🛡", title: "Back independent reporting", text: "No ads, no sponsored stories. Your membership pays for the research behind every story.", live: true },
   { icon: "🎯", title: "An unlimited Watchlist", text: "Watch the countries, chokepoints, actors and topics you care about, and get a My Lens feed built around them.", live: true },
   { icon: "🔗", title: "Connected stories", text: "Every story shows what else is happening on the same places, actors and themes, so you can follow one thread across the news.", live: true },
+  { icon: "👁", title: "Watch single stories", text: "Get an alert when one specific story is updated, plus a plain note on what changed.", live: true },
+  { icon: "📴", title: "Offline reading", text: "Saved stories open on your device even without a connection.", live: true },
   { icon: "📬", title: "The full weekly analyst briefing", text: "A longer email each week on the stories that will matter most, with the connections between them. Everyone gets a short preview; Lens+ members get the whole briefing.", live: false },
   { icon: "🔎", title: "Full Off-Lens archive and search", text: "Search every story's coverage map by country, outlet and date.", live: false },
 ];
