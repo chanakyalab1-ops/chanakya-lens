@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import NavDrawer from '@/components/NavDrawer';
 import { SignOutButton } from './SignOutButton';
+import { ReadingSize } from '@/components/ReadingSize';
 import { ManageButton } from '@/components/MembershipButtons';
 import { paddleConfigured } from '@/lib/paddle';
 import { membershipVisibleTo } from '@/lib/memberAccess';
@@ -58,7 +59,8 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const cards = [
     { href: '/account/watchlist', icon: '🎯', title: 'Watchlist', text: 'Countries, chokepoints, actors and topics you follow. They build your My Lens tab.', count: watching.length, unit: 'watched' },
     { href: '/account/saved', icon: '🔖', title: 'Saved stories', text: 'Stories you saved to read later.', count: saved.length, unit: 'saved' },
-    { href: '/account/reading', icon: '🧭', title: 'Reading Map', text: 'What you read, and which countries you keep missing.', count: null, unit: '' },
+    { href: '/account/reading', icon: '🧭', title: 'Reading Map', text: 'What you read, your reading streak, and which countries you keep missing.', count: null, unit: '' },
+    { href: '/compare', icon: '⚖️', title: 'Compare', text: 'Pick two countries, places or actors and see what they share.', count: null, unit: '' },
   ];
 
   return (
@@ -141,6 +143,13 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                 </Link>
               ))}
             </div>
+          </section>
+        )}
+
+        {tools && (
+          <section className="mb-10">
+            <h2 className="font-mono text-[0.68rem] uppercase tracking-widest mb-3" style={{ color: 'var(--brand-soft)' }}>Reading size</h2>
+            <ReadingSize />
           </section>
         )}
 
