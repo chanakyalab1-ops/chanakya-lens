@@ -96,6 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('cl_text');if(t&&/^1[0-3][0-9]%$/.test(t))document.documentElement.style.fontSize=t}catch(e){}" }} />
         {children}
         <Footer />
         <StickyDigestBar />

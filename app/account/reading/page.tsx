@@ -6,6 +6,7 @@ import { getSessionUser } from '@/lib/supabase-user';
 import { membershipVisibleTo } from '@/lib/memberAccess';
 import { supabaseServer } from '@/lib/supabase-server';
 import { readingMap, type ReadStory, type Tally } from '@/lib/readStats';
+import { readingStreak } from '@/lib/streak';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Your Reading Map | Chanakya Lens', robots: { index: false, follow: false } };
@@ -22,8 +23,10 @@ export default async function ReadingPage() {
 
   const db = supabaseServer();
   const cutoff = since();
-  const { data: reads } = await db.from('story_reads').select('slug').eq('user_id', user.id).gte('read_at', cutoff).limit(1000);
-  const slugs = ((reads ?? []) as { slug: string }[]).map((r) => r.slug);
+  const { data: reads } = await db.from('story_reads').select('slug, read_at').eq('user_id', user.id).gte('read_at', cutoff).limit(1000);
+  const readRowsAll = (reads ?? []) as { slug: string; read_at: string }[];
+  const slugs = readRowsAll.map((r) => r.slug);
+  const streak = readingStreak(readRowsAll.map((r) => r.read_at));
   const [readRows, recentRows] = await Promise.all([
     slugs.length ? db.from('stories').select('slug, category, subject_countries').in('slug', slugs) : Promise.resolve({ data: [] }),
     db.from('stories').select('slug, category, subject_countries').gte('created_at', cutoff).limit(500),
@@ -47,7 +50,8 @@ export default async function ReadingPage() {
           </p>
         ) : (
           <>
-            <p className="font-mono text-[0.7rem] uppercase tracking-widest mb-6" style={{ color: 'var(--brand-soft)' }}>{map.total} stories read</p>
+            <p className="font-mono text-[0.7rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>{map.total} stories read</p>
+            {streak > 0 && <p className="text-[0.95rem] mb-6">🔥 {streak} {streak === 1 ? 'day' : 'days'} in a row</p>}
             <Bars title="By topic" rows={map.categories} />
             <Bars title="Countries you read about" rows={map.countries} />
             <Bars title="In the news, not on your radar" rows={map.unseen} note="Stories about these countries ran in the last 30 days and you opened none." muted />
