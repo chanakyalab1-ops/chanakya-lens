@@ -4,6 +4,16 @@ import { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { toggleSaved } from '@/app/account/saved/actions';
 
+// Keeps a saved story's page on this device so it opens without a connection.
+function keepOffline(slug: string) {
+  try {
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+    if ('caches' in window) caches.open('cl-stories-v1').then((c) => c.add(`/story/${slug}`)).catch(() => {});
+  } catch {
+    // offline copy is a bonus
+  }
+}
+
 // Save a story to read later. The story page is cached for everyone, so whether
 // it is already kept is asked for in the browser, and only when a session cookie exists.
 export function SaveButton({ slug, compact, open }: { slug: string; compact?: boolean; open: boolean }) {
@@ -60,7 +70,10 @@ export function SaveButton({ slug, compact, open }: { slug: string; compact?: bo
           start(async () => {
             setMsg(null);
             const res = await toggleSaved(slug);
-            if (res.ok) setSaved(res.saved);
+            if (res.ok) {
+              setSaved(res.saved);
+              if (res.saved) keepOffline(slug);
+            }
             else setMsg(res.error);
           })
         }

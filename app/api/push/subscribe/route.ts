@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 import { pushConfigured } from "@/lib/push";
 import { validatePrefs } from "@/lib/pushMatch";
+import { getSessionUser } from "@/lib/supabase-user";
 
 type Body = { subscription?: { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } }; prefs?: unknown };
 
@@ -24,10 +25,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Bad request." }, { status: 400 });
   }
 
+  // Link the browser to the signed-in reader (if any) so single-story watches can reach it.
+  const user = await getSessionUser().catch(() => null);
   const { error } = await supabaseServer()
     .from("push_subscriptions")
     .upsert(
-      { endpoint, p256dh, auth, topics: prefs.topics, breaking_only: prefs.breakingOnly, user_agent: (req.headers.get("user-agent") ?? "").slice(0, 200), updated_at: new Date().toISOString() },
+      { ...(user ? { user_id: user.id } : {}), endpoint, p256dh, auth, topics: prefs.topics, breaking_only: prefs.breakingOnly, user_agent: (req.headers.get("user-agent") ?? "").slice(0, 200), updated_at: new Date().toISOString() },
       { onConflict: "endpoint" }
     );
   if (error) {
