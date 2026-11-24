@@ -110,6 +110,8 @@ export function ReviewBoard({
   const [publishReason, setPublishReason] = useState<string>("");
   const [publishTags, setPublishTags] = useState<Set<string>>(new Set());
   const [publishRating, setPublishRating] = useState<number>(0);
+  const [draftFilter, setDraftFilter] = useState<string>('All');
+  const [draftSel, setDraftSel] = useState<Set<string>>(new Set());
 
   const candidateById = useMemo(
     () => new Map(candidates.map((c) => [c.id, c])),
@@ -169,6 +171,33 @@ export function ReviewBoard({
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to generate draft.');
       }
+    });
+  }
+
+  // Publishes with no feedback form: one click for drafts that are plainly fine.
+  function quickPublish(slugs: string[]) {
+    if (slugs.length === 0) return;
+    if (slugs.length > 1 && !window.confirm(`Publish ${slugs.length} stories now? Readers who follow their topics may get alerts (at most 3 a day each).`)) return;
+    setError(null);
+    startTransition(async () => {
+      for (const slug of slugs) {
+        const result = await publishDraft(slug);
+        if (!result.ok) {
+          setError(`${slug}: ${result.error}`);
+          break;
+        }
+      }
+      setDraftSel(new Set());
+      router.refresh();
+    });
+  }
+
+  function toggleDraft(slug: string) {
+    setDraftSel((prev) => {
+      const next = new Set(prev);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
+      return next;
     });
   }
 
@@ -252,6 +281,14 @@ export function ReviewBoard({
       [...drafts].sort((a, b) => (b.quality_score ?? -1) - (a.quality_score ?? -1)),
     [drafts],
   );
+  const draftCategories = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const d of sortedDrafts) counts.set(d.category ?? 'Uncategorised', (counts.get(d.category ?? 'Uncategorised') ?? 0) + 1);
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  }, [sortedDrafts]);
+  const shownDrafts = draftFilter === 'All' ? sortedDrafts : sortedDrafts.filter((d) => (d.category ?? 'Uncategorised') === draftFilter);
+  // Safe to bulk publish: fact-check finished with a good score.
+  const goodDrafts = shownDrafts.filter((d) => d.fact_check_status === 'done' && (d.quality_score ?? 0) >= 70);
   const bestDraftSlug =
     sortedDrafts.length > 1 && sortedDrafts[0].quality_score !== null ? sortedDrafts[0].slug : null;
 
@@ -345,15 +382,40 @@ export function ReviewBoard({
             <h2 className="font-mono text-xs uppercase tracking-wider text-[#8A93A6] mb-3">
               Drafts in review
             </h2>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {[['All', sortedDrafts.length] as [string, number], ...draftCategories].map(([c, n]) => (
+                <button
+                  key={c}
+                  onClick={() => setDraftFilter(c)}
+                  className={`font-mono text-[0.72rem] uppercase tracking-wide px-3 py-1.5 rounded border ${draftFilter === c ? 'bg-[#6FA98A] text-[#0B1220] border-[#6FA98A]' : 'border-white/15 hover:bg-white/5'}`}
+                >
+                  {c} · {n}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2 mb-3 text-sm">
+              <button onClick={() => setDraftSel(new Set(goodDrafts.map((d) => d.slug)))} disabled={goodDrafts.length === 0} className="px-3 py-1.5 rounded border border-white/15 hover:bg-white/5 disabled:opacity-40">
+                Select fact-checked 70+ ({goodDrafts.length})
+              </button>
+              {draftSel.size > 0 && (
+                <>
+                  <button onClick={() => quickPublish([...draftSel])} disabled={isPending} className="px-3 py-1.5 rounded bg-[#6FA98A] text-[#0B1220] font-medium disabled:opacity-40">
+                    {isPending ? 'Publishing…' : `Publish ${draftSel.size} selected`}
+                  </button>
+                  <button onClick={() => setDraftSel(new Set())} className="underline text-[#8A93A6]">Clear</button>
+                </>
+              )}
+            </div>
             <div className="space-y-2">
-              {sortedDrafts.map((d) => (
+              {shownDrafts.map((d) => (
                 <div
                   key={d.slug}
                   className={`flex items-center justify-between border rounded px-4 py-3 bg-white/[0.02] ${
                     d.slug === bestDraftSlug ? 'border-[#6FA98A]/60' : 'border-white/10'
                   }`}
                 >
-                  <div>
+                  <input type="checkbox" checked={draftSel.has(d.slug)} onChange={() => toggleDraft(d.slug)} aria-label={`Select ${d.headline}`} className="h-4 w-4 mr-3 shrink-0" />
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       {d.slug === bestDraftSlug && (
                         <span className="text-[0.65rem] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded bg-[#6FA98A]/15 text-[#6FA98A]">
@@ -402,11 +464,19 @@ export function ReviewBoard({
                       Reject
                     </button>
                     <button
-                      onClick={() => handlePublish(d.slug)}
+                      onClick={() => quickPublish([d.slug])}
                       disabled={isPending}
                       className="text-sm px-3 py-1.5 rounded bg-[#6FA98A] text-[#0B1220] font-medium hover:bg-[#7EB899] disabled:opacity-40"
                     >
                       Publish
+                    </button>
+                    <button
+                      onClick={() => handlePublish(d.slug)}
+                      disabled={isPending}
+                      title="Publish and leave feedback on this draft"
+                      className="text-sm px-3 py-1.5 rounded border border-white/15 hover:bg-white/5 disabled:opacity-40"
+                    >
+                      + Feedback
                     </button>
                   </div>
                 </div>
