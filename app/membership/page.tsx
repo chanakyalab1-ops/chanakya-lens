@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import NavDrawer from "@/components/NavDrawer";
-import { ManageButton, SubscribeButton } from "@/components/MembershipButtons";
+import { ManageButton } from "@/components/MembershipButtons";
+import PlanPicker from "@/components/PlanPicker";
 import { isSandboxToken, paddleConfigured } from "@/lib/paddle";
 import { getMembership, isActiveMember } from "@/lib/membership";
 import { getSessionUser } from "@/lib/supabase-user";
@@ -40,6 +41,8 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
   const membership = user ? await getMembership(user.id) : null;
   const member = isActiveMember(membership);
   const price = process.env.MEMBERSHIP_PRICE_LABEL;
+  const yearlyPriceId = process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_YEARLY;
+  const yearlyLabel = process.env.MEMBERSHIP_PRICE_LABEL_YEARLY;
 
   return (
     <>
@@ -54,7 +57,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
         <div className="rounded-sm border p-5 mb-6" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
           <div className="flex items-baseline justify-between mb-4">
             <div className="font-display font-bold text-xl">Strategist</div>
-            {price && <div className="font-mono text-sm">{price}</div>}
+            {price && !yearlyPriceId && <div className="font-mono text-sm">{price}</div>}
           </div>
           <ul className="space-y-2 mb-5">
             {PERKS.map((p) => (
@@ -81,7 +84,14 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
             <div className="space-y-3">
               {canceled && <p className="text-sm" style={{ color: "var(--text-on-ink-dim)" }}>Checkout canceled. You have not been charged.</p>}
               {user?.email ? (
-                <SubscribeButton token={token} priceId={priceId} sandbox={isSandboxToken(token)} email={user.email} userId={user.id} />
+                <PlanPicker
+                  token={token}
+                  sandbox={isSandboxToken(token)}
+                  email={user.email}
+                  userId={user.id}
+                  monthly={{ priceId, label: price ?? "Monthly" }}
+                  yearly={yearlyPriceId ? { priceId: yearlyPriceId, label: yearlyLabel ?? "Yearly", note: "Best value" } : null}
+                />
               ) : (
                 <Link href="/account/login" className="inline-block px-5 py-2.5 rounded-sm text-sm font-semibold text-white" style={{ background: "#0E7080", color: "#fff" }}>
                   Sign in to join
