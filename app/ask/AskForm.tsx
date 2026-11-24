@@ -31,7 +31,7 @@ export function AskForm({ limit }: { limit: number }) {
           <button disabled={pending || q.trim().length < 8} className="px-5 py-2.5 text-sm font-semibold text-white rounded-sm disabled:opacity-50" style={{ background: '#0E7080' }}>
             {pending ? 'Reading the stories…' : 'Ask'}
           </button>
-          <span className="font-mono text-[0.65rem] uppercase tracking-wide" style={{ color: 'var(--text-on-ink-dim)' }}>
+          <span className="font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: 'var(--text-on-ink-dim)' }}>
             {result?.ok ? `${result.left} left today` : `${limit} questions a day`}
           </span>
         </div>
@@ -42,7 +42,7 @@ export function AskForm({ limit }: { limit: number }) {
           <p className="text-[0.98rem] leading-relaxed whitespace-pre-line">{result.answer}</p>
           {result.sources.length > 0 && (
             <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-              <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-2" style={{ color: 'var(--text-on-ink-dim)' }}>From these stories</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: 'var(--text-on-ink-dim)' }}>From these stories</div>
               <ul className="space-y-1.5">
                 {result.sources.map((s) => (
                   <li key={s.slug}><Link href={`/story/${s.slug}`} className="underline text-[0.88rem]">{s.headline}</Link></li>

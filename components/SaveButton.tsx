@@ -52,7 +52,7 @@ export function SaveButton({ slug, compact, open }: { slug: string; compact?: bo
 
   if (state === 'anon') {
     return (
-      <Link href="/account/login" className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
+      <Link href="/account/login" className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
         {icon}
         {!compact && 'Save'}
       </Link>
@@ -77,7 +77,7 @@ export function SaveButton({ slug, compact, open }: { slug: string; compact?: bo
             else setMsg(res.error);
           })
         }
-        className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80 disabled:opacity-60"
+        className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80 disabled:opacity-60"
         style={{ color: saved ? 'var(--brand-soft)' : 'var(--text-on-ink-dim)' }}
       >
         {icon}

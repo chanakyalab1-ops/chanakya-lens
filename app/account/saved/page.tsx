@@ -25,13 +25,13 @@ export default async function SavedPage() {
     <>
       <NavDrawer />
       <div className="max-w-2xl mx-auto px-5 pt-7 pb-16">
-        <Link href="/account" className="font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
+        <Link href="/account" className="font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
           ← Your account
         </Link>
         <div className="flex items-end justify-between gap-3 mt-4 mb-5">
           <h1 className="font-display text-3xl font-bold">Saved stories</h1>
           {items.length > 0 && (
-            <a href="/api/saved/export" download className="font-mono text-[0.68rem] uppercase tracking-wide underline" style={{ color: 'var(--text-on-ink-dim)' }}>Download CSV</a>
+            <a href="/api/saved/export" download className="font-mono text-[0.6875rem] uppercase tracking-wide underline" style={{ color: 'var(--text-on-ink-dim)' }}>Download CSV</a>
           )}
         </div>
         <SavedList initial={items} />

@@ -37,7 +37,7 @@ export default async function ReadingPage() {
     <>
       <NavDrawer />
       <div className="max-w-2xl mx-auto px-5 pt-7 pb-16">
-        <Link href="/account" className="font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
+        <Link href="/account" className="font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
           ← Your account
         </Link>
         <h1 className="font-display text-3xl font-bold mt-4 mb-2">Your Reading Map</h1>
@@ -76,7 +76,7 @@ function Bars({ title, rows, note, muted }: { title: string; rows: Tally[]; note
             <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
               <div className="h-full rounded-full" style={{ width: `${Math.round((r.count / max) * 100)}%`, background: muted ? 'var(--developing)' : 'var(--brand-soft)' }} />
             </div>
-            <span className="font-mono text-[0.65rem] w-6 text-right" style={{ color: 'var(--text-on-ink-dim)' }}>{r.count}</span>
+            <span className="font-mono text-[0.6875rem] w-6 text-right" style={{ color: 'var(--text-on-ink-dim)' }}>{r.count}</span>
           </div>
         ))}
       </div>

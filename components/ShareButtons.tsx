@@ -40,7 +40,7 @@ export function ShareButtons({ slug, headline, compact }: { slug: string; headli
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: 'var(--text-on-ink-dim)' }}>
+      <div className="font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: 'var(--text-on-ink-dim)' }}>
         Share this story
       </div>
       <div className="flex flex-wrap gap-2">

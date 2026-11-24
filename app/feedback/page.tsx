@@ -10,7 +10,7 @@ export default function FeedbackPage() {
     <>
       <NavDrawer />
       <div className="max-w-2xl mx-auto px-5 pt-12 pb-16 text-center">
-        <div className="font-mono text-[0.64rem] uppercase tracking-widest mb-3" style={{ color: "var(--text-on-ink-dim)" }}>
+        <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--text-on-ink-dim)" }}>
           Talk to us
         </div>
         <h1 className="font-display font-bold text-2xl mb-4">Feedback</h1>

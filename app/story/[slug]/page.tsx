@@ -137,7 +137,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M15 18l-6-6 6-6" /></svg>
           Feed
         </Link>
-        <span className="font-mono text-[0.62rem] uppercase tracking-widest truncate" style={{ color: "var(--brand-soft)" }}>{story.category}</span>
+        <span className="font-mono text-[0.6875rem] uppercase tracking-widest truncate" style={{ color: "var(--brand-soft)" }}>{story.category}</span>
         <span className="w-[52px]" aria-hidden />
       </div>
       <div className="max-w-7xl mx-auto px-4 md:px-5 pt-4 md:pt-7 pb-16">
@@ -145,7 +145,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         <div className="contents md:flex md:flex-col">
         <Link
           href="/"
-          className="hidden md:inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide mb-5 hover:opacity-80"
+          className="hidden md:inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wide mb-5 hover:opacity-80"
           style={{ color: "var(--text-on-ink-dim)" }}
         >
           ← Back to feed
@@ -165,7 +165,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             {(() => {
               const primarySource = story.sources?.find((s) => s.role === "primary");
               return primarySource ? (
-                <p className="mt-1.5 text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+                <p className="mt-1.5 text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
                   Photo via{" "}
                   <a href={primarySource.url} target="_blank" rel="noreferrer" className="hover:opacity-80" style={{ textDecoration: "underline" }}>
                     {primarySource.domain}
@@ -178,14 +178,14 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
         <div className="flex items-center justify-between gap-3 mb-3.5 flex-wrap">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="hidden md:inline font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+            <span className="hidden md:inline font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
               {story.category}
             </span>
             {story.status && (
               <>
                 <span className="hidden md:inline text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>·</span>
                 <span
-                  className="font-mono text-[0.62rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1.5"
+                  className="font-mono text-[0.6875rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1.5"
                   style={
                     story.status === "developing"
                       ? { color: "var(--developing)", borderColor: "rgba(217,105,74,0.5)", background: "rgba(217,105,74,0.08)" }
@@ -198,21 +198,21 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
               </>
             )}
             <span className="hidden md:inline text-[0.7rem]" style={{ color: "var(--text-on-ink-dim)" }}>·</span>
-            <span className="hidden md:inline font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(story.publishedAt)}</span>
+            <span className="hidden md:inline font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(story.publishedAt)}</span>
           </div>
           <div className="hidden md:flex items-center gap-4"><SaveButton slug={slug} open={process.env.MEMBERSHIP_PUBLIC === "true"} /><EmailStoryButton slug={slug} open={false} /><WatchButton slug={slug} /><ShareButtons slug={slug} headline={story.headline} /></div>
         </div>
-        <div className="md:hidden flex items-center justify-between mb-2 font-mono text-[0.68rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+        <div className="md:hidden flex items-center justify-between mb-2 font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
           <span>{formatStoryDate(story.publishedAt)}</span>
           <span className="-mr-2 flex items-center"><SaveButton slug={slug} compact open={process.env.MEMBERSHIP_PUBLIC === "true"} /><ShareButtons slug={slug} headline={story.headline} compact /></span>
         </div>
         {updates.length > 0 && (
           <section className="mb-5 border-l-4 p-4" style={{ borderColor: "var(--developing)", background: "var(--ink-card)" }}>
-            <div className="font-mono text-[0.62rem] uppercase tracking-widest mb-2" style={{ color: "var(--developing)" }}>What changed</div>
+            <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: "var(--developing)" }}>What changed</div>
             <ul className="space-y-2">
               {updates.map((u) => (
                 <li key={u.createdAt} className="text-[0.92rem] leading-snug">
-                  <span className="font-mono text-[0.68rem] mr-2" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(u.createdAt)}</span>
+                  <span className="font-mono text-[0.6875rem] mr-2" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(u.createdAt)}</span>
                   {u.note}
                 </li>
               ))}
@@ -224,7 +224,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             {story.subjectCountries.map((country) => (
               <span
                 key={country}
-                className="font-mono text-[0.6rem] uppercase tracking-wide px-2.5 py-1 rounded-full border"
+                className="font-mono text-[0.6875rem] uppercase tracking-wide px-2.5 py-1 rounded-full border"
                 style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}
               >
                 {country}
@@ -265,13 +265,13 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
               How could this affect you
             </h2>
             <div className="text-[0.78rem] mb-6" style={{ color: "var(--text-on-ink-dim)" }}>
-              Traced by who&apos;s actually in the path of this — not everyone is.
+              Traced by who&apos;s actually in the path of this. Not everyone is.
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               {story.impactNodes.map((node, i) => (
                 <div key={i} className="p-3.5 md:p-4 rounded-sm border" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
                   <span
-                    className="inline-block font-mono text-[0.6rem] uppercase tracking-wide rounded px-1.5 py-0.5 mb-2"
+                    className="inline-block font-mono text-[0.6875rem] uppercase tracking-wide rounded px-1.5 py-0.5 mb-2"
                     style={{ color: tagColor[node.confidence], background: `${tagColor[node.confidence]}20` }}
                   >
                     {tagLabel[node.confidence]}
@@ -299,7 +299,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
               </svg>
             </div>
             <div className="text-sm" style={{ color: "var(--text-body)" }}>
-              <strong style={{ color: "var(--text-on-ink)" }}>Video brief attached —</strong> companion piece with more detail.
+              <strong style={{ color: "var(--text-on-ink)" }}>Video brief attached:</strong> companion piece with more detail.
             </div>
           </div>
         )}
@@ -340,13 +340,13 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                     <span className="text-[0.85rem] truncate" style={{ color: "var(--text-body)" }}>
                       {g.title}
                     </span>
-                    <span className="font-mono text-[0.62rem] uppercase tracking-wide shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>
+                    <span className="font-mono text-[0.6875rem] uppercase tracking-wide shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>
                       {g.label}
                     </span>
                   </a>
                   {g.others.length > 0 && (
                     <details className="px-3 pb-2.5">
-                      <summary className="cursor-pointer font-mono text-[0.62rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
+                      <summary className="cursor-pointer font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
                         Same story in {g.others.length} more {g.others.length === 1 ? "outlet" : "outlets"}
                       </summary>
                       <div className="flex flex-wrap gap-1.5 mt-2">
@@ -356,7 +356,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                             href={o.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="font-mono text-[0.62rem] px-2 py-1 rounded border hover:opacity-80"
+                            className="font-mono text-[0.6875rem] px-2 py-1 rounded border hover:opacity-80"
                             style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}
                           >
                             {o.domain.replace("www.", "")}
@@ -373,7 +373,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                   <div className="space-y-2">{groups.slice(0, SHOWN).map(row)}</div>
                   {groups.length > SHOWN && (
                     <details className="mt-2 group">
-                      <summary className="cursor-pointer font-mono text-[0.68rem] uppercase tracking-wide py-2 hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
+                      <summary className="cursor-pointer font-mono text-[0.6875rem] uppercase tracking-wide py-2 hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
                         Show {groups.length - SHOWN} more {groups.length - SHOWN === 1 ? "source" : "sources"}
                       </summary>
                       <div className="space-y-2 mt-1">{groups.slice(SHOWN).map((g, i) => row(g, i + SHOWN))}</div>
@@ -420,7 +420,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                   className="block p-3.5 rounded-sm border hover:opacity-80"
                   style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}
                 >
-                  <div className="font-mono text-[0.6rem] uppercase tracking-wide mb-1.5" style={{ color: "var(--brand-soft)" }}>
+                  <div className="font-mono text-[0.6875rem] uppercase tracking-wide mb-1.5" style={{ color: "var(--brand-soft)" }}>
                     {r.category}
                   </div>
                   <div className="font-display font-bold text-[0.95rem] leading-tight">{r.headline}</div>
@@ -430,7 +430,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </section>
         )}
 
-        <div className="md:col-span-2 md:mt-10 flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.68rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
+        <div className="md:col-span-2 md:mt-10 flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.6875rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
           <div className="flex gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--direct)" }} />
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--likely)" }} />

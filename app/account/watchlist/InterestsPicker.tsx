@@ -80,7 +80,7 @@ export function InterestsPicker({
                   onClick={() => toggle(o)}
                   disabled={pending}
                   aria-pressed={on}
-                  className="font-mono text-[0.68rem] uppercase tracking-wide rounded-full border px-3 py-1.5 transition-colors disabled:opacity-60"
+                  className="font-mono text-[0.6875rem] uppercase tracking-wide rounded-full border px-3 py-1.5 transition-colors disabled:opacity-60"
                   style={on ? { color: '#fff', background: '#0E7080', borderColor: '#0E7080' } : { borderColor: 'var(--border)' }}
                 >
                   {on ? '✓ ' : ''}{o.name}{o.week ? <span style={{ opacity: 0.6 }}> · {o.week}</span> : null}

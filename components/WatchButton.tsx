@@ -45,7 +45,7 @@ export function WatchButton({ slug }: { slug: string }) {
             } else setMsg(r.error);
           })
         }
-        className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80 disabled:opacity-60"
+        className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80 disabled:opacity-60"
         style={{ color: watching ? 'var(--brand-soft)' : 'var(--text-on-ink-dim)' }}
       >
         <svg viewBox="0 0 24 24" width="18" height="18" fill={watching ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" /><circle cx="12" cy="12" r="3" fill={watching ? 'var(--ink)' : 'none'} /></svg>

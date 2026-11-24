@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import NavDrawer from '@/components/NavDrawer';
 import { SignOutButton } from './SignOutButton';
+import { Icon } from '@/components/Icon';
 import { ReadingSize } from '@/components/ReadingSize';
 import { ManageButton } from '@/components/MembershipButtons';
 import { paddleConfigured } from '@/lib/paddle';
@@ -57,11 +58,11 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     : '';
 
   const cards = [
-    { href: '/account/watchlist', icon: '🎯', title: 'Watchlist', text: 'Countries, chokepoints, actors and topics you follow. They build your My Lens tab.', count: watching.length, unit: 'watched' },
-    { href: '/account/saved', icon: '🔖', title: 'Saved stories', text: 'Stories you saved to read later.', count: saved.length, unit: 'saved' },
-    { href: '/account/reading', icon: '🧭', title: 'Reading Map', text: 'What you read, your reading streak, and which countries you keep missing.', count: null, unit: '' },
-    { href: '/ask', icon: '💬', title: 'Ask the Lens', text: 'Ask a question and get an answer from our own stories, with sources.', count: null, unit: '' },
-    { href: '/compare', icon: '⚖️', title: 'Compare', text: 'Pick two countries, places or actors and see what they share.', count: null, unit: '' },
+    { href: '/account/watchlist', icon: 'target', title: 'Watchlist', text: 'Countries, chokepoints, actors and topics you follow. They build your My Lens tab.', count: watching.length, unit: 'watched' },
+    { href: '/account/saved', icon: 'bookmark', title: 'Saved stories', text: 'Stories you saved to read later.', count: saved.length, unit: 'saved' },
+    { href: '/account/reading', icon: 'compass', title: 'Reading Map', text: 'What you read, your reading streak, and which countries you keep missing.', count: null, unit: '' },
+    { href: '/ask', icon: 'chat', title: 'Ask the Lens', text: 'Ask a question and get an answer from our own stories, with sources.', count: null, unit: '' },
+    { href: '/compare', icon: 'compare', title: 'Compare', text: 'Pick two countries, places or actors and see what they share.', count: null, unit: '' },
   ];
 
   return (
@@ -78,7 +79,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </div>
           {showMembership && (
             <span
-              className="ml-auto shrink-0 font-mono text-[0.62rem] uppercase tracking-widest rounded-full px-3 py-1.5"
+              className="ml-auto shrink-0 font-mono text-[0.6875rem] uppercase tracking-widest rounded-full px-3 py-1.5"
               style={member ? { background: '#0E7080', color: '#fff' } : { border: '1px solid var(--border)', color: 'var(--text-on-ink-dim)' }}
             >
               {member ? 'Lens+' : 'Free plan'}
@@ -90,7 +91,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <section className="mb-8">
             {member && membership ? (
               <div className="rounded-sm p-5 text-white" style={{ background: 'linear-gradient(135deg, #0E7080 0%, #0A4F5B 100%)' }}>
-                <div className="font-mono text-[0.62rem] uppercase tracking-widest opacity-80 mb-1">Membership</div>
+                <div className="font-mono text-[0.6875rem] uppercase tracking-widest opacity-80 mb-1">Membership</div>
                 <div className="font-display text-xl font-extrabold mb-1">You are a Lens+ member</div>
                 <p className="text-sm opacity-90 mb-4">
                   {membership.cancelAtPeriodEnd ? 'Your membership ends' : 'Renews'} {renewal}.
@@ -119,7 +120,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
         {tools && (
           <section className="mb-10">
-            <h2 className="font-mono text-[0.68rem] uppercase tracking-widest mb-3" style={{ color: 'var(--brand-soft)' }}>Your tools</h2>
+            <h2 className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: 'var(--brand-soft)' }}>Your tools</h2>
             <div className="space-y-3">
               {cards.map((c) => (
                 <Link
@@ -128,12 +129,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                   className="group flex items-center gap-4 rounded-sm border p-4 transition-colors hover:border-[#0E7080]"
                   style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}
                 >
-                  <span className="h-11 w-11 shrink-0 rounded-sm flex items-center justify-center text-xl" style={{ background: 'var(--ink)' }} aria-hidden>{c.icon}</span>
+                  <span className="h-11 w-11 shrink-0 rounded-sm flex items-center justify-center" style={{ background: 'var(--ink)', color: '#0E7080' }} aria-hidden><Icon name={c.icon} size={22} /></span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <span className="font-display font-bold text-[1.05rem]">{c.title}</span>
                       {c.count !== null && c.count > 0 && (
-                        <span className="font-mono text-[0.6rem] uppercase tracking-wide rounded-full px-2 py-0.5" style={{ background: '#0E7080', color: '#fff' }}>
+                        <span className="font-mono text-[0.6875rem] uppercase tracking-wide rounded-full px-2 py-0.5" style={{ background: '#0E7080', color: '#fff' }}>
                           {c.count} {c.unit}
                         </span>
                       )}
@@ -149,7 +150,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
         {tools && (
           <section className="mb-10">
-            <h2 className="font-mono text-[0.68rem] uppercase tracking-widest mb-3" style={{ color: 'var(--brand-soft)' }}>Reading size</h2>
+            <h2 className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: 'var(--brand-soft)' }}>Reading size</h2>
             <ReadingSize />
           </section>
         )}

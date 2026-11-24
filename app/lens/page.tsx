@@ -24,7 +24,7 @@ function Card({ entity, count }: { entity: LensEntity; count: number }) {
       <p className="text-[0.82rem] mt-1.5 leading-snug" style={{ color: "var(--text-body)" }}>
         {entity.tagline}
       </p>
-      <div className="font-mono text-[0.62rem] uppercase tracking-wide mt-3" style={{ color: "var(--brand-soft)" }}>
+      <div className="font-mono text-[0.6875rem] uppercase tracking-wide mt-3" style={{ color: "var(--brand-soft)" }}>
         {count} {count === 1 ? "story" : "stories"}
       </div>
     </Link>
@@ -40,7 +40,7 @@ export default async function LensIndexPage() {
       <NavDrawer />
       <main className="max-w-6xl mx-auto px-5 pt-7 pb-16">
         <div className="max-w-2xl mb-9">
-          <div className="font-mono text-[0.68rem] uppercase tracking-wide mb-3" style={{ color: "var(--brand-soft)" }}>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-wide mb-3" style={{ color: "var(--brand-soft)" }}>
             Reference
           </div>
           <h1 className="font-display font-extrabold uppercase text-4xl md:text-5xl mb-4" style={{ color: "var(--text-on-ink)" }}>
@@ -76,7 +76,7 @@ export default async function LensIndexPage() {
           <h2 className="font-display font-bold text-xl mb-4" style={{ color: "var(--brand-soft)" }}>Countries</h2>
           {countriesByRegion().map(({ region, countries }) => (
             <div key={region} className="mb-5">
-              <div className="font-mono text-[0.62rem] uppercase tracking-widest mb-2" style={{ color: "var(--text-on-ink-dim)" }}>{region}</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: "var(--text-on-ink-dim)" }}>{region}</div>
               <div className="flex flex-wrap gap-2">
                 {countries.map((c) => (
                   <Link

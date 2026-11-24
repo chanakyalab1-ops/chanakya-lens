@@ -21,10 +21,10 @@ export function SavedList({ initial }: { initial: Item[] }) {
       {items.map((it) => (
         <div key={it.slug} className="flex items-start justify-between gap-3 rounded-sm border p-3" style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}>
           <Link href={`/story/${it.slug}`} className="min-w-0 hover:opacity-80">
-            <div className="font-mono text-[0.62rem] uppercase" style={{ color: 'var(--brand-soft)' }}>{it.category}</div>
+            <div className="font-mono text-[0.6875rem] uppercase" style={{ color: 'var(--brand-soft)' }}>{it.category}</div>
             <div className="text-sm font-semibold leading-snug">{it.headline}</div>
           </Link>
-          <button onClick={() => remove(it.slug)} disabled={pending} className="shrink-0 font-mono text-[0.62rem] uppercase underline disabled:opacity-60" style={{ color: 'var(--text-on-ink-dim)' }}>
+          <button onClick={() => remove(it.slug)} disabled={pending} className="shrink-0 font-mono text-[0.6875rem] uppercase underline disabled:opacity-60" style={{ color: 'var(--text-on-ink-dim)' }}>
             Remove
           </button>
         </div>

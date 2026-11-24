@@ -63,7 +63,7 @@ export default function NavDrawer() {
           </Suspense>
           <div className="md:hidden"><ThemeToggle /></div>
           <NotifyBell />
-          <Link href="/account" className="hidden md:inline-block font-mono text-[0.68rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
+          <Link href="/account" className="hidden md:inline-block font-mono text-[0.6875rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
             Account
           </Link>
           <button
@@ -85,7 +85,7 @@ export default function NavDrawer() {
         >
           <div className="max-w-7xl mx-auto px-5 py-6 grid grid-cols-2 md:grid-cols-5 gap-6">
             <div>
-              <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Read</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Read</div>
               <div className="space-y-3">
                 <Link href="/" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Latest stories</Link>
                 <Link href="/today" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Today&apos;s Signal</Link>
@@ -95,7 +95,7 @@ export default function NavDrawer() {
               </div>
             </div>
             <div>
-              <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Regions</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Regions</div>
               <div className="space-y-3">
                 <Link href="/regions" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>All regions</Link>
                 {REGIONS.map((r) => (
@@ -104,7 +104,7 @@ export default function NavDrawer() {
               </div>
             </div>
             <div>
-              <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Follow</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Follow</div>
               <div className="space-y-3">
                 <a href="https://www.instagram.com/chanakya.lab/" target="_blank" rel="noreferrer" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Instagram</a>
                 <a href="https://www.youtube.com/@Chanakya_lab" target="_blank" rel="noreferrer" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>YouTube</a>
@@ -112,7 +112,7 @@ export default function NavDrawer() {
               </div>
             </div>
             <div>
-              <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>About</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>About</div>
               <div className="space-y-3">
                 <Link href="/about" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Our approach</Link>
                 <Link href="/how-we-rate" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>How we rate this</Link>
@@ -123,12 +123,12 @@ export default function NavDrawer() {
               </div>
             </div>
             <div className="col-span-2 md:col-span-1 md:block">
-              <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Stay ahead</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Stay ahead</div>
               {subStatus === "done" ? (
                 <p className="text-sm" style={{ color: "var(--brand-soft)" }}>You are on the list.</p>
               ) : (
                 <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
-                  <p className="text-[0.78rem] mb-1" style={{ color: "var(--text-on-ink-dim)" }}>Daily geopolitics digest — free.</p>
+                  <p className="text-[0.78rem] mb-1" style={{ color: "var(--text-on-ink-dim)" }}>Daily geopolitics digest, free.</p>
                   <input
                     type="email"
             aria-label="Email address"
