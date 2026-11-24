@@ -90,6 +90,15 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
         <section className="mb-8">
           <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
+            Saved stories
+          </h2>
+          <p className="text-sm">
+            <Link href="/account/saved" className="underline">Open your saved stories</Link>
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
             Reading Map
           </h2>
           <p className="text-sm">
