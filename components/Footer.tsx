@@ -31,6 +31,7 @@ export default function Footer() {
               <Link href="/about" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Our approach</Link>
               <Link href="/whats-new" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>What&apos;s new</Link>
               <Link href="/how-we-rate" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>How we rate this</Link>
+              <Link href="/business" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Lens+ for Business</Link>
               <Link href="/feedback" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Feedback</Link>
               <Link href="/privacy" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Privacy policy</Link>
               <Link href="/terms" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Terms of service</Link>
