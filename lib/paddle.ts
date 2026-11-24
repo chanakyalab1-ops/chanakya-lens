@@ -72,6 +72,19 @@ export function membershipRow(sub: PaddleSubscription, userId: string, occurredA
   };
 }
 
+const LIVE_STATUSES = new Set(["active", "trialing"]);
+
+// A reader can end up with two subscriptions (for example test purchases, or buying
+// twice before the first confirmation arrived), but the site keeps one record each.
+// Cancelling the extra one must not cancel the membership, so an event about a
+// different subscription only replaces the record when it is itself live, or when
+// the recorded one has already ended.
+export function shouldReplaceRecord(stored: { provider_subscription_id: string; status: string } | null, incoming: { id: string; status: string }): boolean {
+  if (!stored || stored.provider_subscription_id === incoming.id) return true;
+  if (!LIVE_STATUSES.has(stored.status)) return true;
+  return LIVE_STATUSES.has(incoming.status);
+}
+
 // Webhooks can arrive out of order; only apply one newer than what is stored.
 export function isNewerEvent(stored: string | null | undefined, incoming: string): boolean {
   if (!stored) return true;
