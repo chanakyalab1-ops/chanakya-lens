@@ -60,6 +60,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     { href: '/account/watchlist', icon: '🎯', title: 'Watchlist', text: 'Countries, chokepoints, actors and topics you follow. They build your My Lens tab.', count: watching.length, unit: 'watched' },
     { href: '/account/saved', icon: '🔖', title: 'Saved stories', text: 'Stories you saved to read later.', count: saved.length, unit: 'saved' },
     { href: '/account/reading', icon: '🧭', title: 'Reading Map', text: 'What you read, your reading streak, and which countries you keep missing.', count: null, unit: '' },
+    { href: '/ask', icon: '💬', title: 'Ask the Lens', text: 'Ask a question and get an answer from our own stories, with sources.', count: null, unit: '' },
     { href: '/compare', icon: '⚖️', title: 'Compare', text: 'Pick two countries, places or actors and see what they share.', count: null, unit: '' },
   ];
 
