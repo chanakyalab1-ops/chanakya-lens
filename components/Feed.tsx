@@ -7,6 +7,8 @@ import { formatStoryDate } from "@/lib/formatDate";
 import { isOptimizableImageUrl } from "@/lib/imageHost";
 import { SYSTEMS } from "@/lib/lens";
 import { matchInterests, type Interest } from "@/lib/interests";
+import { applyFocus, countryOptions, isFocused, NO_FOCUS, type Focus } from "@/lib/focus";
+import { getLocalReads } from "@/components/ReadMarker";
 import type { TrendingTopic } from "@/lib/trending";
 const dotColor: Record<string, string> = {
   direct: "var(--direct)",
@@ -513,7 +515,7 @@ function useInterests(open: boolean): { status: "loading" | "anon" | "ready" | "
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [open]);
   return state;
 }
 
@@ -545,14 +547,21 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
   );
   const [active, setActive] = useState("All");
   const me = useInterests(!!toolsOpen);
+  const [focus, setFocus] = useState<Focus>(NO_FOCUS);
+  const [readSet, setReadSet] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    setTimeout(() => setReadSet(new Set(getLocalReads())), 0);
+  }, []);
+  const countries = useMemo(() => countryOptions(stories), [stories]);
   // Search now lives in the header (see HeaderSearch.tsx), which writes to
   // the `q` URL param -- read it here reactively rather than owning local
   // input state, since Feed no longer renders its own search box.
   const query = useUrlQuery();
   const categoryFiltered =
     active === FOR_YOU ? matchInterests(stories, me.interests) : active === "All" ? stories : stories.filter((s) => s.category === active);
+  const focused = me.status === "ready" && isFocused(focus) ? applyFocus(categoryFiltered, focus, readSet) : categoryFiltered;
   const filtered = query.trim()
-    ? categoryFiltered.filter((s) => {
+    ? focused.filter((s) => {
         const q = query.trim().toLowerCase();
         return (
           s.headline.toLowerCase().includes(q) ||
@@ -560,14 +569,15 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
           s.category.toLowerCase().includes(q)
         );
       })
-    : categoryFiltered;
+    : focused;
   const treated = filtered.filter((s) => s.impactNodes?.length);
   const briefs = filtered.filter((s) => !s.impactNodes?.length);
 
   // Only group into category rails on the unfiltered, no-search "All" view --
   // once someone picks a specific category or searches, show the flat,
   // complete list they actually asked for.
-  const showRails = active === "All" && !query.trim();
+  const focusOn = me.status === "ready" && isFocused(focus);
+  const showRails = active === "All" && !query.trim() && !focusOn;
 
   // On that same default landing view, the Today's Signal panel above the
   // feed already shows the top story -- skip it as the hero pick too so
@@ -659,6 +669,46 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
           ))}
         </div>
       </div>
+      {me.status === "ready" && (
+        <div className="max-w-7xl mx-auto px-4 pt-3 flex flex-wrap items-center gap-2 font-mono text-[0.64rem] uppercase tracking-wide">
+          <span style={{ color: "var(--text-on-ink-dim)" }}>Focus</span>
+          <button
+            onClick={() => setFocus((f) => ({ ...f, freshOnly: !f.freshOnly }))}
+            aria-pressed={focus.freshOnly}
+            className="rounded-full border px-3 py-1.5"
+            style={focus.freshOnly ? { color: "#fff", background: "#0E7080", borderColor: "#0E7080" } : { borderColor: "var(--border)" }}
+          >
+            {focus.freshOnly ? "✓ " : ""}Fresh only
+          </button>
+          <select
+            value={focus.confidence}
+            onChange={(e) => setFocus((f) => ({ ...f, confidence: e.target.value as Focus["confidence"] }))}
+            aria-label="Filter by how certain the effect is"
+            className="rounded-full border px-3 py-1.5 bg-transparent"
+            style={{ borderColor: "var(--border)" }}
+          >
+            <option value="all">Any certainty</option>
+            <option value="direct">Direct effects</option>
+            <option value="likely">Likely effects</option>
+            <option value="possible">Possible effects</option>
+          </select>
+          <select
+            value={focus.country}
+            onChange={(e) => setFocus((f) => ({ ...f, country: e.target.value }))}
+            aria-label="Filter by country"
+            className="rounded-full border px-3 py-1.5 bg-transparent"
+            style={{ borderColor: "var(--border)" }}
+          >
+            <option value="">Any country</option>
+            {countries.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          {isFocused(focus) && (
+            <button onClick={() => setFocus(NO_FOCUS)} className="underline" style={{ color: "var(--text-on-ink-dim)" }}>Clear</button>
+          )}
+        </div>
+      )}
       {trending && trending.length > 0 && (
         <TrendingRow topics={trending} />
       )}
