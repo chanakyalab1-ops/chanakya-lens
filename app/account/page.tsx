@@ -90,16 +90,6 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
         <section className="mb-8">
           <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
-            Shelf
-          </h2>
-          <p className="text-sm">
-            <Link href="/account/shelf" className="underline">Open your Shelf</Link>
-            <span style={{ color: 'var(--text-on-ink-dim)' }}> for the stories you kept.</span>
-          </p>
-        </section>
-
-        <section className="mb-8">
-          <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
             Reading Map
           </h2>
           <p className="text-sm">
