@@ -8,6 +8,7 @@ import { toggleWatch } from '@/app/account/watchActions';
 // until MEMBERSHIP_PUBLIC=true.
 export function WatchButton({ slug }: { slug: string }) {
   const [show, setShow] = useState(false);
+  const [locked, setLocked] = useState(false);
   const [watching, setWatching] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -17,8 +18,9 @@ export function WatchButton({ slug }: { slug: string }) {
     let off = false;
     fetch('/api/me', { cache: 'no-store' })
       .then((r) => r.json())
-      .then((d: { enabled?: boolean; watching?: string[] }) => {
+      .then((d: { enabled?: boolean; watching?: string[]; paid?: string }) => {
         if (off || !d.enabled) return;
+        setLocked(d.paid === 'locked');
         setWatching((d.watching ?? []).includes(slug));
         setShow(true);
       })
@@ -29,6 +31,14 @@ export function WatchButton({ slug }: { slug: string }) {
   }, [slug]);
 
   if (!show) return null;
+  if (locked) {
+    return (
+      <a href="/membership" title="Watching a story is for Lens+ members" className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" /><circle cx="12" cy="12" r="3" /></svg>
+        Watch · Lens+
+      </a>
+    );
+  }
   return (
     <span className="relative inline-flex">
       <button

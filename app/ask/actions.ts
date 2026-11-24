@@ -1,7 +1,7 @@
 'use server';
 
 import { getSessionUser } from '@/lib/supabase-user';
-import { membershipVisibleTo } from '@/lib/memberAccess';
+import { paidAccess } from '@/lib/entitlements';
 import { supabaseServer } from '@/lib/supabase-server';
 import { getAllStories } from '@/lib/stories';
 import { ASK_DAILY_LIMIT, ASK_GLOBAL_DAILY_LIMIT, buildAskPrompt, citedSlugs, cleanQuestion, pickRelevant } from '@/lib/ask';
@@ -17,7 +17,9 @@ const dayAgo = () => new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 export async function askLens(rawQuestion: string): Promise<AskResult> {
   const user = await getSessionUser();
   if (!user) return { ok: false, error: 'Sign in first.' };
-  if (!membershipVisibleTo(user.email)) return { ok: false, error: 'Not available yet.' };
+  const access = await paidAccess(user);
+  if (access === 'hidden') return { ok: false, error: 'Not available yet.' };
+  if (access === 'locked') return { ok: false, error: 'Ask the Lens is for Lens+ members.' };
   const question = cleanQuestion(rawQuestion);
   if (question.length < 8) return { ok: false, error: 'Ask a full question.' };
   const apiKey = process.env.ANTHROPIC_API_KEY;

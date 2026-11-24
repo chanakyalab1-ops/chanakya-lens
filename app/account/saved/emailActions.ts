@@ -1,7 +1,7 @@
 'use server';
 
 import { getSessionUser } from '@/lib/supabase-user';
-import { membershipVisibleTo } from '@/lib/memberAccess';
+import { paidAccess } from '@/lib/entitlements';
 import { getStoryBySlug } from '@/lib/stories';
 import { storyEmailHtml } from '@/lib/storyEmail';
 import { brevoConfigured, resendConfigured, sendEmail } from '@/lib/emailSend';
@@ -10,7 +10,9 @@ import { brevoConfigured, resendConfigured, sendEmail } from '@/lib/emailSend';
 export async function emailStoryToMe(slug: string): Promise<{ ok: boolean; error?: string }> {
   const user = await getSessionUser();
   if (!user?.email) return { ok: false, error: 'Sign in first.' };
-  if (!membershipVisibleTo(user.email)) return { ok: false, error: 'Not available yet.' };
+  const access = await paidAccess(user);
+  if (access === 'hidden') return { ok: false, error: 'Not available yet.' };
+  if (access === 'locked') return { ok: false, error: 'Email me is for Lens+ members.' };
   if (!/^[a-z0-9-]{1,200}$/.test(slug)) return { ok: false, error: 'Unknown story.' };
   const story = await getStoryBySlug(slug);
   if (!story) return { ok: false, error: 'Unknown story.' };

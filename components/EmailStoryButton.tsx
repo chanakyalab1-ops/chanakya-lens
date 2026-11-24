@@ -8,6 +8,7 @@ import { emailStoryToMe } from '@/app/account/saved/emailActions';
 // for everyone but the owner.
 export function EmailStoryButton({ slug, open }: { slug: string; open: boolean }) {
   const [show, setShow] = useState(false);
+  const [locked, setLocked] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -16,7 +17,11 @@ export function EmailStoryButton({ slug, open }: { slug: string; open: boolean }
     let off = false;
     fetch('/api/me', { cache: 'no-store' })
       .then((r) => r.json())
-      .then((d: { enabled?: boolean }) => !off && setShow(!!d.enabled || (open && true)))
+      .then((d: { enabled?: boolean; paid?: string }) => {
+        if (off) return;
+        setShow(!!d.enabled || (open && true));
+        setLocked(d.paid === 'locked');
+      })
       .catch(() => {});
     return () => {
       off = true;
@@ -24,6 +29,14 @@ export function EmailStoryButton({ slug, open }: { slug: string; open: boolean }
   }, [open]);
 
   if (!show) return null;
+  if (locked) {
+    return (
+      <a href="/membership" title="Email me is for Lens+ members" className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
+        Email me · Lens+
+      </a>
+    );
+  }
   return (
     <button
       type="button"

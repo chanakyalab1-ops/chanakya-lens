@@ -4,6 +4,7 @@ import { getUserInterests } from "@/lib/userInterests";
 import { getShelf } from "@/lib/userShelf";
 import { membershipVisibleTo } from "@/lib/memberAccess";
 import { supabaseServer } from "@/lib/supabase-server";
+import { paidAccess } from "@/lib/entitlements";
 
 // The homepage and story pages are cached for everyone, so a reader's own
 // Watchlist and Shelf are asked for here, in the browser.
@@ -21,5 +22,5 @@ export async function GET() {
   } catch {
     // table not created yet
   }
-  return NextResponse.json({ signedIn: true, enabled: true, interests, shelf: shelf.map((s) => s.slug), watching }, { headers });
+  return NextResponse.json({ signedIn: true, enabled: true, interests, shelf: shelf.map((s) => s.slug), watching, paid: (await paidAccess(user)) === "locked" ? "locked" : "allowed" }, { headers });
 }
