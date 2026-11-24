@@ -1,11 +1,18 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyUnsubToken } from "@/lib/unsubscribeToken";
 
+// Unsubscribes an address. The link in every digest carries a token only we can
+// make; without a valid one nothing is removed.
 export async function POST(req: NextRequest) {
   const email = req.nextUrl.searchParams.get("email");
+  const token = req.nextUrl.searchParams.get("t");
 
   if (!email) {
     return NextResponse.json({ error: "Missing email parameter." }, { status: 400 });
+  }
+  if (!verifyUnsubToken(email, token)) {
+    return NextResponse.json({ error: "This link is not valid. Ask for a new one." }, { status: 403 });
   }
 
   const supabase = createClient(

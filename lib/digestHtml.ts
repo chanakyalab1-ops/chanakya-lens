@@ -1,4 +1,5 @@
 import type { DigestStory } from "./digestStories";
+import { unsubToken } from "./unsubscribeToken";
 
 const SITE = "https://chanakyalens.com";
 const INK = "#0A0D11";
@@ -145,7 +146,7 @@ export function buildDigestHtml(stories: DigestStory[], topicLabel: string, emai
       </td></tr></table>
       <div style="text-align:center;margin-top:22px;">
         <p style="font-size:11px;color:${MUTED};margin:0 0 6px 0;">You're receiving this because you subscribed at chanakyalens.com.</p>
-        <a href="${SITE}/unsubscribe?email=${encodeURIComponent(email)}" style="font-size:11px;color:${MUTED};">Unsubscribe</a>
+        <a href="${SITE}/unsubscribe?email=${encodeURIComponent(email)}&t=${unsubToken(email)}" style="font-size:11px;color:${MUTED};">Unsubscribe</a>
       </div>
     </div>
   </div>
