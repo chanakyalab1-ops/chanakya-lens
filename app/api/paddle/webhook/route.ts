@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
-import { cleanSecret, isNewerEvent, membershipRow, signatureDebug, verifyPaddleSignature, type PaddleSubscription } from "@/lib/paddle";
+import { cleanSecret, isNewerEvent, membershipRow, shouldReplaceRecord, signatureDebug, verifyPaddleSignature, type PaddleSubscription } from "@/lib/paddle";
 import { sendAlert } from "@/lib/alerts";
 
 type PaddleEvent = {
@@ -19,8 +19,10 @@ async function save(sub: PaddleSubscription, occurredAt: string) {
   }
   if (!userId) throw new Error(`No user for subscription ${sub.id}`);
 
-  const { data: stored } = await supabase.from("memberships").select("last_event_at").eq("user_id", userId).maybeSingle();
-  if (!isNewerEvent((stored as { last_event_at?: string } | null)?.last_event_at, occurredAt)) return;
+  const { data } = await supabase.from("memberships").select("last_event_at, provider_subscription_id, status").eq("user_id", userId).maybeSingle();
+  const stored = data as { last_event_at?: string; provider_subscription_id?: string; status?: string } | null;
+  if (!isNewerEvent(stored?.last_event_at, occurredAt)) return;
+  if (stored?.provider_subscription_id && stored.status && !shouldReplaceRecord({ provider_subscription_id: stored.provider_subscription_id, status: stored.status }, sub)) return;
 
   const { error } = await supabase.from("memberships").upsert(membershipRow(sub, userId, occurredAt), { onConflict: "user_id" });
   if (error) throw new Error(`Failed to save membership: ${error.message}`);

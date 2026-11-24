@@ -26,7 +26,9 @@ export default function Footer() {
           <div>
             <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>About</div>
             <div className="space-y-2">
+              <Link href="/start-here" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Start here</Link>
               <Link href="/about" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Our approach</Link>
+              <Link href="/whats-new" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>What&apos;s new</Link>
               <Link href="/how-we-rate" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>How we rate this</Link>
               <Link href="/feedback" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Feedback</Link>
               <Link href="/privacy" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Privacy policy</Link>

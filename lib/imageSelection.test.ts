@@ -14,3 +14,11 @@ describe("sourcesAboutStory", () => {
     expect(sourcesAboutStory(headline, body, [s])).toEqual([s]);
   });
 });
+
+import { fallbackImageUrl } from "./imageSelection";
+describe("fallbackImageUrl", () => {
+  it("points at the branded category card", () => {
+    expect(fallbackImageUrl("Trade & Tariffs")).toBe("https://chanakyalens.com/api/category-image?category=Trade%20%26%20Tariffs");
+    expect(fallbackImageUrl("")).toContain("category=World");
+  });
+});

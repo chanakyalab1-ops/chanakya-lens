@@ -20,8 +20,9 @@ export function recentWindow(stories: Story[], now: number = Date.now()): { stor
 
 // The few stories that matter most right now: freshest first (6-hour
 // buckets), then still developing with a direct impact on a reader. Near-
-// duplicate headlines are skipped so one event doesn't fill the strip.
-export function pickTodaysSignal(stories: Story[], now: number = Date.now()): Story[] {
+// duplicate headlines are skipped so one event doesn't fill the strip, and
+// each category gets a slot before any category gets a second one.
+export function pickTodaysSignal(stories: Story[], now: number = Date.now(), count = 5): Story[] {
   const rank = (s: Story) => {
     const hasDirect = s.impactNodes?.some((n) => n.confidence === "direct");
     const isDeveloping = s.status === "developing";
@@ -35,13 +36,29 @@ export function pickTodaysSignal(stories: Story[], now: number = Date.now()): St
   const ordered = [...recentWindow(stories, now).stories].sort(
     (a, b) => bucket(a) - bucket(b) || rank(b) - rank(a) || time(b) - time(a),
   );
-  const picked: Story[] = [];
-  const skipped: Story[] = [];
+  const unique: Story[] = [];
+  const dups: Story[] = [];
   for (const s of ordered) {
-    if (picked.length === 3) break;
     const tokens = tokenize(s.headline);
-    const dup = picked.some((p) => jaccard(tokenize(p.headline), tokens) >= 0.2);
-    (dup ? skipped : picked).push(s);
+    const dup = unique.some((p) => jaccard(tokenize(p.headline), tokens) >= 0.2);
+    (dup ? dups : unique).push(s);
   }
-  return [...picked, ...skipped].slice(0, 3);
+  const chosen = new Set<Story>();
+  const categories = new Set<string>();
+  for (const s of unique) {
+    if (chosen.size >= count) break;
+    if (!categories.has(s.category)) {
+      chosen.add(s);
+      categories.add(s.category);
+    }
+  }
+  for (const s of unique) {
+    if (chosen.size >= count) break;
+    chosen.add(s);
+  }
+  for (const s of dups) {
+    if (chosen.size >= count) break;
+    chosen.add(s);
+  }
+  return ordered.filter((s) => chosen.has(s));
 }

@@ -93,3 +93,18 @@ a { color: inherit; text-decoration: none; }
 .logo-for-dark { display: block; }
 :root[data-theme="light"] .logo-for-light { display: block; }
 :root[data-theme="light"] .logo-for-dark { display: none; }
+
+/* Tailwind v4 no longer shows the hand cursor on buttons; restore it everywhere. */
+button:not(:disabled),
+[role="button"]:not(:disabled),
+[role="radio"],
+summary,
+select,
+input[type="checkbox"],
+input[type="radio"],
+label[for] {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}

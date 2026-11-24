@@ -175,11 +175,11 @@ function ImpactChips({ nodes }: { nodes: Story["impactNodes"] }) {
         <span
           key={i}
           title={n.mechanism}
-          className="inline-flex items-center gap-1 font-mono text-[0.62rem] rounded-full border px-2 py-0.5 max-w-full"
+          className="inline-flex items-start gap-1 font-mono text-[0.62rem] leading-snug rounded-xl border px-2 py-0.5 max-w-full text-left"
           style={{ color: dotColor[n.confidence], borderColor: dotColor[n.confidence], background: "transparent" }}
         >
-          <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: dotColor[n.confidence] }} />
-          <span className="truncate">{truncate(n.audience, 32)}</span>
+          <span className="h-1.5 w-1.5 rounded-full shrink-0 mt-[0.3rem]" style={{ background: dotColor[n.confidence] }} />
+          <span className="min-w-0 break-words">{n.audience}</span>
         </span>
       ))}
     </div>

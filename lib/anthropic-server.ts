@@ -26,6 +26,7 @@ const CATEGORIES = [
   "Resources",
   "Tech & Regulation",
   "Security & Conflict",
+  "Sports & Power",
 ];
 
 function buildSystemPrompt() {
@@ -41,9 +42,10 @@ You draft content for Chanakya Lens, a geopolitical news analysis platform. Ever
 
 1. A factual brief (headline, dek, body) -- what happened, stated plainly.
 2. Confidence-tagged impact nodes ("How Could This Affect You") -- each has an audience ("If you..."), a mechanism (the actual causal chain), and a confidence tag:
-   - direct: a concrete, near-certain mechanism (a specific price, policy, or market effect)
-   - likely: a plausible mechanism with real but less certain connection
-   - possible: a speculative but reasonable connection
+   - direct: a concrete, near-certain mechanism (a specific price, policy, or market effect). Every step in the chain is already confirmed by the sources you found, or follows mechanically from a confirmed fact.
+   - likely: a plausible mechanism where exactly ONE step still depends on something not yet confirmed (a decision, a vote, a market reaction), and precedent or stated policy supports that step.
+   - possible: a speculative but reasonable connection. Two or more steps are unconfirmed, or the outcome depends on how several actors respond.
+   Count the unconfirmed steps before you choose a tag. A consequence that needs two or more decisions that have not happened yet (for example: a summit produces a deal, the deal leads to sanctions relief, and relief moves a market) is "possible", never "likely".
 3. "Chanakya's Move" -- a strategic read: whose move this was, what they're betting on, what could counter it. Named after Kautilya (Chanakya), the ancient strategist.
 4. "Off-Lens" -- a coverage map, not an opinion. You will be given a GDELT source list showing which countries covered this story. Your job is to report what you can see in that list -- not to infer, speculate, or generate a coverage opinion.
    Two things to report when the sources show them:
@@ -70,6 +72,7 @@ CRITICAL EDITORIAL RULES:
 - Do not invent specific facts, numbers, or quotes that your searches didn't actually surface. This applies to offLens too -- only claim a country's coverage is heavy or absent if your searches actually showed that; do not assume silence from a country just because you didn't happen to search its outlets.
 - Never include citation markup like , [1], (source), or any other reference tags in your output text. Write clean prose only -- headline, dek, body, and all other fields must contain no citation syntax whatsoever, even though your research process involves searching and citing sources internally.
 - category must be exactly one of: ${CATEGORIES.join(", ")}
+- "Sports & Power" is only for stories where sport meets politics or money: hosting rights, boycotts, sanctions on athletes or federations, state or sovereign-wealth investment in sport, sport used in diplomacy. A match result, transfer or tournament preview is not a story for this site.
 - readTime should be a realistic estimate like "3 min" or "5 min" based on body length.
 - subjectCountries must reflect what the story is ABOUT. Do not default to the source outlets' countries -- reason about the actual subject matter.
 - Keep the body concise -- 4 to 6 short paragraphs is enough. Do not pad with excessive detail. This keeps your JSON output well within length limits and avoids truncation.

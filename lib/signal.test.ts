@@ -47,7 +47,7 @@ describe("pickTodaysSignal", () => {
       story("developing", "2026-10-02T02:00:00Z", { status: "developing", headline: "Brazil election runoff" }),
       story("settled-newer", "2026-10-02T04:00:00Z", { status: "settled", headline: "Japan rate decision" }),
     ];
-    expect(pickTodaysSignal(stories, NOW).map((s) => s.slug)).toEqual(["developing-direct", "developing", "settled-newer"]);
+    expect(pickTodaysSignal(stories, NOW, 3).map((s) => s.slug)).toEqual(["developing-direct", "developing", "settled-newer"]);
   });
   it("falls back to the last 48 hours on a quiet day", () => {
     const stories = [story("a", "2026-10-01T06:00:00Z"), story("b", "2026-09-30T12:00:00Z")];
@@ -68,6 +68,21 @@ describe("pickTodaysSignal", () => {
       story("r", "2026-10-02T03:00:00Z", { headline: "Russia launches drone barrage on Kyiv" }),
       story("s", "2026-10-02T02:00:00Z", { headline: "Spain protests over housing costs" }),
     ];
-    expect(pickTodaysSignal(stories, NOW).map((s) => s.slug)).toEqual(["y2", "r", "s"]);
+    expect(pickTodaysSignal(stories, NOW, 3).map((s) => s.slug)).toEqual(["y2", "r", "s"]);
+  });
+  it("shows five by default and gives each category a slot before repeating one", () => {
+    const mk = (slug: string, category: string, at: string, headline: string) => story(slug, at, { category, headline });
+    const stories = [
+      mk("p1", "Political", "2026-10-02T04:20:00Z", "Alpha election result"),
+      mk("p2", "Political", "2026-10-02T04:15:00Z", "Bravo coalition talks"),
+      mk("p3", "Political", "2026-10-02T04:10:00Z", "Charlie parliament vote"),
+      mk("s1", "Security", "2026-10-02T03:00:00Z", "Delta border clash"),
+      mk("t1", "Trade", "2026-10-02T02:00:00Z", "Echo tariff deal"),
+      mk("r1", "Resources", "2026-10-02T01:00:00Z", "Foxtrot oil output"),
+    ];
+    const slugs = pickTodaysSignal(stories, NOW).map((s) => s.slug);
+    expect(slugs).toHaveLength(5);
+    expect(slugs).toEqual(expect.arrayContaining(["p1", "s1", "t1", "r1"]));
+    expect(slugs.filter((x) => x.startsWith("p"))).toHaveLength(2);
   });
 });

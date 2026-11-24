@@ -4,7 +4,7 @@ import { sendAlert } from "@/lib/alerts";
 import { brevoConfigured, resendConfigured, resendDailyLimit, sendEmail } from "@/lib/emailSend";
 import { deliverDigest } from "@/lib/digestDelivery";
 import { selectDigestForSubscriber } from "@/lib/digestStories";
-import { buildDigestHtml } from "@/lib/digestHtml";
+import { announcementFromEnv, buildDigestHtml } from "@/lib/digestHtml";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     prepared.push({
       to: sub.email,
       subject: `Daily Digest — Chanakya Lens`,
-      html: buildDigestHtml(digest.stories, digest.topicLabel, sub.email, digest.fellBack),
+      html: buildDigestHtml(digest.stories, digest.topicLabel, sub.email, digest.fellBack, announcementFromEnv()),
     });
   }
 

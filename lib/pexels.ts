@@ -8,6 +8,7 @@ const CATEGORY_SEARCH_TERMS: Record<string, string> = {
   "Political": "government building",
   "Resources": "oil energy",
   "Tech & Regulation": "technology data center",
+  "Sports & Power": "stadium",
 };
 
 // Categories where a flag/emblem photo reads as on-topic rather than as

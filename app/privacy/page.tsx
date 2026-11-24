@@ -73,6 +73,7 @@ export default function PrivacyPage() {
                 <><B>Account details:</B> your email address and, if you sign up with a password, a securely hashed version of it. We never see or store your password in plain text.</>,
                 <><B>Google sign-in:</B> if you choose it, we receive your name, email address and profile photo from Google, and nothing else. We never post on your behalf or access your other Google data.</>,
                 <><B>Daily digest:</B> your email address and the topics you choose, so we can send you the digest.</>,
+                <><B>Notifications:</B> if you turn them on, your browser&apos;s notification address (a technical token, not your name or email) and the topics you chose, so we can send alerts. You can turn them off at any time from the bell icon, and we delete the token when you do.</>,
                 <><B>Saved stories:</B> the stories you save, stored against your account.</>,
                 <><B>Feedback:</B> anything you send us through a feedback form, and your email if you include it.</>,
                 <><B>Basic usage data:</B> the page you visited, the browser type (user agent) and the page that referred you. We use this to see which stories are read. It isn&apos;t linked to your account, and we don&apos;t store your IP address in these records. Our hosting provider may keep standard server logs, which include IP addresses, for security and operations.</>,
@@ -84,7 +85,7 @@ export default function PrivacyPage() {
             <List
               items={[
                 "To run your account, sign you in and show you your saved stories.",
-                "To send the daily digest you asked for.",
+                "To send the daily digest and any notifications you asked for.",
                 "To understand which content is read, so we can improve the site.",
                 "To keep the site secure and prevent abuse.",
                 "To respond when you contact us.",

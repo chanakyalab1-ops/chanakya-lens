@@ -23,6 +23,7 @@ export function SubscribeButton({
   email,
   userId,
   label = 'Become a Strategist',
+  wide = false,
 }: {
   token: string;
   priceId: string;
@@ -30,6 +31,7 @@ export function SubscribeButton({
   email: string;
   userId: string;
   label?: string;
+  wide?: boolean;
 }) {
   const [ready, setReady] = useState(false);
 
@@ -56,8 +58,8 @@ export function SubscribeButton({
       <button
         onClick={open}
         disabled={!ready}
-        className="px-5 py-2.5 rounded-sm text-sm font-semibold text-white disabled:opacity-60"
-        style={{ background: '#0E7080' }}
+        className={`${wide ? 'w-full py-3 text-[0.95rem]' : 'px-5 py-2.5 text-sm'} rounded-sm font-semibold disabled:opacity-60 transition-opacity hover:opacity-90`}
+        style={{ background: '#0E7080', color: '#fff' }}
       >
         {label}
       </button>

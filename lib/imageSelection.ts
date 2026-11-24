@@ -4,7 +4,6 @@ import { fetchSourceOgImage } from "./ogImage";
 import { TRUSTED_DOMAINS } from "./trustedDomains";
 import { tokenize } from "./clustering";
 
-const MIN_ACCEPTABLE_SCORE = 35;
 const MAX_SOURCE_PHOTOS_TO_TRY = 4;
 
 export type ImageSource = { url: string; domain: string; title?: string | null };
@@ -30,7 +29,7 @@ export async function selectImageForStory(
   category: string,
   subjectCountries?: string[],
   sources?: ImageSource[]
-): Promise<{ imageUrl: string } | null> {
+): Promise<{ imageUrl: string }> {
   // The actual event photo from one of the story's own sources beats any
   // stock/entity photo -- try trusted-wire sources first (most likely to
   // have the real, high-quality event photo), then whatever's left, and
@@ -60,14 +59,18 @@ export async function selectImageForStory(
     pexels ? { source: "pexels" as const, externalId: pexels.photoId, imageUrl: pexels.imageUrl, score: pexels.score } : null,
   ].filter((c): c is NonNullable<typeof c> => c !== null);
 
-  if (candidates.length === 0) return null;
+  // Every story gets a picture: the best candidate we found, or failing that
+  // a branded category card, never an empty slot.
+  if (candidates.length === 0) return { imageUrl: fallbackImageUrl(category) };
 
   candidates.sort((a, b) => b.score - a.score);
   const winner = candidates[0];
 
-  if (winner.score < MIN_ACCEPTABLE_SCORE) return null; // no image beats a bad image
-
   await logImageUsage(winner.source, winner.externalId);
 
   return { imageUrl: winner.imageUrl };
+}
+
+export function fallbackImageUrl(category: string): string {
+  return `https://chanakyalens.com/api/category-image?category=${encodeURIComponent(category || "World")}`;
 }

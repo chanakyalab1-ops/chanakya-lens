@@ -1,6 +1,6 @@
 import type { GdeltArticle, GdeltFetchResult } from "./gdelt";
 import { RSS_FEEDS, type RssFeed } from "./rssFeeds";
-import { isOffTopic } from "./ingestFilters";
+import { isOffTopic, isSportsPower } from "./ingestFilters";
 
 const REQUEST_TIMEOUT_MS = 8000;
 const CONCURRENCY = 16;
@@ -115,7 +115,7 @@ export async function fetchRssCandidates(feeds: RssFeed[] = RSS_FEEDS): Promise<
       succeeded++;
       for (const item of result.value.slice(0, MAX_ITEMS_PER_FEED)) {
         if (item.publishedAt && new Date(item.publishedAt).getTime() < cutoff) continue;
-        if (seenUrls.has(item.url) || isOffTopic(item.title)) continue;
+        if (seenUrls.has(item.url) || (feed.sports ? !isSportsPower(item.title) : isOffTopic(item.title))) continue;
         seenUrls.add(item.url);
         articles.push({
           url: item.url,

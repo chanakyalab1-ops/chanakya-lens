@@ -166,6 +166,13 @@ export function OffLensSection({
         </div>
       )}
 
+      {(total > 0 || chipSources.length > 0) && (
+        <p className="text-[0.68rem] leading-snug mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
+          This map shows only the sources we found for this story. A country listed as missing may still have covered it, in an outlet or language we did not see.{" "}
+          <a href="/how-we-rate" className="underline">How to read this</a>
+        </p>
+      )}
+
       {offLens && (
         <div className="pt-4 border-t" style={{ borderColor: "var(--border)" }}>
           <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
