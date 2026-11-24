@@ -17,7 +17,7 @@ export async function toggleInterest(kind: InterestKind, slug: string): Promise<
 
   const supabase = supabaseServer();
   const { data: existing, error: readError } = await supabase
-    .from('user_interests')
+    .from('watchlist_items')
     .select('slug')
     .eq('user_id', user.id);
   if (readError) return { ok: false, error: 'Could not save. Try again.' };
@@ -26,9 +26,9 @@ export async function toggleInterest(kind: InterestKind, slug: string): Promise<
   const following = rows.some((r) => r.slug === slug);
 
   if (following) {
-    const { error } = await supabase.from('user_interests').delete().eq('user_id', user.id).eq('kind', kind).eq('slug', slug);
+    const { error } = await supabase.from('watchlist_items').delete().eq('user_id', user.id).eq('kind', kind).eq('slug', slug);
     if (error) return { ok: false, error: 'Could not save. Try again.' };
-    revalidatePath('/account/interests');
+    revalidatePath('/account/watchlist');
     return { ok: true, selected: false };
   }
 
@@ -38,8 +38,8 @@ export async function toggleInterest(kind: InterestKind, slug: string): Promise<
     return { ok: false, error: 'You are following the free limit.', limit: true };
   }
 
-  const { error } = await supabase.from('user_interests').insert({ user_id: user.id, kind, slug });
+  const { error } = await supabase.from('watchlist_items').insert({ user_id: user.id, kind, slug });
   if (error) return { ok: false, error: 'Could not save. Try again.' };
-  revalidatePath('/account/interests');
+  revalidatePath('/account/watchlist');
   return { ok: true, selected: true };
 }

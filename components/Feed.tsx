@@ -491,7 +491,7 @@ function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
   );
 }
 
-const FOR_YOU = "For you";
+const FOR_YOU = "My Lens";
 
 // The homepage is cached for everyone, so a reader's interests are fetched in the
 // browser. Visitors without a Supabase session cookie skip the request entirely.
@@ -501,7 +501,7 @@ function useInterests(): { status: "loading" | "anon" | "ready"; interests: Inte
     let cancelled = false;
     const hasSession = /(^|;\s*)sb-[^=]*-auth-token/.test(document.cookie);
     const load: Promise<{ signedIn: boolean; interests: Interest[] }> = hasSession
-      ? fetch("/api/interests", { cache: "no-store" }).then((r) => r.json())
+      ? fetch("/api/me", { cache: "no-store" }).then((r) => r.json())
       : Promise.resolve({ signedIn: false, interests: [] });
     load
       .then((d) => {
@@ -610,7 +610,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
               className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5"
               style={{ color: "var(--brand-soft)", borderColor: "var(--brand-soft)" }}
             >
-              For you
+              My Lens
             </Link>
           )}
           {me.status === "ready" && (
@@ -626,7 +626,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
                   : { color: "var(--brand-soft)", borderColor: "var(--brand-soft)", background: "transparent" }
               }
             >
-              For you
+              My Lens
             </button>
           )}
           {categories.map((cat) => (
@@ -747,9 +747,9 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
                 `No stories match "${query}".`
               ) : active === FOR_YOU ? (
                 me.interests.length === 0 ? (
-                  <>You are not following anything yet. <Link href="/account/interests" className="underline">Choose your interests</Link>.</>
+                  <>You are not watching anything yet. <Link href="/account/watchlist" className="underline">Build your Watchlist</Link>.</>
                 ) : (
-                  <>Nothing new for your interests yet. <Link href="/account/interests" className="underline">Edit interests</Link>.</>
+                  <>Nothing new on your Watchlist yet. <Link href="/account/watchlist" className="underline">Edit your Watchlist</Link>.</>
                 )
               ) : (
                 "Nothing in this category today."

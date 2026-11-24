@@ -40,12 +40,6 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     redirect('/account/login');
   }
 
-  const { data: saved } = await supabase
-    .from('saved_stories')
-    .select('story_slug, created_at, stories(headline, category)')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
-
   const membership = await getMembership(user.id);
   const member = isActiveMember(membership);
 
@@ -84,39 +78,23 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
         <section className="mb-8">
           <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
-            Interests
+            Watchlist
           </h2>
           <p className="text-sm">
-            <Link href="/account/interests" className="underline">Choose what you follow</Link>
-            <span style={{ color: 'var(--text-on-ink-dim)' }}> to build your For you tab.</span>
+            <Link href="/account/watchlist" className="underline">Choose what you watch</Link>
+            <span style={{ color: 'var(--text-on-ink-dim)' }}> to build your My Lens tab.</span>
           </p>
         </section>
 
-        <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
-          Saved stories
-        </h2>
-
-        {saved && saved.length > 0 ? (
-          <div className="space-y-2 mb-8">
-            {saved.map((s) => (
-              <Link
-                key={s.story_slug}
-                href={`/story/${s.story_slug}`}
-                className="block rounded-sm border p-3"
-                style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}
-              >
-                {/* @ts-expect-error — nested relation typing from Supabase */}
-                <div className="font-mono text-[0.62rem] uppercase" style={{ color: 'var(--brand-soft)' }}>{s.stories?.category}</div>
-                {/* @ts-expect-error — nested relation typing from Supabase */}
-                <div className="text-sm font-semibold">{s.stories?.headline}</div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm mb-8" style={{ color: 'var(--text-on-ink-dim)' }}>
-            Nothing saved yet — tap the bookmark icon on any story to save it here.
+        <section className="mb-8">
+          <h2 className="font-mono text-xs uppercase tracking-wider mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
+            Shelf
+          </h2>
+          <p className="text-sm">
+            <Link href="/account/shelf" className="underline">Open your Shelf</Link>
+            <span style={{ color: 'var(--text-on-ink-dim)' }}> for the stories you kept.</span>
           </p>
-        )}
+        </section>
 
         <SignOutButton />
       </div>

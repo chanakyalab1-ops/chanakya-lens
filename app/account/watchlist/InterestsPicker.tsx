@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { toggleInterest } from './actions';
 import type { InterestKind } from '@/lib/interests';
 
-type Option = { kind: InterestKind; slug: string; name: string };
+type Option = { kind: InterestKind; slug: string; name: string; week?: number };
 type Group = { title: string; options: Option[] };
 
 export function InterestsPicker({
@@ -50,19 +50,19 @@ export function InterestsPicker({
     <div>
       <div className="flex items-center justify-between border p-3 mb-4 text-sm" style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}>
         <span>
-          <b>{selected.size}</b> {limitApplies && !isMember ? `of ${freeLimit} free ` : ''}followed
+          <b>{selected.size}</b> {limitApplies && !isMember ? `of ${freeLimit} free ` : ''}watched
         </span>
-        {limitApplies && !isMember && <span style={{ color: 'var(--text-on-ink-dim)' }}>Strategists follow unlimited</span>}
+        {limitApplies && !isMember && <span style={{ color: 'var(--text-on-ink-dim)' }}>Lens+ watches unlimited</span>}
       </div>
 
       {hitLimit && (
         <div className="border p-4 mb-4" style={{ borderColor: '#C97B4A', borderLeftWidth: 4, background: 'var(--ink-card)' }}>
-          <div className="font-semibold mb-1">You&apos;re following {freeLimit} interests, the free limit.</div>
+          <div className="font-semibold mb-1">Your Watchlist is full ({freeLimit} items on the free plan).</div>
           <p className="text-sm mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>
-            Strategists follow unlimited topics, countries and Lens pages.
+            Lens+ members can watch unlimited topics, countries and Lens pages.
           </p>
           <Link href="/membership" className="inline-block px-4 py-2 text-sm font-semibold text-white" style={{ background: '#0E7080' }}>
-            Become a Strategist
+            Upgrade to Lens+
           </Link>
         </div>
       )}
@@ -83,7 +83,7 @@ export function InterestsPicker({
                   className="font-mono text-[0.68rem] uppercase tracking-wide rounded-full border px-3 py-1.5 transition-colors disabled:opacity-60"
                   style={on ? { color: '#fff', background: '#0E7080', borderColor: '#0E7080' } : { borderColor: 'var(--border)' }}
                 >
-                  {on ? '✓ ' : ''}{o.name}
+                  {on ? '✓ ' : ''}{o.name}{o.week ? <span style={{ opacity: 0.6 }}> · {o.week}</span> : null}
                 </button>
               );
             })}

@@ -25,7 +25,8 @@ export const metadata: Metadata = {
 // Perks are listed honestly: what is live, and what is coming.
 const PERKS: { icon: string; title: string; text: string; live: boolean }[] = [
   { icon: "🛡", title: "Back independent reporting", text: "No ads, no sponsored stories. Your membership pays for the research behind every story.", live: true },
-  { icon: "🎯", title: "Follow unlimited interests", text: "Pick the countries, topics and places you care about, and get a For you feed and digest built around them.", live: false },
+  { icon: "🎯", title: "An unlimited Watchlist", text: "Watch the countries, chokepoints, actors and topics you care about, and get a My Lens feed built around them.", live: true },
+  { icon: "📚", title: "An unlimited Shelf", text: "Keep any story and add a private note on why. Free readers can keep 20.", live: true },
   { icon: "📬", title: "The full weekly analyst briefing", text: "A longer email each week on the stories that will matter most, with the connections between them. Everyone gets a short preview; Lens+ members get the whole briefing.", live: false },
   { icon: "🔎", title: "Full Off-Lens archive and search", text: "Search every story's coverage map by country, outlet and date.", live: false },
 ];
@@ -34,13 +35,14 @@ const COMPARE: { row: string; free: string; paid: string }[] = [
   { row: "Every story and its full analysis", free: "✓", paid: "✓" },
   { row: "Off-Lens coverage maps", free: "✓", paid: "✓" },
   { row: "Daily digest and notifications", free: "✓", paid: "✓" },
-  { row: "Follow interests", free: "Up to 3 (soon)", paid: "Unlimited (soon)" },
+  { row: "Watchlist and My Lens feed", free: "Up to 3 items", paid: "Unlimited" },
+  { row: "Shelf (kept stories)", free: "Up to 20", paid: "Unlimited" },
   { row: "Weekly analyst briefing", free: "Preview (soon)", paid: "Full briefing (soon)" },
   { row: "Archive search", free: "–", paid: "✓ (soon)" },
 ];
 
 const FAQ: { q: string; a: string }[] = [
-  { q: "What do I get today?", a: "Today your membership supports the site, and you get each feature marked Coming soon launches. We add them one at a time and say so on the What's new page." },
+  { q: "What do I get today?", a: "Today your membership supports the site, and you get each feature marked Coming soon as it launches. We add them one at a time and say so on the What's new page." },
   { q: "Can I cancel?", a: "Yes, any time. Open your account and choose Manage billing. You keep your membership until the end of the period you have paid for." },
   { q: "Who handles the payment?", a: "Paddle, our payment partner. It processes your card, collects any sales tax, and sends your receipt. We never see your card details." },
   { q: "Will every story stay free?", a: "Yes. Lens+ members back the work and get extra tools. Reading the news is never locked." },
