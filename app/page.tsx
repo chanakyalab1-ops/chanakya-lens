@@ -41,7 +41,7 @@ export default async function FeedPage() {
       <LiveMarketTicker initialRows={filterFreshRows(marketRows)} />
 
       <Suspense fallback={null}>
-        <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} todayCount={recent.stories.length} windowLabel={recent.label} trending={trending} lensWeek={lensWeek} />
+        <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} todayCount={recent.stories.length} windowLabel={recent.label} trending={trending} lensWeek={lensWeek} toolsOpen={process.env.MEMBERSHIP_PUBLIC === "true"} />
       </Suspense>
     </>
   );

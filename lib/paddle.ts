@@ -4,7 +4,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 // Paddle.js; the server only handles webhooks and customer-portal links.
 // Environment variables:
 //   NEXT_PUBLIC_PADDLE_CLIENT_TOKEN  client-side token ("test_..." = sandbox)
-//   NEXT_PUBLIC_PADDLE_PRICE_ID      the Strategist price ("pri_...")
+//   NEXT_PUBLIC_PADDLE_PRICE_ID      the Lens+ price ("pri_...")
 //   PADDLE_API_KEY                   server API key (sandbox keys contain "_sdbx")
 //   PADDLE_WEBHOOK_SECRET            notification destination secret key
 
