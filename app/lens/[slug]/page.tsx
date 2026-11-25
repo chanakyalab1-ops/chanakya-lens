@@ -1,3 +1,4 @@
+import { glossaryFor } from "@/lib/glossary";
 import { pageMeta } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -41,6 +42,7 @@ export default async function LensEntityPage({ params }: { params: Promise<{ slu
   const shown = matched.slice(0, SHOWN);
   const coverage = coverageCounts(matched).slice(0, 8);
   const totalSources = coverage.reduce((n, [, c]) => n + c, 0);
+  const terms = glossaryFor(slug);
   const related = (entity.related ?? []).map(getLensEntity).filter((e): e is NonNullable<typeof e> => !!e);
 
   return (
@@ -78,6 +80,19 @@ export default async function LensEntityPage({ params }: { params: Promise<{ slu
               <section className="mb-8 max-w-2xl p-4 md:p-5 rounded-sm border-2" style={{ borderColor: "var(--brand-soft)", background: "var(--surface-strong)" }}>
                 <h2 className="font-display font-bold text-lg mb-1.5" style={{ color: "var(--brand-soft)" }}>Why it matters</h2>
                 <p className="text-[0.92rem] leading-relaxed" style={{ color: "var(--text-on-ink)" }}>{entity.whyItMatters}</p>
+              </section>
+            )}
+
+            {terms.length > 0 && (
+              <section className="mb-8 max-w-2xl">
+                <h2 className="font-display font-bold text-lg mb-2" style={{ color: "var(--brand-soft)" }}>Terms used here</h2>
+                <div className="flex flex-wrap gap-2">
+                  {terms.map((t) => (
+                    <Link key={t.slug} href={`/glossary#${t.slug}`} title={t.definition} className="font-mono text-[0.75rem] rounded-full border px-3 py-1.5 hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink)" }}>
+                      {t.term}
+                    </Link>
+                  ))}
+                </div>
               </section>
             )}
 

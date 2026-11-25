@@ -2,6 +2,7 @@ import type { Story } from "./stories";
 import { COUNTRY_NAMES, REGIONS } from "./regions";
 import { inferStoryRegion } from "./regions";
 import { slugify } from "./slug";
+import { EXPLAINER_DRAFTS } from "./explainerDrafts";
 
 export type LensKind = "system" | "actor" | "country" | "theme";
 
@@ -224,7 +225,7 @@ export const ACTORS: LensEntity[] = [
 // Themes: the ongoing storylines readers follow. A theme that lists a country
 // by name (Iran, Ukraine, Israel) stands in for that country in the trending row. Edit this list as storylines
 // start and end; each trends on its own when enough stories match.
-export const THEMES: LensEntity[] = [
+const THEME_BASE: LensEntity[] = [
   {
     slug: "iran-war",
     name: "Iran war",
@@ -275,6 +276,12 @@ export const THEMES: LensEntity[] = [
     keywords: ["crude", "Brent", "diesel", "oil price", "oil prices", "energy prices", "LNG"],
   },
 ];
+
+// Published backgrounders (lib/explainerDrafts.ts) fill in themes that have no primer.
+export const THEMES: LensEntity[] = THEME_BASE.map((t) => {
+  const d = EXPLAINER_DRAFTS.find((e) => e.published && e.slug === t.slug);
+  return d && !t.primer ? { ...t, primer: d.primer, whyItMatters: t.whyItMatters ?? d.whyItMatters } : t;
+});
 
 // Aliases for countries whose names show up in other forms in headlines.
 const COUNTRY_ALIASES: Record<string, string[]> = {
