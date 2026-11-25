@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
 import { cleanSecret, isNewerEvent, membershipRow, shouldReplaceRecord, signatureDebug, verifyPaddleSignature, type PaddleSubscription } from "@/lib/paddle";
 import { sendAlert } from "@/lib/alerts";
+import { createGiftFromTransaction, type PaddleTransaction } from "@/lib/giftServer";
 
 type PaddleEvent = {
   event_type: string;
   occurred_at: string;
-  data: PaddleSubscription;
+  data: PaddleSubscription & PaddleTransaction;
 };
 
 async function save(sub: PaddleSubscription, occurredAt: string) {
@@ -44,6 +45,8 @@ export async function POST(req: Request) {
 
   try {
     if (event.event_type.startsWith("subscription.")) await save(event.data, event.occurred_at);
+    // A completed one-off payment for a gift makes a gift code (once per payment).
+    else if (event.event_type === "transaction.completed" && event.data.custom_data?.gift) await createGiftFromTransaction(event.data);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await sendAlert("paddle-webhook", `${event.event_type}: ${msg}`);
