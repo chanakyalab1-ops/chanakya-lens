@@ -2,6 +2,24 @@ import { tokenize } from "./clustering";
 
 export const ASK_DAILY_LIMIT = 5;
 export const ASK_GLOBAL_DAILY_LIMIT = 150;
+// Free readers get one question a day as a taste of Lens+. They stop at this many
+// questions site-wide, which keeps the rest of the daily cap for members.
+export const ASK_FREE_DAILY_LIMIT = 1;
+export const ASK_FREE_GLOBAL_CEILING = 100;
+
+export type AskTier = "member" | "free";
+
+export function askLimitsFor(tier: AskTier): { perUser: number; global: number } {
+  return tier === "member" ? { perUser: ASK_DAILY_LIMIT, global: ASK_GLOBAL_DAILY_LIMIT } : { perUser: ASK_FREE_DAILY_LIMIT, global: ASK_FREE_GLOBAL_CEILING };
+}
+
+// Why a question must wait, or null when it can go ahead.
+export function askBlocked(opts: { tier: AskTier; usedByUser: number; usedSiteWide: number }): "user" | "busy" | null {
+  const l = askLimitsFor(opts.tier);
+  if (opts.usedByUser >= l.perUser) return "user";
+  if (opts.usedSiteWide >= l.global) return "busy";
+  return null;
+}
 export const QUESTION_MAX = 300;
 
 export type AskStory = { slug: string; headline: string; dek: string; category: string; chanakyaAnalysis?: string };

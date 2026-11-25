@@ -5,7 +5,7 @@ import { getMembership, isActiveMember } from "./membership";
 // else (Save, My Lens, Focus filters, offline reading, 3 Watchlist items) is free
 // for any signed-in reader once membership is public.
 export const PAID_FEATURES = {
-  ask: { name: "Ask the Lens", blurb: "Ask a question and get an answer built only from our own stories, with sources." },
+  ask: { name: "Ask the Lens", blurb: "Free readers can ask 1 question a day. Lens+ members get 5, with sources every time." },
   compare: { name: "Compare", blurb: "Pick two countries, places or actors and see what they share and where they differ." },
   reading: { name: "Reading Map", blurb: "See what you read, your reading streak, and which countries you keep missing." },
   export: { name: "CSV export", blurb: "Download your saved stories as a spreadsheet." },

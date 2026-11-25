@@ -4,7 +4,7 @@ import { getSessionUser } from '@/lib/supabase-user';
 import { paidAccess } from '@/lib/entitlements';
 import { supabaseServer } from '@/lib/supabase-server';
 import { getAllStories } from '@/lib/stories';
-import { ASK_DAILY_LIMIT, ASK_GLOBAL_DAILY_LIMIT, buildAskPrompt, citedSlugs, cleanQuestion, pickRelevant } from '@/lib/ask';
+import { askBlocked, askLimitsFor, buildAskPrompt, citedSlugs, cleanQuestion, pickRelevant } from '@/lib/ask';
 
 export type AskResult =
   | { ok: true; answer: string; sources: { slug: string; headline: string }[]; left: number }
@@ -19,7 +19,7 @@ export async function askLens(rawQuestion: string): Promise<AskResult> {
   if (!user) return { ok: false, error: 'Sign in first.' };
   const access = await paidAccess(user);
   if (access === 'hidden') return { ok: false, error: 'Not available yet.' };
-  if (access === 'locked') return { ok: false, error: 'Ask the Lens is for Lens+ members.' };
+  const tier = access === 'locked' ? 'free' : 'member';
   const question = cleanQuestion(rawQuestion);
   if (question.length < 8) return { ok: false, error: 'Ask a full question.' };
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -35,8 +35,11 @@ export async function askLens(rawQuestion: string): Promise<AskResult> {
   ]);
   if (mine.error || all.error) return { ok: false, error: 'Ask the Lens is not ready yet.' };
   const used = mine.count ?? 0;
-  if (used >= ASK_DAILY_LIMIT) return { ok: false, error: `You have used your ${ASK_DAILY_LIMIT} questions for today. Try again tomorrow.` };
-  if ((all.count ?? 0) >= ASK_GLOBAL_DAILY_LIMIT) return { ok: false, error: 'Ask the Lens is busy today. Try again tomorrow.' };
+  const blocked = askBlocked({ tier, usedByUser: used, usedSiteWide: all.count ?? 0 });
+  if (blocked === 'user') {
+    return { ok: false, error: tier === 'free' ? 'You have used your free question for today. Lens+ members get 5 a day.' : `You have used your ${askLimitsFor('member').perUser} questions for today. Try again tomorrow.` };
+  }
+  if (blocked === 'busy') return { ok: false, error: 'Ask the Lens is busy today. Try again tomorrow.' };
 
   const { system, user: prompt } = buildAskPrompt(question, stories);
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -52,5 +55,5 @@ export async function askLens(rawQuestion: string): Promise<AskResult> {
   await db.from('ask_log').insert({ user_id: user.id });
   const cited = new Set(citedSlugs(answer, stories));
   const sources = stories.filter((s) => cited.has(s.slug)).map((s) => ({ slug: s.slug, headline: s.headline }));
-  return { ok: true, answer: answer.replace(/\s*\[[a-z0-9-]+\]/g, ''), sources, left: ASK_DAILY_LIMIT - used - 1 };
+  return { ok: true, answer: answer.replace(/\s*\[[a-z0-9-]+\]/g, ''), sources, left: askLimitsFor(tier).perUser - used - 1 };
 }

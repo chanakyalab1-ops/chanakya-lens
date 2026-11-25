@@ -5,7 +5,7 @@ import NavDrawer from '@/components/NavDrawer';
 import { getSessionUser } from '@/lib/supabase-user';
 import { paidAccess } from '@/lib/entitlements';
 import { UpgradeNotice } from '@/components/UpgradeNotice';
-import { ASK_DAILY_LIMIT } from '@/lib/ask';
+import { askLimitsFor } from '@/lib/ask';
 import { AskForm } from './AskForm';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +25,12 @@ export default async function AskPage() {
         <p className="text-[0.95rem] leading-relaxed mb-6" style={{ color: 'var(--text-body)' }}>
           Ask a question and get an answer built only from our own stories, with the stories it came from. If we have not covered it, it says so.
         </p>
-        {access === 'locked' ? <UpgradeNotice feature="ask" icon="chat" /> : <AskForm limit={ASK_DAILY_LIMIT} />}
+        <AskForm limit={askLimitsFor(access === 'locked' ? 'free' : 'member').perUser} />
+        {access === 'locked' && (
+          <div className="mt-8">
+            <UpgradeNotice feature="ask" icon="chat" heading="Get 5 questions a day with Lens+" />
+          </div>
+        )}
       </div>
     </>
   );

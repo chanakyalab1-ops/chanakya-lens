@@ -30,3 +30,21 @@ describe("helpers", () => {
     expect(buildAskPrompt("q", stories).system).toContain("ONLY");
   });
 });
+
+import { askBlocked, askLimitsFor } from "./ask";
+
+describe("askBlocked", () => {
+  it("gives members 5 a day and free readers 1", () => {
+    expect(askLimitsFor("member").perUser).toBe(5);
+    expect(askLimitsFor("free").perUser).toBe(1);
+  });
+  it("stops a reader at their own limit", () => {
+    expect(askBlocked({ tier: "free", usedByUser: 1, usedSiteWide: 0 })).toBe("user");
+    expect(askBlocked({ tier: "member", usedByUser: 4, usedSiteWide: 0 })).toBeNull();
+  });
+  it("keeps the last slots of the daily cap for members", () => {
+    expect(askBlocked({ tier: "free", usedByUser: 0, usedSiteWide: 100 })).toBe("busy");
+    expect(askBlocked({ tier: "member", usedByUser: 0, usedSiteWide: 100 })).toBeNull();
+    expect(askBlocked({ tier: "member", usedByUser: 0, usedSiteWide: 150 })).toBe("busy");
+  });
+});
