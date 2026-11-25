@@ -10,6 +10,14 @@ import { matchInterests, type Interest } from "@/lib/interests";
 import { applyFocus, countryOptions, isFocused, NO_FOCUS, type Focus } from "@/lib/focus";
 import { getLocalReads } from "@/components/ReadMarker";
 import type { TrendingTopic } from "@/lib/trending";
+// Publisher photos are hot-linked, and some sites refuse that. A photo that fails
+// to load is dropped instead of leaving a broken-image icon.
+function SafeImage(props: React.ComponentProps<typeof Image>) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  // eslint-disable-next-line jsx-a11y/alt-text
+  return <Image {...props} onError={() => setFailed(true)} />;
+}
 const dotColor: Record<string, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
@@ -64,6 +72,7 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
           {offLensStories.slice(0, 6).map((story) => (
             <Link
               key={story.slug}
+              prefetch={false}
               href={`/story/${story.slug}`}
               className="text-[0.82rem] leading-snug hover:opacity-80"
               style={{ color: "var(--text-on-ink)" }}
@@ -192,10 +201,10 @@ function HeroCard({ story }: { story: Story }) {
   return (
     <>
       {/* Phones: edge-to-edge image, big headline, no card chrome */}
-      <Link href={`/story/${story.slug}`} className="md:hidden block -mx-4 mb-1">
+      <Link prefetch={false} href={`/story/${story.slug}`} className="md:hidden block -mx-4 mb-1">
         {story.imageUrl && (
           <div className="relative w-full aspect-[16/10] overflow-hidden">
-            <Image src={story.imageUrl} alt={story.headline} fill priority sizes="100vw" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+            <SafeImage src={story.imageUrl} alt={story.headline} fill priority fetchPriority="high" sizes="100vw" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
           </div>
         )}
         <div className="px-4 pt-3 pb-4 border-b" style={{ borderColor: "var(--border)" }}>
@@ -215,13 +224,14 @@ function HeroCard({ story }: { story: Story }) {
         </div>
       </Link>
       <Link
+        prefetch={false}
         href={`/story/${story.slug}`}
         className="hidden md:block rounded-sm border p-5 md:p-6 mb-3 hover:opacity-95"
         style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}
       >
         {story.imageUrl && (
           <div className="relative w-full aspect-[3/1] rounded-sm overflow-hidden mb-3 -mt-1">
-            <Image src={story.imageUrl} alt={story.headline} fill sizes="944px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+            <SafeImage src={story.imageUrl} alt={story.headline} fill sizes="944px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
           </div>
         )}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -248,13 +258,14 @@ function HeroCard({ story }: { story: Story }) {
 export function CompactCard({ story }: { story: Story }) {
   return (
     <Link
+      prefetch={false}
       href={`/story/${story.slug}`}
       className="block rounded-sm border p-3.5"
       style={{ background: "var(--surface)", borderColor: "var(--surface-border)" }}
     >
       {story.imageUrl && (
         <div className="relative w-full aspect-[5/2] rounded-sm overflow-hidden mb-2.5">
-          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 320px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+          <SafeImage src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 320px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
         </div>
       )}
       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -280,6 +291,7 @@ export function CompactCard({ story }: { story: Story }) {
 export function MobileRow({ story }: { story: Story }) {
   return (
     <Link
+      prefetch={false}
       href={`/story/${story.slug}`}
       className="flex gap-3 py-3.5 border-b"
       style={{ borderColor: "var(--border)" }}
@@ -310,7 +322,7 @@ export function MobileRow({ story }: { story: Story }) {
       </div>
       {story.imageUrl && (
         <div className="relative shrink-0 w-[104px] h-[104px] rounded-md overflow-hidden self-start">
-          <Image src={story.imageUrl} alt="" fill sizes="104px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+          <SafeImage src={story.imageUrl} alt="" fill sizes="104px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
         </div>
       )}
     </Link>
@@ -347,7 +359,7 @@ export function SignalPanel({ stories, moreCount, moreLabel = "More from today",
       <ol className="flex flex-col">
         {stories.map((story, i) => (
           <li key={story.slug} className={i > 0 ? "border-t" : undefined} style={{ borderColor: "var(--border)" }}>
-            <Link href={`/story/${story.slug}`} className="flex gap-3 py-2.5 lg:py-3 hover:opacity-80">
+            <Link prefetch={false} href={`/story/${story.slug}`} className="flex gap-3 py-2.5 lg:py-3 hover:opacity-80">
               <span className="font-display font-extrabold text-2xl leading-none w-6 lg:w-7 shrink-0" style={{ color: "var(--brand-soft)" }}>
                 {i + 1}
               </span>
@@ -632,7 +644,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
               className="shrink-0 font-mono text-[0.6875rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
               style={
                 active === FOR_YOU
-                  ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
+                  ? { color: "var(--on-brand)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
                   : { color: "var(--brand-soft)", borderColor: "var(--brand-soft)", background: "transparent" }
               }
             >
@@ -660,7 +672,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
               className="shrink-0 font-mono text-[0.6875rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
               style={
                 active === cat
-                  ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
+                  ? { color: "var(--on-brand)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
                   : { color: "var(--text-on-ink)", borderColor: "var(--border)", background: "transparent" }
               }
             >
@@ -773,6 +785,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
             {briefs.map((story) => (
               <Link
                 key={story.slug}
+                prefetch={false}
                 href={`/story/${story.slug}`}
                 className="block rounded-sm border p-3.5"
                 style={{ background: "var(--surface)", borderColor: "var(--surface-border)" }}

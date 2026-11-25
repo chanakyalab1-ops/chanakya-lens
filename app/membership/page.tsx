@@ -9,6 +9,7 @@ import { getSessionUser } from "@/lib/supabase-user";
 import { pageMeta } from "@/lib/seo";
 import { Icon } from "@/components/Icon";
 import { WaitlistPage } from "@/components/WaitlistPage";
+import { COMPARE, PERKS } from "@/lib/plans";
 import { membershipVisibleTo } from "@/lib/memberAccess";
 
 export const dynamic = "force-dynamic";
@@ -21,26 +22,8 @@ export const metadata: Metadata = {
   ),
 };
 
-// Perks are listed honestly: what is live, and what is coming.
-const PERKS: { icon: string; title: string; text: string; live: boolean }[] = [
-  { icon: "shield", title: "Back independent reporting", text: "No ads, no sponsored stories. Your membership pays for the research behind every story.", live: true },
-  { icon: "target", title: "An unlimited Watchlist", text: "Watch the countries, chokepoints, actors and topics you care about, and get a My Lens feed built around them.", live: true },
-  { icon: "link", title: "Connected stories", text: "Every story shows what else is happening on the same places, actors and themes, so you can follow one thread across the news.", live: true },
-  { icon: "eye", title: "Watch single stories", text: "Get an alert when one specific story is updated, plus a plain note on what changed.", live: true },
-  { icon: "offline", title: "Offline reading", text: "Saved stories open on your device even without a connection.", live: true },
-  { icon: "mail", title: "A digest built from your Watchlist", text: "Your daily email leads with today's stories on the places, actors and topics you watch.", live: true },
-  { icon: "chat", title: "Ask the Lens", text: "Ask a question and get an answer built only from our own stories, with the stories it came from. 5 questions a day.", live: true },
-];
-
-const COMPARE: { row: string; free: string; paid: string }[] = [
-  { row: "Every story and its full analysis", free: "✓", paid: "✓" },
-  { row: "Off-Lens coverage maps", free: "✓", paid: "✓" },
-  { row: "Daily digest and notifications", free: "✓", paid: "✓" },
-  { row: "Watchlist and My Lens feed", free: "Up to 3 items", paid: "Unlimited" },
-];
-
 const FAQ: { q: string; a: string }[] = [
-  { q: "What do I get today?", a: "Today your membership supports the site, and you get each feature marked Coming soon as it launches. We add them one at a time and say so on the What's new page." },
+  { q: "What do I get today?", a: "Everything on this page is live the day you join: an unlimited Watchlist, a digest built from it, Ask the Lens, the Reading Map, Compare, single-story alerts and more. New tools are announced on the What's new page." },
   { q: "Can I cancel?", a: "Yes, any time. Open your account and choose Manage billing. You keep your membership until the end of the period you have paid for." },
   { q: "Who handles the payment?", a: "Paddle, our payment partner. It processes your card, collects any sales tax, and sends your receipt. We never see your card details." },
   { q: "Will every story stay free?", a: "Yes. Lens+ members back the work and get extra tools. Reading the news is never locked." },
@@ -53,7 +36,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
   const priceId = process.env.NEXT_PUBLIC_PADDLE_PRICE_ID ?? "";
   const user = await getSessionUser();
   // Hidden from everyone but the owner until MEMBERSHIP_PUBLIC=true.
-  if (!membershipVisibleTo(user?.email)) return <WaitlistPage perks={PERKS} />;
+  if (!membershipVisibleTo(user?.email)) return <WaitlistPage perks={PERKS} compare={COMPARE} />;
   const membership = user ? await getMembership(user.id) : null;
   const member = isActiveMember(membership);
   const price = process.env.MEMBERSHIP_PRICE_LABEL;
@@ -117,12 +100,6 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
               <div key={p.title} className="p-4 border rounded-sm" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
                 <div className="flex items-start justify-between gap-3 mb-1.5">
                   <div style={{ color: "#0E7080" }}><Icon name={p.icon} size={26} /></div>
-                  <span
-                    className="font-mono text-[0.6875rem] uppercase tracking-wide px-2 py-0.5 rounded-full border"
-                    style={p.live ? { color: "#0E7080", borderColor: "#0E7080" } : { color: "var(--text-on-ink-dim)", borderColor: "var(--border)" }}
-                  >
-                    {p.live ? "Live" : "Coming soon"}
-                  </span>
                 </div>
                 <div className="font-display font-bold text-lg leading-tight mb-1">{p.title}</div>
                 <p className="text-[0.85rem] leading-snug" style={{ color: "var(--text-body)" }}>{p.text}</p>
