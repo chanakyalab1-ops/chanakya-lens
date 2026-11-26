@@ -21,6 +21,7 @@ export function WaitlistPage({ perks, compare }: { perks: Perk[]; compare: Row[]
           </p>
           <div className="max-w-lg mx-auto">
             <WaitlistForm source="membership" />
+            <p className="text-[0.8rem] mt-3"><a href="/features" className="underline" style={{ color: 'var(--brand-soft)' }}>See every feature</a></p>
             <p className="text-[0.75rem] mt-3" style={{ color: 'var(--text-on-ink-dim)' }}>One email when it opens. No spam, and you can ignore it.</p>
           </div>
         </section>

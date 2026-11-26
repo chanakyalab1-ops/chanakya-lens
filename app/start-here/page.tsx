@@ -64,7 +64,7 @@ export default function StartHerePage() {
 
         <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>Keep it close</h2>
         <p className="text-[0.92rem] leading-relaxed mb-6" style={{ color: "var(--text-body)" }}>
-          Get the <Link href="/digest" className="underline">daily digest</Link> in your inbox, or add the site to your phone&apos;s home screen from your browser&apos;s share or menu button. See <Link href="/whats-new" className="underline">what&apos;s new</Link> for the latest changes.
+          Get the <Link href="/digest" className="underline">daily digest</Link> in your inbox, or add the site to your phone&apos;s home screen from your browser&apos;s share or menu button. See <Link href="/features" className="underline">every feature</Link>, or <Link href="/whats-new" className="underline">what&apos;s new</Link> for the latest changes.
         </p>
         <Link href="/" className="inline-block px-5 py-2.5 rounded-sm text-sm font-semibold text-white" style={{ background: "#0E7080", color: "#fff" }}>Read today&apos;s stories</Link>
       </main>

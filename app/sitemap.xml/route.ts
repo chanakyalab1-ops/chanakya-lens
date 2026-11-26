@@ -80,6 +80,11 @@ export async function GET() {
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://chanakyalens.com/features</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://chanakyalens.com/whats-new</loc>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
