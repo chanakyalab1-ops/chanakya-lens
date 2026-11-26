@@ -188,6 +188,12 @@ export function OffLensSection({
         </div>
       )}
 
+      {capped && (sorted.length > FREE_LIMIT || chipSources.length > FREE_LIMIT || missing.length > FREE_LIMIT) && (
+        <Link href="/membership" className="inline-block mb-5 font-mono text-[0.6875rem] uppercase tracking-widest underline" style={{ color: "var(--brand-soft)" }}>
+          See the full map · Lens+
+        </Link>
+      )}
+
       {(total > 0 || chipSources.length > 0) && (
         <p className="text-[0.6875rem] leading-snug mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
           This map shows only the sources we found for this story. A country listed as missing may still have covered it, in an outlet or language we did not see.{" "}
