@@ -23,8 +23,9 @@ export function EmailStoryButton({ slug, open, compact }: { slug: string; open: 
       .then((r) => r.json())
       .then((d: { enabled?: boolean; paid?: string }) => {
         if (off) return;
-        setShow(!!d.enabled || (open && true));
-        setLocked(d.paid === 'locked');
+        // Readers who can't use the tool yet see it as a locked Lens+ link, never the working button.
+        setShow(!!d.enabled || open);
+        setLocked(!d.enabled || d.paid === 'locked');
       })
       .catch(() => {});
     return () => {
