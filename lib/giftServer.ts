@@ -1,11 +1,12 @@
 import { supabaseServer } from "./supabase-server";
 import { apiBase, cleanSecret } from "./paddle";
 import { generateGiftCode, giftEmailHtml, giftPeriodEnd, GIFT_MONTHS, normalizeGiftCode } from "./gifts";
+import { cleanEmail } from "./waitlist";
 import { brevoConfigured, resendConfigured, sendEmail } from "./emailSend";
 import { sendAlert } from "./alerts";
 import { sendWelcomeEmail } from "./welcomeSend";
 
-export type PaddleTransaction = { id: string; customer_id?: string | null; custom_data?: { gift?: string } | null };
+export type PaddleTransaction = { id: string; customer_id?: string | null; custom_data?: { gift?: string; email?: string } | null };
 
 async function buyerEmail(customerId: string | null | undefined): Promise<string> {
   const key = cleanSecret(process.env.PADDLE_API_KEY ?? "");
@@ -27,7 +28,8 @@ export async function createGiftFromTransaction(txn: PaddleTransaction): Promise
   if (existing) return;
 
   const code = generateGiftCode();
-  const email = await buyerEmail(txn.customer_id);
+  // The address typed on our gift page rides along with the payment; Paddle's customer record is the backup.
+  const email = cleanEmail(txn.custom_data?.email) ?? (await buyerEmail(txn.customer_id));
   const { error } = await db.from("gift_codes").insert({ code, paddle_transaction_id: txn.id, buyer_email: email, months: GIFT_MONTHS });
   if (error) throw new Error(`Could not save gift code: ${error.message}`);
 
@@ -86,4 +88,17 @@ export async function redeemGiftCode(userId: string, rawCode: string): Promise<R
   }
   await sendWelcomeEmail(userId, { gift: true, endsAt: end.toISOString() });
   return { ok: true, endsAt: end.toISOString() };
+}
+
+// Sends a gift code (again) to an address. Owner tool; the code must already exist.
+export async function resendGiftCode(rawCode: string, toEmail: string): Promise<{ ok: boolean; error?: string }> {
+  const code = normalizeGiftCode(rawCode);
+  const to = cleanEmail(toEmail);
+  if (!code || !to) return { ok: false, error: "Check the code and the email address." };
+  const { data } = await supabaseServer().from("gift_codes").select("code").eq("code", code).maybeSingle();
+  if (!data) return { ok: false, error: "No such code." };
+  const provider = brevoConfigured() ? "brevo" : resendConfigured() ? "resend" : null;
+  if (!provider) return { ok: false, error: "No email provider is set up." };
+  const r = await sendEmail({ to, subject: "Your Lens+ gift code", html: giftEmailHtml(code) }, provider);
+  return r.ok ? { ok: true } : { ok: false, error: "The email provider refused it." };
 }
