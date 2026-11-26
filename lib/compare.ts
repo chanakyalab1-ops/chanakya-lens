@@ -13,7 +13,7 @@ export type SideSummary = {
   total: number;
   last30: number;
   developing: number;
-  avgQuality: number | null;
+  avgSources: number | null;
   topCategories: [string, number][];
   topSourceCountries: [string, number][];
   newest: string | null;
@@ -29,8 +29,7 @@ export function summarizeSide(stories: Story[], now: number = Date.now()): SideS
   const srcs = new Map<string, number>();
   let last30 = 0;
   let developing = 0;
-  let q = 0;
-  let qn = 0;
+  let srcTotal = 0;
   let newest: number | null = null;
   for (const s of stories) {
     const t = new Date(s.publishedAt).getTime();
@@ -39,10 +38,7 @@ export function summarizeSide(stories: Story[], now: number = Date.now()): SideS
       if (newest === null || t > newest) newest = t;
     }
     if (s.status === "developing") developing++;
-    if (typeof s.qualityScore === "number") {
-      q += s.qualityScore;
-      qn++;
-    }
+    srcTotal += s.sources?.length ?? 0;
     if (s.category) cats.set(s.category, (cats.get(s.category) ?? 0) + 1);
     for (const src of s.sources ?? []) {
       if (src.sourceCountry) srcs.set(src.sourceCountry, (srcs.get(src.sourceCountry) ?? 0) + 1);
@@ -52,7 +48,7 @@ export function summarizeSide(stories: Story[], now: number = Date.now()): SideS
     total: stories.length,
     last30,
     developing,
-    avgQuality: qn ? Math.round(q / qn) : null,
+    avgSources: stories.length ? Math.round((srcTotal / stories.length) * 10) / 10 : null,
     topCategories: top(cats, 3),
     topSourceCountries: top(srcs, 3),
     newest: newest === null ? null : new Date(newest).toISOString(),
