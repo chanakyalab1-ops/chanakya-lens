@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { insertDigestSignup, readRefCookie } from "@/lib/referral";
 
 export default function StickyDigestBar() {
   const [email, setEmail] = useState("");
@@ -26,10 +27,7 @@ export default function StickyDigestBar() {
     e.preventDefault();
     if (!email.trim()) return;
     setStatus("loading");
-    const { error } = await supabase.from("digest_signups").insert({
-      email: email.trim(),
-      regions: [],
-    });
+    const { error } = await insertDigestSignup(supabase, { email: email.trim(), regions: [] }, readRefCookie(document.cookie));
     if (error && error.code !== "23505") {
       setStatus("error");
       return;
