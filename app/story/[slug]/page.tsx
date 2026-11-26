@@ -12,6 +12,7 @@ import { SaveButton } from "@/components/SaveButton";
 import { EmailStoryButton } from "@/components/EmailStoryButton";
 import { WatchButton } from "@/components/WatchButton";
 import { getStoryUpdates } from "@/lib/storyUpdates";
+import { getWatchingNext } from "@/lib/watchingNext";
 import { ReadMarker } from "@/components/ReadMarker";
 import { ConnectionsSection } from "@/components/ConnectionsSection";
 import { connectionsFor } from "@/lib/connections";
@@ -73,7 +74,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
   const hubs = hubsForStory(story, allStories);
   const connections = connectionsFor(story, allStories);
-  const updates = await getStoryUpdates(slug);
+  const [updates, watchingNext] = await Promise.all([getStoryUpdates(slug), getWatchingNext(slug)]);
 
   const schemaData = {
     "@context": "https://schema.org",
@@ -404,6 +405,22 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                 </Link>
               ))}
             </div>
+          </section>
+        )}
+
+        {watchingNext.length > 0 && (
+          <section className="mt-10 md:mt-2 md:max-w-[42rem] border-l-4 p-4" style={{ borderColor: "var(--brand-soft)", background: "var(--ink-card)" }}>
+            <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-2" style={{ color: "var(--brand-soft)" }}>
+              What we&apos;re watching next
+            </h2>
+            <ul className="list-disc pl-5 space-y-1.5 text-[0.92rem] leading-snug">
+              {watchingNext.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+            <p className="text-[0.6875rem] mt-3" style={{ color: "var(--text-on-ink-dim)" }}>
+              Things that could change this story. These are signals to look for, not predictions.
+            </p>
           </section>
         )}
 

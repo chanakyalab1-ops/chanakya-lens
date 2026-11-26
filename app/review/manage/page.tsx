@@ -1,5 +1,6 @@
 import { supabaseServer } from '@/lib/supabase-server';
 import { ManageBoard } from './ManageBoard';
+import { getWatchingNextMap } from '@/lib/watchingNext';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,5 +20,5 @@ export default async function ManagePage() {
     );
   }
 
-  return <ManageBoard stories={stories ?? []} />;
+  return <ManageBoard stories={stories ?? []} watchingNext={await getWatchingNextMap()} />;
 }

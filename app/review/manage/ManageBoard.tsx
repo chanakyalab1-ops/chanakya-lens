@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   sendUpdateAlert,
   postStoryUpdate,
+  saveWatchingNext,
   unpublishStory,
   updatePublishedStory,
   type Confidence,
@@ -54,7 +55,7 @@ function formatDate(iso: string) {
   });
 }
 
-export function ManageBoard({ stories }: { stories: PublishedStory[] }) {
+export function ManageBoard({ stories, watchingNext = {} }: { stories: PublishedStory[]; watchingNext?: Record<string, string[]> }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState<PublishedStory | null>(null);
@@ -159,6 +160,7 @@ export function ManageBoard({ stories }: { stories: PublishedStory[] }) {
         <EditPublishedModal
           story={editing}
           others={stories.filter((s) => s.slug !== editing.slug).slice(0, 80)}
+          watching={watchingNext[editing.slug] ?? []}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
@@ -173,11 +175,13 @@ export function ManageBoard({ stories }: { stories: PublishedStory[] }) {
 function EditPublishedModal({
   story,
   others,
+  watching,
   onClose,
   onSaved,
 }: {
   story: PublishedStory;
   others: PublishedStory[];
+  watching: string[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -198,6 +202,8 @@ function EditPublishedModal({
   const [alertNote, setAlertNote] = useState<string | null>(null);
   const [alerting, setAlerting] = useState(false);
 
+  const [watchText, setWatchText] = useState(watching.join('\n'));
+  const [watchNote, setWatchNote] = useState<string | null>(null);
   const [changeText, setChangeText] = useState('');
   const [changeAlert, setChangeAlert] = useState(true);
   const [changeNote, setChangeNote] = useState<string | null>(null);
@@ -209,6 +215,12 @@ function EditPublishedModal({
       setChangeText('');
       setChangeNote(changeAlert ? `Posted. Alert sent to ${res.data?.sent ?? 0}.` : 'Posted.');
     } else setChangeNote(res.error);
+  }
+
+  async function handleWatchNext() {
+    setWatchNote(null);
+    const res = await saveWatchingNext(story.slug, watchText);
+    setWatchNote(res.ok ? 'Saved.' : res.error);
   }
 
   async function handleAlert() {
@@ -443,6 +455,14 @@ function EditPublishedModal({
             <label className="flex items-center gap-1.5"><input type="checkbox" checked={changeAlert} onChange={(e) => setChangeAlert(e.target.checked)} /> Alert followers and watchers</label>
             <button onClick={handleChange} disabled={!changeText.trim()} className="underline hover:text-[#EDE7DA] disabled:opacity-40">Post update</button>
             {changeNote && <span>{changeNote}</span>}
+          </div>
+        </div>
+        <div className="pt-4 border-t border-white/10">
+          <label className="block text-xs text-[#8A93A6] mb-1">What we&apos;re watching next (one per line, up to 5; empty removes it)</label>
+          <textarea value={watchText} onChange={(e) => setWatchText(e.target.value)} rows={4} className="w-full rounded border border-white/15 bg-transparent p-2 text-sm" placeholder={'The vote scheduled for Friday\nWhether shipping insurers raise rates'} />
+          <div className="flex items-center gap-3 mt-2 text-xs text-[#8A93A6]">
+            <button onClick={handleWatchNext} className="underline hover:text-[#EDE7DA]">Save list</button>
+            {watchNote && <span>{watchNote}</span>}
           </div>
         </div>
         <div className="flex items-center justify-between gap-3 pt-4 border-t border-white/10">

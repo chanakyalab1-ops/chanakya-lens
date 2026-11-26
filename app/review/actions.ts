@@ -11,6 +11,7 @@ import { selectImageForStory } from '@/lib/imageSelection';
 import { notifyForStory } from '@/lib/push';
 import { resolveThreadRoot } from '@/lib/threadRules';
 import { cleanUpdateNote } from '@/lib/storyUpdates';
+import { parseWatchingNext } from '@/lib/watchingNext';
 
 // Every path that creates a draft holds it at workflow_status='fact_checking'
 // (invisible to the /review queue) and fires this so a reviewer never sees
@@ -605,6 +606,22 @@ export async function postStoryUpdate(slug: string, note: string, alert: boolean
     refreshStoryPage(slug);
     if (!alert) return { ok: true, data: { sent: 0 } };
     return sendUpdateAlert(slug);
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
+// Sets the short "what we're watching next" list shown on a story (one item per line).
+export async function saveWatchingNext(slug: string, raw: string): Promise<ActionResult> {
+  try {
+    const items = parseWatchingNext(raw);
+    const db = supabaseServer();
+    const { error } = items.length
+      ? await db.from('story_watching_next').upsert({ slug, items, updated_at: new Date().toISOString() })
+      : await db.from('story_watching_next').delete().eq('slug', slug);
+    if (error) throw new Error('Could not save. Has the SQL been run?');
+    refreshStoryPage(slug);
+    return { ok: true };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
