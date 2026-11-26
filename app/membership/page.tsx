@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 const FAQ: { q: string; a: string }[] = [
   { q: "What do I get today?", a: "Everything on this page is live the day you join: an unlimited Watchlist, a digest built from it, Ask the Lens, the Reading Map, Compare, single-story alerts and more. New tools are announced on the What's new page." },
-  { q: "Can I cancel?", a: "Yes, any time. Open your account and choose Manage billing. You keep your membership until the end of the period you have paid for. Refunds are limited to what the law and Paddle's rules require; see our refund policy at chanakyalens.com/refund." },
+  { q: "Can I cancel?", a: "Yes, any time. Open your account and choose Manage billing. You keep your membership until the end of the period you have paid for. Refund requests are handled under Paddle's refund policy; see our refund page at chanakyalens.com/refund." },
   { q: "Who handles the payment?", a: "Paddle, our payment partner. It processes your card, collects any sales tax, and sends your receipt. We never see your card details." },
   { q: "Will every story stay free?", a: "Yes. Lens+ members back the work and get extra tools. Reading the news is never locked." },
 ];

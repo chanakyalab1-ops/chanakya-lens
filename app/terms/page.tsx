@@ -61,7 +61,7 @@ export default function TermsPage() {
         <div className="space-y-8">
           <Section title="What Chanakya Lens is">
             <P>
-              Chanakya Lens publishes geopolitical news analysis: factual summaries, sourced coverage comparisons and strategic commentary. By using this site you agree to these terms. If you don&apos;t agree, please don&apos;t use it.
+              These terms are between you and Chanakya Lens, which runs chanakyalens.com (&ldquo;we&rdquo;, &ldquo;us&rdquo;). Chanakya Lens publishes geopolitical news analysis: factual summaries, sourced coverage comparisons and strategic commentary. By using this site you agree to these terms. If you don&apos;t agree, please don&apos;t use it.
             </P>
           </Section>
 
@@ -108,7 +108,7 @@ export default function TermsPage() {
             <List
               items={[
                 "Memberships renew automatically each month or year until you cancel. You can cancel at any time from your account, and you keep access until the end of the period you have paid for.",
-                <>Payments are taken by Paddle, our payment partner and seller of record, which also collects any tax and sends your receipt. Our <Link href="/refund" className="underline" style={heading}>refund and cancellation policy</Link> explains refunds.</>,
+                <>Our order process is conducted by our online reseller Paddle.com. Paddle.com is the Merchant of Record for all our orders. Paddle takes your payment, collects any tax and sends your receipt, and its buyer terms apply to your purchase. Our <Link href="/refund" className="underline" style={heading}>refund and cancellation policy</Link> explains refunds.</>,
                 "A gift code gives one year of Lens+ to whoever redeems it, once. Please do not resell codes or share a membership between several people.",
                 "Ask the Lens answers questions using our own stories and an AI model. Answers can be wrong or out of date, they are not advice, and you should check the stories they cite.",
                 "We may add, change or retire member tools over time. If we change the price, we will tell you before it applies to your next renewal.",

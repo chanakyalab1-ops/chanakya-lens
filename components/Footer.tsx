@@ -51,7 +51,7 @@ export default function Footer() {
         </div>
         <div className="pt-6 border-t flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
           <span className="font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
-            © 2026 Chanakya Labs. All rights reserved.
+            © 2026 Chanakya Lens. All rights reserved.
           </span>
           <span className="font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
             Market prices are indicative only. Not investment advice.
