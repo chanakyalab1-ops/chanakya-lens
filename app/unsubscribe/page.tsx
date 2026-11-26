@@ -7,12 +7,13 @@ import { Suspense } from "react";
 function UnsubscribeContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") ?? "";
-  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const token = searchParams.get("t") ?? "";
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error" | "sent">("idle");
 
   async function handleUnsubscribe() {
     setStatus("loading");
     try {
-      const res = await fetch(`/api/unsubscribe?email=${encodeURIComponent(email)}`, {
+      const res = await fetch(`/api/unsubscribe?email=${encodeURIComponent(email)}&t=${encodeURIComponent(token)}`, {
         method: "POST",
       });
       if (!res.ok) throw new Error("Failed");
@@ -24,6 +25,29 @@ function UnsubscribeContent() {
 
   if (!email) {
     return <p style={{ color: "var(--text-body)" }}>Missing email address.</p>;
+  }
+
+  if (!token && status !== "done") {
+    return (
+      <>
+        <h1 className="font-display font-bold text-2xl mb-4">Unsubscribe from the digest</h1>
+        <p className="text-[0.9rem] mb-6" style={{ color: "var(--text-body)" }}>
+          This link is out of date. We will email a fresh unsubscribe link to {email}.
+        </p>
+        <button
+          onClick={async () => {
+            setStatus("loading");
+            await fetch("/api/unsubscribe/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) }).catch(() => {});
+            setStatus("sent");
+          }}
+          disabled={status === "loading" || status === "sent"}
+          className="px-6 py-2.5 rounded-full font-semibold text-sm"
+          style={{ background: "var(--developing)", color: "white" }}
+        >
+          {status === "sent" ? "Check your inbox" : "Email me a link"}
+        </button>
+      </>
+    );
   }
 
   if (status === "done") {

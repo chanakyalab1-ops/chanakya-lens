@@ -23,6 +23,7 @@ type Row = {
   breaking_only: boolean | null;
   sent_day: string | null;
   sent_today: number | null;
+  user_id?: string | null;
 };
 
 export type PushResult = { sent: number; skipped: number; removed: number; failed: number };
@@ -34,8 +35,19 @@ export async function notifyForStory(story: PushStory, kind: "new" | "update"): 
   if (!configure()) return result;
 
   const supabase = supabaseServer();
-  const { data, error } = await supabase.from("push_subscriptions").select("id, endpoint, p256dh, auth, topics, breaking_only, sent_day, sent_today").limit(5000);
+  const { data, error } = await supabase.from("push_subscriptions").select("id, endpoint, p256dh, auth, topics, breaking_only, sent_day, sent_today, user_id").limit(5000);
   if (error || !data) return result;
+
+  // Readers who asked to watch this exact story get its updates whatever else they follow.
+  const watchers = new Set<string>();
+  if (kind === "update") {
+    try {
+      const { data: w } = await supabase.from("story_watches").select("user_id").eq("slug", story.slug);
+      for (const r of (w ?? []) as { user_id: string }[]) watchers.add(r.user_id);
+    } catch {
+      // table not created yet
+    }
+  }
 
   const payload = JSON.stringify(buildPayload(story, kind));
   const rows = data as Row[];
@@ -44,7 +56,8 @@ export async function notifyForStory(story: PushStory, kind: "new" | "update"): 
     await Promise.all(
       rows.slice(i, i + 25).map(async (row) => {
         const prefs: PushPrefs = { breakingOnly: !!row.breaking_only, topics: row.topics ?? [] };
-        if (!matchesPrefs(story, prefs) || !canSendToday(row)) {
+        const watching = !!row.user_id && watchers.has(row.user_id);
+        if (!watching && (!matchesPrefs(story, prefs) || !canSendToday(row))) {
           result.skipped++;
           return;
         }

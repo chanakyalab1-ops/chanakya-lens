@@ -47,12 +47,12 @@ export default async function LensEntityPage({ params }: { params: Promise<{ slu
     <>
       <NavDrawer />
       <main className="max-w-6xl mx-auto px-5 pt-6 pb-16">
-        <Link href="/lens" className="font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--text-on-ink-dim)" }}>
+        <Link href="/lens" className="font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--text-on-ink-dim)" }}>
           ← The Lens
         </Link>
 
         <header className="mt-4 mb-7 max-w-2xl">
-          <div className="font-mono text-[0.68rem] uppercase tracking-wide mb-2.5" style={{ color: "var(--brand-soft)" }}>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-wide mb-2.5" style={{ color: "var(--brand-soft)" }}>
             {KIND_LABEL[entity.kind]}
           </div>
           <h1 className="font-display font-extrabold uppercase text-4xl md:text-5xl leading-none" style={{ color: "var(--text-on-ink)" }}>
@@ -84,7 +84,7 @@ export default async function LensEntityPage({ params }: { params: Promise<{ slu
             <section>
               <h2 className="font-display font-bold text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
                 Latest coverage
-                <span className="ml-2 font-mono text-[0.62rem] font-normal" style={{ color: "var(--text-on-ink-dim)" }}>{matched.length}</span>
+                <span className="ml-2 font-mono text-[0.6875rem] font-normal" style={{ color: "var(--text-on-ink-dim)" }}>{matched.length}</span>
               </h2>
               {shown.length === 0 ? (
                 <p className="text-[0.9rem]" style={{ color: "var(--text-on-ink-dim)" }}>
@@ -99,7 +99,7 @@ export default async function LensEntityPage({ params }: { params: Promise<{ slu
                     {shown.map((s) => <CompactCard key={s.slug} story={s} />)}
                   </div>
                   {matched.length > SHOWN && (
-                    <p className="font-mono text-[0.68rem] mt-3" style={{ color: "var(--text-on-ink-dim)" }}>
+                    <p className="font-mono text-[0.6875rem] mt-3" style={{ color: "var(--text-on-ink-dim)" }}>
                       Showing the latest {SHOWN} of {matched.length}.
                     </p>
                   )}
@@ -118,11 +118,11 @@ export default async function LensEntityPage({ params }: { params: Promise<{ slu
                 <div className="space-y-2.5">
                   {coverage.map(([country, n]) => (
                     <div key={country} className="flex items-center gap-3">
-                      <span className="font-mono text-[0.68rem] w-24 shrink-0 truncate" style={{ color: "var(--text-body)" }}>{country}</span>
+                      <span className="font-mono text-[0.6875rem] w-24 shrink-0 truncate" style={{ color: "var(--text-body)" }}>{country}</span>
                       <div className="flex-1 rounded-full overflow-hidden h-1.5" style={{ background: "var(--border)" }}>
                         <div className="h-full rounded-full" style={{ width: `${Math.round((n / totalSources) * 100)}%`, background: "var(--brand-soft)" }} />
                       </div>
-                      <span className="font-mono text-[0.65rem] w-6 text-right shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>{n}</span>
+                      <span className="font-mono text-[0.6875rem] w-6 text-right shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>{n}</span>
                     </div>
                   ))}
                 </div>
@@ -131,7 +131,7 @@ export default async function LensEntityPage({ params }: { params: Promise<{ slu
 
             {related.length > 0 && (
               <section>
-                <h2 className="font-mono text-[0.62rem] uppercase tracking-widest mb-2" style={{ color: "var(--text-on-ink-dim)" }}>Related</h2>
+                <h2 className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: "var(--text-on-ink-dim)" }}>Related</h2>
                 <div className="flex flex-wrap gap-2">
                   {related.map((r) => (
                     <Link

@@ -96,6 +96,11 @@ function sleep(ms: number) {
 }
 
 export async function POST(req: NextRequest) {
+  // Only our own pipeline calls this; it shares the cron secret.
+  if (!process.env.CRON_SECRET || req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   // story_drafts has no `id` column -- slug is its identifier everywhere
   // else in this codebase (publishDraft, rejectDraft, updateDraft), so this
   // route takes one too.

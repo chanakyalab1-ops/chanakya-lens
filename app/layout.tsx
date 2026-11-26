@@ -21,8 +21,8 @@ const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
-const SITE_TITLE = "Chanakya Lens -- stay ahead of the map";
-const SITE_DESCRIPTION = "Geopolitics traced to you. Small events, real chains, plausible impact -- not forecasts.";
+const SITE_TITLE = "Chanakya Lens | Stay ahead of the map";
+const SITE_DESCRIPTION = "Geopolitics traced to you. Small events, real chains, plausible impact, not forecasts.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://chanakyalens.com"),
@@ -96,6 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('cl_text');if(t&&/^1[0-3][0-9]%$/.test(t))document.documentElement.style.fontSize=t}catch(e){}" }} />
         {children}
         <Footer />
         <StickyDigestBar />

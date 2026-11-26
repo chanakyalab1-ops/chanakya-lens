@@ -102,7 +102,7 @@ export default function AccountLoginPage() {
 
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-            <span className="font-mono text-[0.62rem] uppercase tracking-wide" style={{ color: 'var(--text-on-ink-dim)' }}>or</span>
+            <span className="font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: 'var(--text-on-ink-dim)' }}>or</span>
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
           </div>
 
@@ -141,7 +141,7 @@ export default function AccountLoginPage() {
               type="submit"
               disabled={loading}
               className="w-full py-2 rounded-sm font-medium disabled:opacity-40"
-              style={{ background: 'var(--brand-soft)', color: 'var(--ink)' }}
+              style={{ background: 'var(--brand-soft)', color: 'var(--on-brand)' }}
             >
               {loading ? 'Working...' : mode === 'signin' ? 'Sign in' : 'Create account'}
             </button>

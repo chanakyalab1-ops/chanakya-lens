@@ -38,7 +38,7 @@ export default function DigestSignup() {
   if (status === "done") {
     return (
       <p className="text-sm" style={{ color: "var(--brand-soft)" }}>
-        You are on the list — we will email you when it launches.
+        You are on the list. We will email you when it launches.
       </p>
     );
   }
@@ -51,10 +51,10 @@ export default function DigestSignup() {
             type="button"
             key={topic}
             onClick={() => toggleTopic(topic)}
-            className="font-mono text-[0.66rem] uppercase tracking-wide rounded-full border px-3 py-1.5 transition-colors"
+            className="font-mono text-[0.6875rem] uppercase tracking-wide rounded-full border px-3 py-1.5 transition-colors"
             style={
               selectedTopics.includes(topic)
-                ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
+                ? { color: "var(--on-brand)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
                 : { color: "var(--text-on-ink)", borderColor: "var(--border)", background: "transparent" }
             }
           >
@@ -80,17 +80,17 @@ export default function DigestSignup() {
           type="submit"
           disabled={status === "loading"}
           className="rounded-full px-5 py-2 text-sm font-semibold"
-          style={{ background: "var(--brand-soft)", color: "var(--ink)" }}
+          style={{ background: "var(--brand-soft)", color: "var(--on-brand)" }}
         >
           {status === "loading" ? "..." : "Notify me"}
         </button>
       </div>
-      <p className="text-[0.68rem] text-center" style={{ color: "var(--text-on-ink-dim)" }}>
+      <p className="text-[0.6875rem] text-center" style={{ color: "var(--text-on-ink-dim)" }}>
         By subscribing you agree to our <Link href="/privacy" className="underline">Privacy Policy</Link>. Unsubscribe anytime.
       </p>
       {status === "error" && (
         <p className="text-xs text-center" style={{ color: "var(--developing)" }}>
-          Something went wrong — try again.
+          Something went wrong. Try again.
         </p>
       )}
     </form>

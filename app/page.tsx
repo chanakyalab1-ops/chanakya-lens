@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import NavDrawer from "@/components/NavDrawer";
 import Feed from "@/components/Feed";
 import FirstVisitStrip from "@/components/FirstVisitStrip";
+import WaitlistStrip from "@/components/WaitlistStrip";
 import LiveMarketTicker from "@/components/LiveMarketTicker";
 import { filterFreshRows } from "@/components/MarketTicker";
 import { getAllStories } from "@/lib/stories";
@@ -14,7 +15,7 @@ import { getMarketRows } from "@/lib/marketData";
 // which is a duplicate URL. Name the homepage explicitly. A page-level
 // `alternates` replaces the layout's wholesale, so the RSS link is repeated.
 export const metadata: Metadata = {
-  title: "Chanakya Lens -- Geopolitics traced to what it means for you",
+  title: "Chanakya Lens | Geopolitics traced to what it means for you",
   description:
     "Daily geopolitics news and analysis. Each story traces a world event to its real-world chain of impact and shows which countries covered it, and how.",
   alternates: { canonical: "https://chanakyalens.com", types: { "application/rss+xml": "/rss.xml" } },
@@ -37,11 +38,12 @@ export default async function FeedPage() {
       <h1 className="sr-only">Chanakya Lens: geopolitics traced to what it means for you</h1>
 
       <FirstVisitStrip />
+      {process.env.MEMBERSHIP_PUBLIC !== "true" && <WaitlistStrip />}
 
       <LiveMarketTicker initialRows={filterFreshRows(marketRows)} />
 
       <Suspense fallback={null}>
-        <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} todayCount={recent.stories.length} windowLabel={recent.label} trending={trending} lensWeek={lensWeek} />
+        <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} todayCount={recent.stories.length} windowLabel={recent.label} trending={trending} lensWeek={lensWeek} toolsOpen={process.env.MEMBERSHIP_PUBLIC === "true"} />
       </Suspense>
     </>
   );

@@ -29,6 +29,7 @@ export default function NotifyPanel({ vapidKey, onClose, onSubscribedChange }: {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [needsInstall, setNeedsInstall] = useState(false);
+  const [watchlist, setWatchlist] = useState<PushTopic[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,6 +41,10 @@ export default function NotifyPanel({ vapidKey, onClose, onSubscribedChange }: {
         // no saved preferences
       }
       if (isIosBrowserTab() && !cancelled) setNeedsInstall(true);
+      if (/(^|;\s*)sb-[^=]*-auth-token/.test(document.cookie)) {
+        const me = (await fetch('/api/me', { cache: 'no-store' }).then((r) => r.json())) as { enabled?: boolean; interests?: PushTopic[] };
+        if (me.enabled && !cancelled) setWatchlist(me.interests ?? []);
+      }
       const reg = await navigator.serviceWorker.getRegistration('/sw.js');
       const sub = await reg?.pushManager.getSubscription();
       if (!cancelled) setSubscribed(!!sub && Notification.permission === 'granted');
@@ -52,6 +57,9 @@ export default function NotifyPanel({ vapidKey, onClose, onSubscribedChange }: {
   const has = (t: PushTopic) => prefs.topics.some((x) => x.kind === t.kind && x.slug === t.slug);
   const toggleTopic = (t: PushTopic) =>
     setPrefs((p) => ({ ...p, topics: has(t) ? p.topics.filter((x) => !(x.kind === t.kind && x.slug === t.slug)) : [...p.topics, t] }));
+
+  const addWatchlist = () =>
+    setPrefs((p) => ({ ...p, topics: [...p.topics, ...watchlist.filter((w) => !p.topics.some((x) => x.kind === w.kind && x.slug === w.slug))] }));
 
   async function save() {
     setMessage(null);
@@ -114,7 +122,7 @@ export default function NotifyPanel({ vapidKey, onClose, onSubscribedChange }: {
       key={label}
       onClick={onClick}
       aria-pressed={on}
-      className="font-mono text-[0.62rem] uppercase tracking-wide rounded-full border px-2.5 py-1.5"
+      className="font-mono text-[0.6875rem] uppercase tracking-wide rounded-full border px-2.5 py-1.5"
       style={on ? { color: '#fff', background: '#0E7080', borderColor: '#0E7080' } : { borderColor: 'var(--border)' }}
     >
       {on ? '✓ ' : ''}
@@ -154,12 +162,20 @@ export default function NotifyPanel({ vapidKey, onClose, onSubscribedChange }: {
             </span>
           </label>
 
-          <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>And these topics</div>
+          {watchlist.length > 0 && (
+            <button onClick={addWatchlist} className="w-full text-left p-3 border mb-3 text-[0.85rem]" style={{ borderColor: '#0E7080' }}>
+              <b>Alert me for my Watchlist</b>
+              <br />
+              <span className="text-[0.75rem]" style={{ color: 'var(--text-on-ink-dim)' }}>Adds your {watchlist.length} watched items to the topics below</span>
+            </button>
+          )}
+
+          <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>And these topics</div>
           <div className="flex flex-wrap gap-1.5 mb-3">
             {PUSH_CATEGORIES.map((c) => chip(c, has({ kind: 'category', slug: c }), () => toggleTopic({ kind: 'category', slug: c })))}
           </div>
 
-          <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>Places and themes</div>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>Places and themes</div>
           <div className="flex flex-wrap gap-1.5 mb-3">
             {[...SYSTEMS, ...THEMES].map((e) => chip(e.name, has({ kind: 'lens', slug: e.slug }), () => toggleTopic({ kind: 'lens', slug: e.slug })))}
           </div>

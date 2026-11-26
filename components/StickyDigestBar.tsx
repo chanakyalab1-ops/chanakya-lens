@@ -48,7 +48,7 @@ export default function StickyDigestBar() {
       {status === "done" ? (
         <div className="flex items-center justify-between w-full">
           <p className="text-sm font-mono" style={{ color: "var(--brand-soft)" }}>
-            You are on the list — first digest lands tomorrow morning.
+            You are on the list. First digest lands tomorrow morning.
           </p>
           <button onClick={() => setDismissed(true)} className="text-[0.7rem] font-mono hover:opacity-80" style={{ color: "var(--text-on-ink-dim)" }}>
             Dismiss
@@ -57,11 +57,11 @@ export default function StickyDigestBar() {
       ) : (
         <>
           <div className="hidden sm:block shrink-0">
-            <p className="font-mono text-[0.68rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
+            <p className="font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
               Stay ahead of the map.
             </p>
             <p className="text-[0.72rem]" style={{ color: "var(--text-on-ink-dim)" }}>
-              Daily geopolitics digest — free.
+              Daily geopolitics digest, free.
             </p>
           </div>
           <form onSubmit={handleSubmit} className="flex flex-1 gap-2 max-w-md">
@@ -79,7 +79,7 @@ export default function StickyDigestBar() {
               type="submit"
               disabled={status === "loading"}
               className="rounded-sm px-4 py-1.5 text-sm font-semibold shrink-0"
-              style={{ background: "var(--brand-soft)", color: "var(--ink)" }}
+              style={{ background: "var(--brand-soft)", color: "var(--on-brand)" }}
             >
               {status === "loading" ? "..." : "Subscribe"}
             </button>

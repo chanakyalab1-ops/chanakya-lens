@@ -22,7 +22,7 @@ export function SubscribeButton({
   sandbox,
   email,
   userId,
-  label = 'Become a Strategist',
+  label = 'Upgrade to Lens+',
   wide = false,
 }: {
   token: string;

@@ -17,7 +17,7 @@ export default async function OffLensPage() {
       <NavDrawer />
       <article className="max-w-6xl mx-auto px-5 pt-7 pb-16">
         <div className="max-w-2xl">
-          <div className="font-mono text-[0.68rem] uppercase tracking-wide mb-3.5" style={{ color: "var(--brand-soft)" }}>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-wide mb-3.5" style={{ color: "var(--brand-soft)" }}>
             Methodology
           </div>
           <h1 className="mb-5">
@@ -49,7 +49,7 @@ export default async function OffLensPage() {
         <section>
           <h2 className="font-display font-bold text-lg mb-4" style={{ color: "var(--brand-soft)" }}>
             Stories with a coverage or framing gap
-            <span className="ml-2 font-mono text-[0.62rem] font-normal" style={{ color: "var(--text-on-ink-dim)" }}>
+            <span className="ml-2 font-mono text-[0.6875rem] font-normal" style={{ color: "var(--text-on-ink-dim)" }}>
               {offLensStories.length}
             </span>
           </h2>
@@ -66,7 +66,7 @@ export default async function OffLensPage() {
                 className="block rounded-sm border p-4 hover:opacity-90"
                 style={{ background: "var(--surface)", borderColor: "var(--border)" }}
               >
-                <div className="font-mono text-[0.62rem] uppercase tracking-wide mb-2" style={{ color: "var(--brand-soft)" }}>
+                <div className="font-mono text-[0.6875rem] uppercase tracking-wide mb-2" style={{ color: "var(--brand-soft)" }}>
                   {story.category}
                 </div>
                 <h3 className="font-display font-bold text-base leading-tight mb-2">{story.headline}</h3>
@@ -82,7 +82,7 @@ export default async function OffLensPage() {
                 >
                   {story.offLens}
                 </p>
-                <div className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+                <div className="font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
                   Read full analysis →
                 </div>
               </Link>
@@ -93,7 +93,7 @@ export default async function OffLensPage() {
         <div className="mt-9">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80"
+            className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80"
             style={{ color: "var(--text-on-ink-dim)" }}
           >
             Back to feed

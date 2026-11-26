@@ -14,6 +14,7 @@ const REGIONS = ["Asia", "Americas", "Europe", "Middle East", "Africa"];
 export default function NavDrawer() {
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [tools, setTools] = useState(false);
   const [email, setEmail] = useState("");
   const [subStatus, setSubStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const ref = useRef<HTMLDivElement>(null);
@@ -21,6 +22,12 @@ export default function NavDrawer() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setIsAdmin(data.user?.email === ADMIN_EMAIL);
+      if (data.user) {
+        fetch("/api/me", { cache: "no-store" })
+          .then((r) => r.json())
+          .then((d: { enabled?: boolean }) => setTools(!!d.enabled))
+          .catch(() => {});
+      }
     });
   }, []);
 
@@ -50,8 +57,8 @@ export default function NavDrawer() {
         <div className="justify-self-start hidden md:block">
           <ThemeSegmentedControl />
         </div>
-        <Link href="/" className="flex items-center gap-2 md:gap-3 md:justify-self-center">
-          <Image src="/logo-mark.png" alt="Chanakya Lens" width={40} height={40} className="rounded-full w-8 h-8 md:w-10 md:h-10" />
+        <Link prefetch={false} href="/" className="flex items-center gap-2 md:gap-3 md:justify-self-center">
+          <Image src="/logo-mark.png" alt="" width={40} height={40} className="rounded-full w-8 h-8 md:w-10 md:h-10" />
           <span className="font-display text-lg md:text-2xl font-extrabold uppercase tracking-wide whitespace-nowrap">
             Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
           </span>
@@ -63,7 +70,7 @@ export default function NavDrawer() {
           </Suspense>
           <div className="md:hidden"><ThemeToggle /></div>
           <NotifyBell />
-          <Link href="/account" className="hidden md:inline-block font-mono text-[0.68rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
+          <Link href="/account" className="hidden md:inline-block font-mono text-[0.6875rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
             Account
           </Link>
           <button
@@ -85,9 +92,10 @@ export default function NavDrawer() {
         >
           <div className="max-w-7xl mx-auto px-5 py-6 grid grid-cols-2 md:grid-cols-5 gap-6">
             <div>
-              <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Read</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Read</div>
               <div className="space-y-3">
-                <Link href="/" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Latest stories</Link>
+                {tools && <Link href="/tools" onClick={() => setOpen(false)} className="block text-sm font-semibold hover:opacity-60" style={{ color: "var(--brand-soft)" }}>Your tools</Link>}
+                <Link prefetch={false} href="/" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Latest stories</Link>
                 <Link href="/today" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Today&apos;s Signal</Link>
                 <Link href="/off-lens" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Off-Lens</Link>
                 <Link href="/lens" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>The Lens</Link>
@@ -95,16 +103,16 @@ export default function NavDrawer() {
               </div>
             </div>
             <div>
-              <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Regions</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Regions</div>
               <div className="space-y-3">
-                <Link href="/regions" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>All regions</Link>
+                <Link prefetch={false} href="/regions" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>All regions</Link>
                 {REGIONS.map((r) => (
                   <Link key={r} href="/regions" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-body)" }}>{r}</Link>
                 ))}
               </div>
             </div>
             <div>
-              <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Follow</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Follow</div>
               <div className="space-y-3">
                 <a href="https://www.instagram.com/chanakya.lab/" target="_blank" rel="noreferrer" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Instagram</a>
                 <a href="https://www.youtube.com/@Chanakya_lab" target="_blank" rel="noreferrer" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>YouTube</a>
@@ -112,7 +120,7 @@ export default function NavDrawer() {
               </div>
             </div>
             <div>
-              <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>About</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>About</div>
               <div className="space-y-3">
                 <Link href="/about" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Our approach</Link>
                 <Link href="/how-we-rate" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>How we rate this</Link>
@@ -123,12 +131,12 @@ export default function NavDrawer() {
               </div>
             </div>
             <div className="col-span-2 md:col-span-1 md:block">
-              <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Stay ahead</div>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Stay ahead</div>
               {subStatus === "done" ? (
                 <p className="text-sm" style={{ color: "var(--brand-soft)" }}>You are on the list.</p>
               ) : (
                 <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
-                  <p className="text-[0.78rem] mb-1" style={{ color: "var(--text-on-ink-dim)" }}>Daily geopolitics digest — free.</p>
+                  <p className="text-[0.78rem] mb-1" style={{ color: "var(--text-on-ink-dim)" }}>Daily geopolitics digest, free.</p>
                   <input
                     type="email"
             aria-label="Email address"
@@ -143,7 +151,7 @@ export default function NavDrawer() {
                     type="submit"
                     disabled={subStatus === "loading"}
                     className="rounded-sm px-4 py-1.5 text-sm font-semibold"
-                    style={{ background: "var(--brand-soft)", color: "var(--ink)" }}
+                    style={{ background: "var(--brand-soft)", color: "var(--on-brand)" }}
                   >
                     {subStatus === "loading" ? "..." : "Subscribe"}
                   </button>

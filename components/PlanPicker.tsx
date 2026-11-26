@@ -44,15 +44,15 @@ export default function PlanPicker({
         }}
       >
         {badge && (
-          <span className="absolute -top-2.5 right-3 font-mono text-[0.6rem] uppercase tracking-wide px-2 py-0.5" style={{ background: '#C97B4A', color: '#fff' }}>
+          <span className="absolute -top-2.5 right-3 font-mono text-[0.6875rem] uppercase tracking-wide px-2 py-0.5" style={{ background: '#C97B4A', color: '#fff' }}>
             {badge}
           </span>
         )}
         <div className="flex items-center justify-between mb-2">
-          <span className="font-mono text-[0.68rem] uppercase tracking-widest" style={{ color: 'var(--text-on-ink-dim)' }}>{title}</span>
+          <span className="font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: 'var(--text-on-ink-dim)' }}>{title}</span>
           <span
             aria-hidden
-            className="h-4 w-4 rounded-full border flex items-center justify-center text-[0.6rem]"
+            className="h-4 w-4 rounded-full border flex items-center justify-center text-[0.6875rem]"
             style={{ borderColor: on ? '#0E7080' : 'var(--border)', background: on ? '#0E7080' : 'transparent', color: '#fff' }}
           >
             {on ? '✓' : ''}
@@ -73,7 +73,7 @@ export default function PlanPicker({
         {card('monthly', 'Monthly', m.amount, m.period)}
       </div>
       {user ? (
-        <SubscribeButton key={plan.priceId} token={token} priceId={plan.priceId} sandbox={sandbox} email={user.email} userId={user.id} label="Become a Strategist" wide />
+        <SubscribeButton key={plan.priceId} token={token} priceId={plan.priceId} sandbox={sandbox} email={user.email} userId={user.id} label="Upgrade to Lens+" wide />
       ) : (
         <Link href="/account/login" className="block text-center px-5 py-3 rounded-sm text-[0.95rem] font-semibold transition-opacity hover:opacity-90" style={{ background: '#0E7080', color: '#fff' }}>
           Sign in to join

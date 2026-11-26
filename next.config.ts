@@ -7,6 +7,21 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [{ source: "/favicon.ico", destination: "/logo-mark.png", permanent: true }];
   },
+  // Basic hardening headers. No Content-Security-Policy yet: Paddle's checkout and
+  // the site's inline scripts need a carefully tested policy first.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

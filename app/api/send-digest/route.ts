@@ -5,6 +5,8 @@ import { brevoConfigured, resendConfigured, resendDailyLimit, sendEmail } from "
 import { deliverDigest } from "@/lib/digestDelivery";
 import { selectDigestForSubscriber } from "@/lib/digestStories";
 import { announcementFromEnv, buildDigestHtml } from "@/lib/digestHtml";
+import { selectWatchlistDigest } from "@/lib/watchlistDigest";
+import { loadWatchlistsByEmail } from "@/lib/watchlistLoad";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -35,7 +37,7 @@ export async function GET(req: NextRequest) {
 
   const { data: stories, error: storiesError } = await supabase
     .from("stories")
-    .select("slug, headline, dek, category, status, impact_nodes, image_url, sources, off_lens_countries")
+    .select("slug, headline, dek, category, status, impact_nodes, image_url, sources, off_lens_countries, subject_countries, created_at")
     .gte("created_at", oneDayAgo)
     .order("created_at", { ascending: false });
 
@@ -67,7 +69,18 @@ export async function GET(req: NextRequest) {
   const prepared: { to: string; subject: string; html: string }[] = [];
   let fellBackToTopStories = 0;
 
+  // Readers who may use the Watchlist digest get today's stories from what they watch.
+  const watchlists = await loadWatchlistsByEmail(supabase, subscribers.map((s) => s.email));
+  let personalised = 0;
+
   for (const sub of subscribers) {
+    const mine = watchlists.get(sub.email.toLowerCase());
+    const own = mine ? selectWatchlistDigest(stories, mine) : null;
+    if (own) {
+      personalised++;
+      prepared.push({ to: sub.email, subject: `Daily Digest — Chanakya Lens`, html: buildDigestHtml(own, "Your Watchlist", sub.email, false, announcementFromEnv()) });
+      continue;
+    }
     // "regions" column stores chosen topics/categories.
     const digest = selectDigestForSubscriber(stories, sub.regions);
     if (!digest) continue;
@@ -102,6 +115,7 @@ export async function GET(req: NextRequest) {
     subscribers: subscribers.length,
     prepared: prepared.length,
     fellBackToTopStories,
+    personalised,
     sent: summary.sent,
     failed: summary.failed,
     notAttempted: summary.notAttempted,
