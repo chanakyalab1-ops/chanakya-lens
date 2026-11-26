@@ -45,7 +45,7 @@ const COUNTRY_TO_REGION: Record<string, Region> = {
 // Every country name the region mapper knows -- also used to pick search terms from headlines.
 export const COUNTRY_NAMES = Object.keys(COUNTRY_TO_REGION);
 
-function regionFromCountryNames(countries: string[]): Region {
+export function regionFromCountryNames(countries: string[]): Region {
   const regions = new Set(
     countries.map((c) => COUNTRY_TO_REGION[c]).filter((r): r is Region => !!r)
   );

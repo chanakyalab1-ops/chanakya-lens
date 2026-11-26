@@ -26,6 +26,7 @@ const TOOLS: Tool[] = [
   { icon: 'compare', name: 'Compare', text: 'Pick two countries, places or actors and see what they share.', how: 'Choose any two Lens pages.', href: '/compare', cta: 'Compare two', paid: true },
   { icon: 'compass', name: 'Reading Map', text: 'What you read, your streak, and which countries you keep missing.', how: 'Fills in as you read stories while signed in.', href: '/account/reading', cta: 'Open your map', paid: true },
   { icon: 'eye', name: 'Watch a story', text: 'An alert when one specific story is updated.', how: 'Tap Watch at the top of a story, and turn on the bell.', href: '/', cta: 'Find a story', paid: true },
+  { icon: 'compass', name: 'Lens Monthly', text: 'A report on the month in world news, with charts drawn from our own data.', how: 'Published on the last day of each month. Free readers see the opening; Lens+ gets the whole report.', href: '/monthly', cta: 'Read the latest', paid: true },
   { icon: 'mail', name: 'Email me', text: 'Send any story to your inbox as a clean email.', how: 'Tap Email me at the top of a story.', href: '/', cta: 'Find a story', paid: true },
   { icon: 'mail', name: 'Watchlist digest', text: 'Your daily email leads with the stories on your Watchlist.', how: 'Needs the daily digest and a Watchlist.', href: '/digest', cta: 'Check your digest', paid: true },
 ];

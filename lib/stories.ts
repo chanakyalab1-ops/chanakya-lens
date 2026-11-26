@@ -226,3 +226,22 @@ export async function getStoryForOg(slug: string): Promise<{ headline: string; c
   if (error || !data) return null;
   return { headline: (data as { headline: string }).headline, category: (data as { category: string | null }).category };
 }
+
+// Every story published in one calendar month (period "YYYY-MM", UTC), for the Lens
+// Monthly charts. Server only; the body is left out.
+export async function getStoriesForMonth(period: string): Promise<Story[]> {
+  const m = /^(\d{4})-(\d{2})$/.exec(period);
+  if (!m) return [];
+  const start = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, 1));
+  const end = new Date(Date.UTC(Number(m[1]), Number(m[2]), 1));
+  const { supabaseServer } = await import("./supabase-server");
+  const { data, error } = await supabaseServer()
+    .from("stories")
+    .select(LIST_COLUMNS)
+    .gte("created_at", start.toISOString())
+    .lt("created_at", end.toISOString())
+    .order("created_at", { ascending: false })
+    .limit(2000);
+  if (error || !data) return [];
+  return (data as unknown as StoryRow[]).map((r) => mapRow({ ...r, body: "" } as StoryRow));
+}
