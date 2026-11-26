@@ -14,6 +14,7 @@ const REGIONS = ["Asia", "Americas", "Europe", "Middle East", "Africa"];
 export default function NavDrawer() {
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [tools, setTools] = useState(false);
   const [email, setEmail] = useState("");
   const [subStatus, setSubStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const ref = useRef<HTMLDivElement>(null);
@@ -21,6 +22,12 @@ export default function NavDrawer() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setIsAdmin(data.user?.email === ADMIN_EMAIL);
+      if (data.user) {
+        fetch("/api/me", { cache: "no-store" })
+          .then((r) => r.json())
+          .then((d: { enabled?: boolean }) => setTools(!!d.enabled))
+          .catch(() => {});
+      }
     });
   }, []);
 
@@ -87,6 +94,7 @@ export default function NavDrawer() {
             <div>
               <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Read</div>
               <div className="space-y-3">
+                {tools && <Link href="/tools" onClick={() => setOpen(false)} className="block text-sm font-semibold hover:opacity-60" style={{ color: "var(--brand-soft)" }}>Your tools</Link>}
                 <Link prefetch={false} href="/" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Latest stories</Link>
                 <Link href="/today" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Today&apos;s Signal</Link>
                 <Link href="/off-lens" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Off-Lens</Link>
