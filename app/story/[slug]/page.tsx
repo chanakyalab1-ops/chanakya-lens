@@ -20,6 +20,7 @@ import { paragraphs } from "@/lib/paragraphs";
 import { groupSources } from "@/lib/groupSources";
 import { hubsForStory } from "@/lib/lens";
 import { seoTitle } from "@/lib/seo";
+import { getThread } from "@/lib/threads";
 const tagColor: Record<ConfidenceLevel, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
@@ -66,7 +67,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
   const story = await getStoryBySlug(slug);
   if (!story) return notFound();
 
-  const allStories = await getAllStories();
+  const [allStories, thread] = await Promise.all([getAllStories(), getThread(slug)]);
 
   const related = relatedStories(story, allStories);
 
@@ -405,6 +406,29 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </section>
         )}
 
+        {thread.length > 1 && (
+          <section className="mt-10 md:mt-2 md:max-w-[42rem]">
+            <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
+              How this story developed
+            </h2>
+            <div className="text-[0.78rem] mb-4" style={{ color: "var(--text-on-ink-dim)" }}>
+              {thread.length} reports on this event, oldest first.
+            </div>
+            <ol className="border-l pl-4 space-y-4" style={{ borderColor: "var(--border)" }}>
+              {thread.map((t) => (
+                <li key={t.slug} className="relative">
+                  <span className="absolute -left-[1.32rem] top-1.5 h-2 w-2 rounded-full" style={{ background: t.slug === slug ? "var(--brand-soft)" : "var(--border)" }} />
+                  <div className="font-mono text-[0.62rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(t.publishedAt)}</div>
+                  {t.slug === slug ? (
+                    <div className="font-display font-bold text-[0.98rem] leading-tight">{t.headline} <span className="font-mono text-[0.6rem] uppercase" style={{ color: "var(--brand-soft)" }}>You are here</span></div>
+                  ) : (
+                    <Link href={`/story/${t.slug}`} className="font-display font-bold text-[0.98rem] leading-tight hover:opacity-80">{t.headline}</Link>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
         <ConnectionsSection connections={connections} open={process.env.MEMBERSHIP_PUBLIC === "true"} />
 
         {related.length > 0 && (

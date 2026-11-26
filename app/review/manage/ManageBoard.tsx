@@ -26,6 +26,7 @@ type PublishedStory = {
   chanakya_analysis: string | null;
   off_lens: string | null;
   image_url: string | null;
+  thread_slug: string | null;
   created_at: string;
 };
 
@@ -157,6 +158,7 @@ export function ManageBoard({ stories }: { stories: PublishedStory[] }) {
       {editing && (
         <EditPublishedModal
           story={editing}
+          others={stories.filter((s) => s.slug !== editing.slug).slice(0, 80)}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
@@ -170,10 +172,12 @@ export function ManageBoard({ stories }: { stories: PublishedStory[] }) {
 
 function EditPublishedModal({
   story,
+  others,
   onClose,
   onSaved,
 }: {
   story: PublishedStory;
+  others: PublishedStory[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -188,6 +192,7 @@ function EditPublishedModal({
   const [chanakyaAnalysis, setChanakyaAnalysis] = useState(story.chanakya_analysis ?? '');
   const [offLens, setOffLens] = useState(story.off_lens ?? '');
   const [imageUrl, setImageUrl] = useState(story.image_url ?? '');
+  const [threadSlug, setThreadSlug] = useState(story.thread_slug ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [alertNote, setAlertNote] = useState<string | null>(null);
@@ -240,6 +245,7 @@ function EditPublishedModal({
         chanakyaAnalysis,
         offLens,
         imageUrl,
+        threadSlug,
       });
       if (!result.ok) throw new Error(result.error);
       onSaved();
@@ -265,6 +271,22 @@ function EditPublishedModal({
             {error}
           </div>
         )}
+
+        <div>
+          <label className="font-mono text-xs uppercase tracking-wider text-[#8A93A6]">Follow-up to (puts this in that story&apos;s timeline)</label>
+          <select
+            value={threadSlug}
+            onChange={(e) => setThreadSlug(e.target.value)}
+            className="mt-1 w-full bg-white/[0.03] border border-white/10 rounded px-3 py-2 text-sm"
+          >
+            <option value="">Stands alone</option>
+            {others.map((o) => (
+              <option key={o.slug} value={o.slug}>
+                {o.headline.length > 90 ? `${o.headline.slice(0, 89)}…` : o.headline}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div>
           <label className="font-mono text-xs uppercase tracking-wider text-[#8A93A6]">Image address (empty = no image)</label>

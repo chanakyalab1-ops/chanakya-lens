@@ -9,6 +9,7 @@ import { slugify } from '@/lib/slug';
 import { generateStoryDraft } from '@/lib/anthropic-server';
 import { selectImageForStory } from '@/lib/imageSelection';
 import { notifyForStory } from '@/lib/push';
+import { resolveThreadRoot } from '@/lib/threadRules';
 import { cleanUpdateNote } from '@/lib/storyUpdates';
 
 // Every path that creates a draft holds it at workflow_status='fact_checking'
@@ -467,6 +468,39 @@ export async function triggerAutoGenerateBatch(limit: number): Promise<ActionRes
   }
 }
 
+// Works out which story a follow-up belongs under (always the root, never itself),
+// and re-files anything that was already a follow-up to this story.
+async function resolveThread(supabase: ReturnType<typeof supabaseServer>, slug: string, parentSlug: string): Promise<string | null> {
+  const wanted = parentSlug.trim();
+  if (!wanted) return null;
+  const { data, error } = await supabase.from('stories').select('slug, thread_slug').eq('slug', wanted).maybeSingle();
+  if (error || !data) throw new Error('That story could not be found.');
+  const root = resolveThreadRoot(data as { slug: string; thread_slug: string | null }, slug);
+  if (root) {
+    // Anything already filed under this story moves with it, so threads never chain.
+    await supabase.from('stories').update({ thread_slug: root }).eq('thread_slug', slug);
+  }
+  return root;
+}
+
+export async function groupAsUpdate(slug: string, parentSlug: string): Promise<ActionResult> {
+  try {
+    const supabase = supabaseServer();
+    const root = await resolveThread(supabase, slug, parentSlug);
+    if (!root) throw new Error('Those two stories cannot be grouped.');
+    const { error } = await supabase.from('stories').update({ thread_slug: root }).eq('slug', slug);
+    if (error) throw new Error(`Failed to group: ${error.message}`);
+    revalidatePath('/review/duplicates');
+    updateTag('stories');
+    resetStoriesMemo();
+    refreshStoryPage(slug);
+    refreshStoryPage(root);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
 export type UpdatePublishedStoryInput = {
   headline: string;
   dek: string;
@@ -480,6 +514,8 @@ export type UpdatePublishedStoryInput = {
   offLens: string;
   // Empty clears the picture; otherwise an https image address.
   imageUrl: string;
+  // Slug of the story this is a follow-up to; empty for a story on its own.
+  threadSlug: string;
 };
 
 export async function updatePublishedStory(slug: string, input: UpdatePublishedStoryInput): Promise<ActionResult> {
@@ -490,6 +526,8 @@ export async function updatePublishedStory(slug: string, input: UpdatePublishedS
       throw new Error('Headline and body are required.');
     }
 
+    const threadRoot = await resolveThread(supabase, slug, input.threadSlug);
+
     const imageUrl = input.imageUrl.trim();
     if (imageUrl && !/^https:\/\/\S+$/i.test(imageUrl)) {
       throw new Error('Image must be an https address, or empty for no image.');
@@ -499,6 +537,7 @@ export async function updatePublishedStory(slug: string, input: UpdatePublishedS
       .from('stories')
       .update({
         image_url: imageUrl || null,
+        thread_slug: threadRoot,
         headline: input.headline.trim(),
         dek: input.dek.trim() || input.headline.trim(),
         body: input.body.trim(),
