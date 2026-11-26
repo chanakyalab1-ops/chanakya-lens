@@ -98,9 +98,13 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                 <p className="text-sm opacity-90 mb-4">
                   {membership.cancelAtPeriodEnd ? 'Your membership ends' : 'Renews'} {renewal}.
                 </p>
-                <div className="[&_button]:!text-white [&_button]:!border-white/70 [&_button]:!bg-white/10">
-                  <ManageButton />
-                </div>
+                {membership.providerCustomerId.startsWith('gift:') ? (
+                  <p className="text-sm opacity-90">This is a gift, so there is no billing to manage. It simply ends on that date. <Link href="/gift" className="underline">Gift Lens+ to someone</Link></p>
+                ) : (
+                  <div className="[&_button]:!text-white [&_button]:!border-white/70 [&_button]:!bg-white/10">
+                    <ManageButton />
+                  </div>
+                )}
               </div>
             ) : justJoined ? (
               <div className="rounded-sm border p-5 text-sm" style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}>

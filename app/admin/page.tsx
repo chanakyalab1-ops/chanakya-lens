@@ -79,6 +79,7 @@ export default async function AdminPage() {
         <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--text-on-ink-dim)" }}>More tools</div>
         <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2.5 text-[0.88rem]">
           <Link href="/admin/dispatches" className="underline" style={{ color: "var(--brand-soft)" }}>Dispatches (monthly deep-dives)</Link>
+          <a href="/api/admin/groups" className="underline" style={{ color: "var(--brand-soft)" }}>Group plan requests, download CSV</a>
           <Link href="/admin/push" className="underline" style={{ color: "var(--brand-soft)" }}>Notifications</Link>
           <Link href="/review/duplicates" className="underline" style={{ color: "var(--brand-soft)" }}>Possible duplicate stories</Link>
           <a href="/api/admin/waitlist" className="underline" style={{ color: "var(--brand-soft)" }}>
