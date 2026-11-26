@@ -57,8 +57,8 @@ export default function NavDrawer() {
         <div className="justify-self-start hidden md:block">
           <ThemeSegmentedControl />
         </div>
-        <Link href="/" className="flex items-center gap-2 md:gap-3 md:justify-self-center">
-          <Image src="/logo-mark.png" alt="Chanakya Lens" width={40} height={40} className="rounded-full w-8 h-8 md:w-10 md:h-10" />
+        <Link prefetch={false} href="/" className="flex items-center gap-2 md:gap-3 md:justify-self-center">
+          <Image src="/logo-mark.png" alt="" width={40} height={40} className="rounded-full w-8 h-8 md:w-10 md:h-10" />
           <span className="font-display text-lg md:text-2xl font-extrabold uppercase tracking-wide whitespace-nowrap">
             Chanakya <span style={{ color: "var(--brand-soft)" }}>Lens</span>
           </span>
@@ -95,7 +95,7 @@ export default function NavDrawer() {
               <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Read</div>
               <div className="space-y-3">
                 {tools && <Link href="/tools" onClick={() => setOpen(false)} className="block text-sm font-semibold hover:opacity-60" style={{ color: "var(--brand-soft)" }}>Your tools</Link>}
-                <Link href="/" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Latest stories</Link>
+                <Link prefetch={false} href="/" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Latest stories</Link>
                 <Link href="/today" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Today&apos;s Signal</Link>
                 <Link href="/off-lens" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>Off-Lens</Link>
                 <Link href="/lens" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>The Lens</Link>
@@ -105,7 +105,7 @@ export default function NavDrawer() {
             <div>
               <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-4" style={{ color: "var(--brand-soft)" }}>Regions</div>
               <div className="space-y-3">
-                <Link href="/regions" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>All regions</Link>
+                <Link prefetch={false} href="/regions" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-on-ink)" }}>All regions</Link>
                 {REGIONS.map((r) => (
                   <Link key={r} href="/regions" onClick={() => setOpen(false)} className="block text-sm hover:opacity-60" style={{ color: "var(--text-body)" }}>{r}</Link>
                 ))}
@@ -151,7 +151,7 @@ export default function NavDrawer() {
                     type="submit"
                     disabled={subStatus === "loading"}
                     className="rounded-sm px-4 py-1.5 text-sm font-semibold"
-                    style={{ background: "var(--brand-soft)", color: "var(--ink)" }}
+                    style={{ background: "var(--brand-soft)", color: "var(--on-brand)" }}
                   >
                     {subStatus === "loading" ? "..." : "Subscribe"}
                   </button>

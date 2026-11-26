@@ -69,7 +69,7 @@ export default function FeedbackForm() {
         type="submit"
         disabled={status === "loading"}
         className="w-full py-2 rounded-sm font-medium disabled:opacity-40"
-        style={{ background: "var(--brand-soft)", color: "var(--ink)" }}
+        style={{ background: "var(--brand-soft)", color: "var(--on-brand)" }}
       >
         {status === "loading" ? "Sending..." : "Send feedback"}
       </button>

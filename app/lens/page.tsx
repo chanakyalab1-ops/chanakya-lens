@@ -9,7 +9,7 @@ import { THEMES, SYSTEMS, ACTORS, countriesByRegion, storiesFor, type LensEntity
 // straight away (lib/siteRefresh.ts), so this is only a safety net.
 export const revalidate = 43200;
 
-export const metadata: Metadata = pageMeta("/lens", "The Lens", "Permanent pages for the countries, actors and strategic systems that keep coming up: Hormuz, the Red Sea, Taiwan, semiconductors, trade corridors and more.");
+export const metadata: Metadata = pageMeta("/lens", "The Lens: the places, powers and systems behind the news", "Permanent pages for the countries, actors and strategic systems that keep coming up: Hormuz, the Red Sea, Taiwan, semiconductors, trade corridors and more.");
 
 function Card({ entity, count }: { entity: LensEntity; count: number }) {
   return (

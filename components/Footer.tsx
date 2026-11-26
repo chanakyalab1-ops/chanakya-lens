@@ -16,8 +16,8 @@ export default function Footer() {
           <div>
             <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Read</div>
             <div className="space-y-2">
-              <Link href="/" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Latest stories</Link>
-              <Link href="/regions" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Browse by region</Link>
+              <Link prefetch={false} href="/" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Latest stories</Link>
+              <Link prefetch={false} href="/regions" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Browse by region</Link>
               <Link href="/off-lens" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Off-Lens</Link>
               <Link href="/lens" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>The Lens</Link>
               <Link href="/digest" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Daily digest</Link>
