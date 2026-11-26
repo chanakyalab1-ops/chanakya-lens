@@ -47,6 +47,7 @@ export async function POST(req: Request) {
   }
 
   const event = JSON.parse(body) as PaddleEvent;
+  console.log("paddle webhook", event.event_type, event.data?.id ?? "");
 
   try {
     if (event.event_type.startsWith("subscription.")) await save(event.data, event.occurred_at);
