@@ -35,7 +35,7 @@ export default function RegionsBrowser({ stories }: { stories: Story[] }) {
               className="font-mono text-[0.6875rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
               style={
                 active === tab
-                  ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
+                  ? { color: "var(--on-brand)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
                   : { color: "var(--text-on-ink-dim)", borderColor: "var(--border)", background: "transparent" }
               }
             >
