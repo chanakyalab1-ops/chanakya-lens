@@ -3,9 +3,10 @@ import { Icon } from '@/components/Icon';
 import { WaitlistForm } from '@/components/WaitlistForm';
 
 type Perk = { icon: string; title: string; text: string };
+type Row = { row: string; free: string; paid: string };
 
 // What /membership shows to everyone until MEMBERSHIP_PUBLIC=true.
-export function WaitlistPage({ perks }: { perks: Perk[] }) {
+export function WaitlistPage({ perks, compare }: { perks: Perk[]; compare: Row[] }) {
   return (
     <>
       <NavDrawer />
@@ -16,7 +17,7 @@ export function WaitlistPage({ perks }: { perks: Perk[] }) {
             Lens<span style={{ color: 'var(--brand-soft)' }}>+</span> is almost here.
           </h1>
           <p className="text-[1.05rem] leading-relaxed max-w-xl mx-auto mb-8" style={{ color: 'var(--text-body)' }}>
-            Every story stays free. Lens+ adds the tools: a feed built around what you follow, saved stories, alerts on single stories, and answers from our own reporting. Join the waitlist and you get in first.
+            Every story stays free. Lens+ adds the tools: an unlimited Watchlist, answers from our own reporting, a Reading Map and alerts on single stories. Join the waitlist and you get in first.
           </p>
           <div className="max-w-lg mx-auto">
             <WaitlistForm source="membership" />
@@ -34,6 +35,27 @@ export function WaitlistPage({ perks }: { perks: Perk[] }) {
                 <p className="text-[0.84rem] leading-snug" style={{ color: 'var(--text-body)' }}>{p.text}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="mb-4">
+          <h2 className="font-display font-bold uppercase tracking-wide text-xl mb-4 text-center" style={{ color: 'var(--brand-soft)' }}>Free and Lens+</h2>
+          <div className="border rounded-sm overflow-hidden text-[0.88rem]" style={{ borderColor: 'var(--border)' }}>
+            <div className="grid grid-cols-[1.6fr_1fr_1fr] font-mono text-[0.6875rem] uppercase tracking-wide p-3" style={{ background: 'var(--ink-card)', color: 'var(--text-on-ink-dim)' }}>
+              <div />
+              <div className="text-center">Free</div>
+              <div className="text-center" style={{ color: '#0E7080' }}>Lens+</div>
+            </div>
+            {compare.map((c) => (
+              <div key={c.row} className="grid grid-cols-[1.6fr_1fr_1fr] p-3 border-t items-center" style={{ borderColor: 'var(--border)' }}>
+                <div>{c.row}</div>
+                <div className="text-center" style={{ color: 'var(--text-on-ink-dim)' }}>{c.free}</div>
+                <div className="text-center font-semibold">{c.paid}</div>
+              </div>
+            ))}
+          </div>
+          <div className="max-w-lg mx-auto mt-8">
+            <WaitlistForm source="membership-table" />
           </div>
         </section>
       </main>

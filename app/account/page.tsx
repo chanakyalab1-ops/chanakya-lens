@@ -126,7 +126,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
         {tools && (
           <section className="mb-10">
-            <h2 className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: 'var(--brand-soft)' }}>Your tools</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: 'var(--brand-soft)' }}>Your tools</h2>
+              <Link href="/tools" className="font-mono text-[0.6875rem] uppercase tracking-wide underline" style={{ color: 'var(--brand-soft)' }}>See everything we added</Link>
+            </div>
             <div className="space-y-3">
               {cards.map((c) => (
                 <Link

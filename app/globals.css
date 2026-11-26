@@ -21,6 +21,7 @@
   --likely: #C9A94E;
   --possible: #5FA88A;
   --developing: #D9694A;
+  --on-brand: #0A112A;
   --settled: #7E8AAA;
   --border: #22326B;
   --radius: 2px;
@@ -39,6 +40,8 @@
   --text-on-ink-dim: #55607F;
   --text-body: #333E5C;
   --brand-soft: #0E7080;
+  --developing: #B4472A;
+  --on-brand: #FFFFFF;
   --border: #D7DEEA;
   color-scheme: light;
 }

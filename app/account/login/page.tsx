@@ -141,7 +141,7 @@ export default function AccountLoginPage() {
               type="submit"
               disabled={loading}
               className="w-full py-2 rounded-sm font-medium disabled:opacity-40"
-              style={{ background: 'var(--brand-soft)', color: 'var(--ink)' }}
+              style={{ background: 'var(--brand-soft)', color: 'var(--on-brand)' }}
             >
               {loading ? 'Working...' : mode === 'signin' ? 'Sign in' : 'Create account'}
             </button>

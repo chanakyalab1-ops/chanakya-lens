@@ -122,7 +122,7 @@ export function ProposalList({ proposals, categories, weekly }: { proposals: Pro
           disabled={chosen.length === 0 || chosen.length > MAX_PER_APPROVAL || pending}
           onClick={() => run('approve')}
           className="text-[0.82rem] font-semibold px-4 py-2 rounded-sm disabled:opacity-40"
-          style={{ background: 'var(--brand-soft)', color: 'var(--ink)' }}
+          style={{ background: 'var(--brand-soft)', color: 'var(--on-brand)' }}
         >
           {pending ? 'Working…' : `Generate ${chosen.length || ''}`.trim()}
         </button>
@@ -150,7 +150,7 @@ export function ProposalList({ proposals, categories, weekly }: { proposals: Pro
               aria-selected={on}
               onClick={() => setFilter(c)}
               className="text-left rounded-sm border px-3 py-2"
-              style={on ? { background: 'var(--brand-soft)', color: 'var(--ink)', borderColor: 'var(--brand-soft)' } : { borderColor: 'var(--border)', color: 'var(--text-on-ink)' }}
+              style={on ? { background: 'var(--brand-soft)', color: 'var(--on-brand)', borderColor: 'var(--brand-soft)' } : { borderColor: 'var(--border)', color: 'var(--text-on-ink)' }}
             >
               <span className="block font-mono text-[0.72rem] uppercase tracking-wide">{c} · {n}</span>
               {c !== 'All' && c !== 'Other' && <span className="block font-mono text-[0.6875rem] opacity-70">{weekly[c] ?? 0} published this week</span>}
