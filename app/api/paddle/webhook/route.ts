@@ -3,6 +3,7 @@ import { supabaseServer } from "@/lib/supabase-server";
 import { cleanSecret, isNewerEvent, membershipRow, shouldReplaceRecord, signatureDebug, verifyPaddleSignature, type PaddleSubscription } from "@/lib/paddle";
 import { sendAlert } from "@/lib/alerts";
 import { createGiftFromTransaction, type PaddleTransaction } from "@/lib/giftServer";
+import { sendWelcomeEmail } from "@/lib/welcomeSend";
 
 type PaddleEvent = {
   event_type: string;
@@ -27,6 +28,10 @@ async function save(sub: PaddleSubscription, occurredAt: string) {
 
   const { error } = await supabase.from("memberships").upsert(membershipRow(sub, userId, occurredAt), { onConflict: "user_id" });
   if (error) throw new Error(`Failed to save membership: ${error.message}`);
+
+  // A reader who was not a member and now is gets a welcome email, once per change of state.
+  const live = (st?: string) => st === "active" || st === "trialing";
+  if (live(sub.status) && !live(stored?.status)) await sendWelcomeEmail(userId);
 }
 
 export async function POST(req: Request) {
