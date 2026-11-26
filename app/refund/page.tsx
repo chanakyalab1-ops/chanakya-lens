@@ -48,7 +48,7 @@ export default function RefundPage() {
             <List
               items={[
                 "Cancel Lens+ any time. You keep your tools until the end of the period you have paid for.",
-                "We do not give refunds for a period you have already used, except where the law or Paddle's buyer terms require one.",
+                "Refunds are handled under Paddle's refund policy, and your local consumer rights always apply.",
                 "Reading the news on Chanakya Lens is free and stays free.",
               ]}
             />
@@ -63,10 +63,10 @@ export default function RefundPage() {
           <Section title="Refunds">
             <List
               items={[
-                <><b>The rule.</b> We do not refund a payment for a period you have already had access to, or a renewal, except where the law or Paddle&apos;s buyer terms say a refund is due. Where one is due, Paddle will process it and we will not stand in the way.</>,
-                <><b>Before you pay.</b> Because of this, please check the plan and price at checkout. If you do not want to be charged again, cancel before your renewal date.</>,
-                <><b>Gifts.</b> Gift codes follow the same rule. A code that has been redeemed cannot be refunded.</>,
-                <><b>If you think a refund is due.</b> Email <Mail /> from the address you paid with, or use the link in your Paddle receipt, and tell us what happened. Refunds that are due go back to the original payment method, and how long they take to show up depends on your bank or card provider.</>,
+                <>Our order process is conducted by our online reseller Paddle.com. Paddle.com is the Merchant of Record for all our orders. Refund requests are handled under <a href="https://paddle.com/legal/refund-policy" className="underline" style={heading} target="_blank" rel="noreferrer">Paddle&apos;s refund policy</a>, which forms part of Paddle&apos;s buyer terms. Nothing here or there limits the rights you have under consumer protection law where you live.</>,
+                <><b>How to ask.</b> Go to <a href="https://paddle.net" className="underline" style={heading} target="_blank" rel="noreferrer">paddle.net</a>, choose Request refund and use the email address you paid with, or use the link in your Paddle receipt. You can also email <Mail /> and we will help you with the request.</>,
+                <><b>Gifts.</b> Gift codes are covered by the same policy. Once a code has been redeemed the gift has been used, and Paddle takes that into account when it reviews a request.</>,
+                <><b>Avoiding a charge you do not want.</b> If you do not want to be charged again, cancel before your renewal date. Cancelling is always allowed and takes effect at the end of the period you have paid for.</>,
               ]}
             />
           </Section>
