@@ -66,13 +66,14 @@ export default function MobileTabBar() {
           return (
             <li key={href}>
               <Link
+                prefetch={false}
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className="flex flex-col items-center justify-center gap-0.5 py-2"
                 style={{ color: active ? "var(--brand-soft)" : "var(--text-on-ink-dim)" }}
               >
                 <TabIcon active={active} />
-                <span className="text-[0.62rem] font-medium tracking-wide">{label}</span>
+                <span className="text-[0.6875rem] font-medium tracking-wide">{label}</span>
               </Link>
             </li>
           );

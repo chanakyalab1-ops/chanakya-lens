@@ -31,11 +31,11 @@ describe("digest announcement", () => {
     expect(buildDigestHtml([mk(1)], "All", "a@x.com")).not.toContain("New on Chanakya Lens");
   });
   it("renders escaped text and an https link", () => {
-    const a = announcementFromEnv({ DIGEST_ANNOUNCEMENT: "Follow <topics>", DIGEST_ANNOUNCEMENT_URL: "https://chanakyalens.com/account/interests" });
+    const a = announcementFromEnv({ DIGEST_ANNOUNCEMENT: "Follow <topics>", DIGEST_ANNOUNCEMENT_URL: "https://chanakyalens.com/account/watchlist" });
     const html = buildDigestHtml([mk(1)], "All", "a@x.com", false, a);
     expect(html).toContain("New on Chanakya Lens");
     expect(html).toContain("Follow &lt;topics&gt;");
-    expect(html).toContain('href="https://chanakyalens.com/account/interests"');
+    expect(html).toContain('href="https://chanakyalens.com/account/watchlist"');
   });
   it("drops non-https links", () => {
     expect(announcementFromEnv({ DIGEST_ANNOUNCEMENT: "x", DIGEST_ANNOUNCEMENT_URL: "javascript:alert(1)" })?.url).toBeUndefined();

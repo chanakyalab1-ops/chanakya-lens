@@ -4,7 +4,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 // Paddle.js; the server only handles webhooks and customer-portal links.
 // Environment variables:
 //   NEXT_PUBLIC_PADDLE_CLIENT_TOKEN  client-side token ("test_..." = sandbox)
-//   NEXT_PUBLIC_PADDLE_PRICE_ID      the Strategist price ("pri_...")
+//   NEXT_PUBLIC_PADDLE_PRICE_ID      the Lens+ price ("pri_...")
 //   PADDLE_API_KEY                   server API key (sandbox keys contain "_sdbx")
 //   PADDLE_WEBHOOK_SECRET            notification destination secret key
 
@@ -22,7 +22,9 @@ export function apiBase(apiKey: string): string {
 }
 
 export async function createPortalLink(customerId: string): Promise<string> {
-  const key = process.env.PADDLE_API_KEY;
+  // A pasted key often carries a trailing space, newline or quotes; Paddle then
+  // rejects it as "authentication malformed".
+  const key = cleanSecret(process.env.PADDLE_API_KEY ?? "");
   if (!key) throw new Error("Missing PADDLE_API_KEY env var.");
   const res = await fetch(`${apiBase(key)}/customers/${encodeURIComponent(customerId)}/portal-sessions`, {
     method: "POST",
@@ -68,6 +70,19 @@ export function membershipRow(sub: PaddleSubscription, userId: string, occurredA
     last_event_at: occurredAt,
     updated_at: new Date().toISOString(),
   };
+}
+
+const LIVE_STATUSES = new Set(["active", "trialing"]);
+
+// A reader can end up with two subscriptions (for example test purchases, or buying
+// twice before the first confirmation arrived), but the site keeps one record each.
+// Cancelling the extra one must not cancel the membership, so an event about a
+// different subscription only replaces the record when it is itself live, or when
+// the recorded one has already ended.
+export function shouldReplaceRecord(stored: { provider_subscription_id: string; status: string } | null, incoming: { id: string; status: string }): boolean {
+  if (!stored || stored.provider_subscription_id === incoming.id) return true;
+  if (!LIVE_STATUSES.has(stored.status)) return true;
+  return LIVE_STATUSES.has(incoming.status);
 }
 
 // Webhooks can arrive out of order; only apply one newer than what is stored.

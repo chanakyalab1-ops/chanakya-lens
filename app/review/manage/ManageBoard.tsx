@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   sendUpdateAlert,
+  postStoryUpdate,
   unpublishStory,
   updatePublishedStory,
   type Confidence,
@@ -196,6 +197,19 @@ function EditPublishedModal({
   const [error, setError] = useState<string | null>(null);
   const [alertNote, setAlertNote] = useState<string | null>(null);
   const [alerting, setAlerting] = useState(false);
+
+  const [changeText, setChangeText] = useState('');
+  const [changeAlert, setChangeAlert] = useState(true);
+  const [changeNote, setChangeNote] = useState<string | null>(null);
+
+  async function handleChange() {
+    setChangeNote(null);
+    const res = await postStoryUpdate(story.slug, changeText, changeAlert);
+    if (res.ok) {
+      setChangeText('');
+      setChangeNote(changeAlert ? `Posted. Alert sent to ${res.data?.sent ?? 0}.` : 'Posted.');
+    } else setChangeNote(res.error);
+  }
 
   async function handleAlert() {
     setAlerting(true);
@@ -422,6 +436,15 @@ function EditPublishedModal({
           />
         </div>
 
+        <div className="pt-4 border-t border-white/10">
+          <label className="block text-xs text-[#8A93A6] mb-1">What changed (shown to readers on the story)</label>
+          <textarea value={changeText} onChange={(e) => setChangeText(e.target.value)} rows={2} maxLength={400} className="w-full rounded border border-white/15 bg-transparent p-2 text-sm" placeholder="e.g. Talks resumed on Tuesday; the ceasefire deadline moved to Friday." />
+          <div className="flex items-center gap-3 mt-2 text-xs text-[#8A93A6]">
+            <label className="flex items-center gap-1.5"><input type="checkbox" checked={changeAlert} onChange={(e) => setChangeAlert(e.target.checked)} /> Alert followers and watchers</label>
+            <button onClick={handleChange} disabled={!changeText.trim()} className="underline hover:text-[#EDE7DA] disabled:opacity-40">Post update</button>
+            {changeNote && <span>{changeNote}</span>}
+          </div>
+        </div>
         <div className="flex items-center justify-between gap-3 pt-4 border-t border-white/10">
           <div className="text-xs text-[#8A93A6]">
             <button onClick={handleAlert} disabled={alerting} className="underline hover:text-[#EDE7DA] disabled:opacity-50">

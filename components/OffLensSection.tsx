@@ -33,6 +33,8 @@ const NON_COUNTRIES = new Set([
 
 // More outlets than this are collapsed into "+N more" so the panel stays short.
 const CHIP_LIMIT = 8;
+// Country bars and "not in sources" tags are capped the same way.
+const COUNTRY_LIMIT = 6;
 
 export function OffLensSection({
   sources,
@@ -101,30 +103,35 @@ export function OffLensSection({
         Off-Lens
       </div>
       <div className="text-[0.78rem] mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
-        Who is covering this — and who is not.
+        Who is covering this, and who is not.
       </div>
 
       {(total > 0 || chipSources.length > 0) && (
         <div className="mb-6">
-          <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3" style={{ color: "var(--text-on-ink-dim)" }}>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--text-on-ink-dim)" }}>
             {usingGdelt
               ? `${total} articles · ${sorted.length} countries`
               : `${chipSources.length} source${chipSources.length !== 1 ? "s" : ""} reviewed`}
           </div>
           <div className="space-y-2.5">
-            {sorted.map(([country, count]) => {
+            {sorted.slice(0, COUNTRY_LIMIT).map(([country, count]) => {
               const pct = Math.round((count / total) * 100);
               return (
                 <div key={country} className="flex items-center gap-3">
                   <span className="text-base w-6 shrink-0">{countryToEmoji(country)}</span>
-                  <span className="font-mono text-[0.68rem] w-20 md:w-28 shrink-0 truncate" style={{ color: "var(--text-body)" }}>{country}</span>
+                  <span className="font-mono text-[0.6875rem] w-20 md:w-28 shrink-0 truncate" style={{ color: "var(--text-body)" }}>{country}</span>
                   <div className="flex-1 rounded-full overflow-hidden h-1.5" style={{ background: "var(--border)" }}>
                     <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: "var(--brand-soft)" }} />
                   </div>
-                  <span className="font-mono text-[0.65rem] w-8 text-right shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>{pct}%</span>
+                  <span className="font-mono text-[0.6875rem] w-8 text-right shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>{pct}%</span>
                 </div>
               );
             })}
+            {sorted.length > COUNTRY_LIMIT && (
+              <div className="font-mono text-[0.65rem] pl-9" style={{ color: "var(--text-on-ink-dim)" }}>
+                +{sorted.length - COUNTRY_LIMIT} more countries
+              </div>
+            )}
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
@@ -135,7 +142,7 @@ export function OffLensSection({
                 target="_blank"
                 rel="noreferrer"
                 title={s.title}
-                className="inline-flex items-center gap-1.5 px-2 py-1 rounded border text-[0.65rem] font-mono hover:opacity-80 truncate max-w-[160px]"
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded border text-[0.6875rem] font-mono hover:opacity-80 truncate max-w-[160px]"
                 style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}
               >
                 <span>{s.sourceCountry && !NON_COUNTRIES.has(s.sourceCountry) ? countryToEmoji(s.sourceCountry) : "🌐"}</span>
@@ -143,7 +150,7 @@ export function OffLensSection({
               </a>
             ))}
             {chipSources.length > CHIP_LIMIT && (
-              <span className="inline-flex items-center px-2 py-1 text-[0.65rem] font-mono" style={{ color: "var(--text-on-ink-dim)" }}>
+              <span className="inline-flex items-center px-2 py-1 text-[0.6875rem] font-mono" style={{ color: "var(--text-on-ink-dim)" }}>
                 +{chipSources.length - CHIP_LIMIT} more
               </span>
             )}
@@ -153,21 +160,26 @@ export function OffLensSection({
 
       {missing.length > 0 && (
         <div className="mb-5">
-          <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-2" style={{ color: "var(--developing)" }}>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: "var(--developing)" }}>
             Perspectives not in sources
           </div>
           <div className="flex flex-wrap gap-2">
-            {missing.map((c) => (
-              <span key={c} className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] px-2.5 py-1 rounded border" style={{ borderColor: "var(--developing)", color: "var(--developing)" }}>
+            {missing.slice(0, COUNTRY_LIMIT).map((c) => (
+              <span key={c} className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] px-2.5 py-1 rounded border" style={{ borderColor: "var(--developing)", color: "var(--developing)" }}>
                 {countryToEmoji(c)} {c}
               </span>
             ))}
+            {missing.length > COUNTRY_LIMIT && (
+              <span className="inline-flex items-center px-1 py-1 text-[0.6875rem] font-mono" style={{ color: "var(--developing)" }}>
+                +{missing.length - COUNTRY_LIMIT} more
+              </span>
+            )}
           </div>
         </div>
       )}
 
       {(total > 0 || chipSources.length > 0) && (
-        <p className="text-[0.68rem] leading-snug mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
+        <p className="text-[0.6875rem] leading-snug mb-5" style={{ color: "var(--text-on-ink-dim)" }}>
           This map shows only the sources we found for this story. A country listed as missing may still have covered it, in an outlet or language we did not see.{" "}
           <a href="/how-we-rate" className="underline">How to read this</a>
         </p>
@@ -175,7 +187,7 @@ export function OffLensSection({
 
       {offLens && (
         <div className="pt-4 border-t" style={{ borderColor: "var(--border)" }}>
-          <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
             Analysis
           </div>
           <p className="text-[0.9rem] leading-relaxed" style={{ color: "var(--text-on-ink)" }}>{offLens}</p>

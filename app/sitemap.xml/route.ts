@@ -1,13 +1,13 @@
-﻿import { getAllStories } from '@/lib/stories';
+﻿import { getAllStories, getSitemapEntries } from '@/lib/stories';
 import { ALL_ENTITIES, isThinCountry, storiesFor } from '@/lib/lens';
 
 // 12 hours; refreshed on publish (lib/siteRefresh.ts).
 export const revalidate = 43200;
 
 export async function GET() {
-  const stories = await getAllStories();
-  
-  const urls = stories.map((s) => `
+  const [stories, entries] = await Promise.all([getAllStories(), getSitemapEntries()]);
+
+  const urls = entries.map((s) => `
     <url>
       <loc>https://chanakyalens.com/story/${s.slug}</loc>
       <lastmod>${new Date(s.publishedAt).toISOString()}</lastmod>
@@ -63,6 +63,16 @@ export async function GET() {
     <loc>https://chanakyalens.com/start-here</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://chanakyalens.com/creators</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://chanakyalens.com/membership</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://chanakyalens.com/whats-new</loc>

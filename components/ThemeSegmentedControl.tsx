@@ -18,7 +18,7 @@ export default function ThemeSegmentedControl({ className }: { className?: strin
   const pref = useSyncExternalStore(subscribeTheme, getStoredPreference, getServerSnapshot);
 
   return (
-    <div className={`flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-wide ${className ?? ""}`}>
+    <div className={`flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wide ${className ?? ""}`}>
       <span style={{ color: "var(--text-on-ink-dim)" }}>Theme:</span>
       {OPTIONS.map((opt, i) => (
         <span key={opt.value} className="flex items-center gap-1.5">

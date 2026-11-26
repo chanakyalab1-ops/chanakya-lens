@@ -6,16 +6,27 @@ import { Story } from "@/lib/stories";
 import { formatStoryDate } from "@/lib/formatDate";
 import { isOptimizableImageUrl } from "@/lib/imageHost";
 import { SYSTEMS } from "@/lib/lens";
+import { matchInterests, type Interest } from "@/lib/interests";
+import { applyFocus, countryOptions, isFocused, NO_FOCUS, type Focus } from "@/lib/focus";
+import { getLocalReads } from "@/components/ReadMarker";
 import type { TrendingTopic } from "@/lib/trending";
+// Publisher photos are hot-linked, and some sites refuse that. A photo that fails
+// to load is dropped instead of leaving a broken-image icon.
+function SafeImage(props: React.ComponentProps<typeof Image>) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  // eslint-disable-next-line jsx-a11y/alt-text
+  return <Image {...props} onError={() => setFailed(true)} />;
+}
 const dotColor: Record<string, string> = {
   direct: "var(--direct)",
   likely: "var(--likely)",
   possible: "var(--possible)",
 };
 const dotLabel: Record<string, string> = {
-  direct: "Direct — a concrete, near-certain mechanism",
-  likely: "Likely — a plausible mechanism, real but less certain",
-  possible: "Possible — a speculative but reasonable connection",
+  direct: "Direct: a concrete, near-certain mechanism",
+  likely: "Likely: a plausible mechanism, real but less certain",
+  possible: "Possible: a speculative but reasonable connection",
 };
 function Pill({
   children,
@@ -32,7 +43,7 @@ function Pill({
 }) {
   return (
     <span
-      className="font-mono text-[0.58rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1"
+      className="font-mono text-[0.6875rem] uppercase tracking-wide rounded-full border px-2 py-0.5 flex items-center gap-1"
       style={{ color, borderColor, background }}
     >
       {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: "currentColor" }} />}
@@ -61,6 +72,7 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
           {offLensStories.slice(0, 6).map((story) => (
             <Link
               key={story.slug}
+              prefetch={false}
               href={`/story/${story.slug}`}
               className="text-[0.82rem] leading-snug hover:opacity-80"
               style={{ color: "var(--text-on-ink)" }}
@@ -72,7 +84,7 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
       ) : null}
       <Link
         href="/off-lens"
-        className="mt-4 font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80"
+        className="mt-4 font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80"
         style={{ color: "var(--text-on-ink-dim)" }}
       >
         {offLensStories.length > 0 ? "See all →" : "Learn more →"}
@@ -103,8 +115,8 @@ function CategoryBadge({ category }: { category: string }) {
 }
 function ImpactLegend() {
   return (
-    <div className="flex items-center gap-3 font-mono text-[0.6rem]" style={{ color: "var(--text-on-ink-dim)" }}>
-      <span className="uppercase tracking-wide">Affects you if —</span>
+    <div className="flex items-center gap-3 font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+      <span className="uppercase tracking-wide">Affects you if:</span>
       {(["direct", "likely", "possible"] as const).map((level) => (
         <span key={level} className="flex items-center gap-1" title={dotLabel[level]}>
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: dotColor[level] }} />
@@ -150,7 +162,7 @@ function MoveLine({ analysis }: { analysis: string }) {
     <p className="flex items-start gap-1.5 text-[0.78rem] leading-snug mb-2" style={{ color: "var(--text-on-ink-dim)" }}>
       <span aria-hidden className="shrink-0" style={{ color: "var(--brand-soft)" }}>♟</span>
       <span>
-        <span className="font-mono text-[0.6rem] uppercase tracking-wide mr-1.5" style={{ color: "var(--brand-soft)" }}>
+        <span className="font-mono text-[0.6875rem] uppercase tracking-wide mr-1.5" style={{ color: "var(--brand-soft)" }}>
           Move
         </span>
         {truncate(firstSentence(analysis), 120)}
@@ -167,14 +179,14 @@ function ImpactChips({ nodes }: { nodes: Story["impactNodes"] }) {
   const top = [...nodes!].sort((a, b) => CONFIDENCE_PRIORITY[a.confidence] - CONFIDENCE_PRIORITY[b.confidence]).slice(0, 3);
   return (
     <div className="flex items-center gap-1.5 flex-wrap mb-2">
-      <span className="font-mono text-[0.58rem] uppercase tracking-wide shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>
+      <span className="font-mono text-[0.6875rem] uppercase tracking-wide shrink-0" style={{ color: "var(--text-on-ink-dim)" }}>
         Affects:
       </span>
       {top.map((n, i) => (
         <span
           key={i}
           title={n.mechanism}
-          className="inline-flex items-start gap-1 font-mono text-[0.62rem] leading-snug rounded-xl border px-2 py-0.5 max-w-full text-left"
+          className="inline-flex items-start gap-1 font-mono text-[0.6875rem] leading-snug rounded-xl border px-2 py-0.5 max-w-full text-left"
           style={{ color: dotColor[n.confidence], borderColor: dotColor[n.confidence], background: "transparent" }}
         >
           <span className="h-1.5 w-1.5 rounded-full shrink-0 mt-[0.3rem]" style={{ background: dotColor[n.confidence] }} />
@@ -189,10 +201,10 @@ function HeroCard({ story }: { story: Story }) {
   return (
     <>
       {/* Phones: edge-to-edge image, big headline, no card chrome */}
-      <Link href={`/story/${story.slug}`} className="md:hidden block -mx-4 mb-1">
+      <Link prefetch={false} href={`/story/${story.slug}`} className="md:hidden block -mx-4 mb-1">
         {story.imageUrl && (
           <div className="relative w-full aspect-[16/10] overflow-hidden">
-            <Image src={story.imageUrl} alt={story.headline} fill priority sizes="100vw" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+            <SafeImage src={story.imageUrl} alt={story.headline} fill priority fetchPriority="high" sizes="100vw" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
           </div>
         )}
         <div className="px-4 pt-3 pb-4 border-b" style={{ borderColor: "var(--border)" }}>
@@ -205,20 +217,21 @@ function HeroCard({ story }: { story: Story }) {
           <p className="text-[0.9rem] line-clamp-2 mb-3" style={{ color: "var(--text-body)" }}>{story.dek}</p>
           <div className="flex items-center gap-2.5">
             {story.impactNodes && story.impactNodes.length > 0 && <ImpactDots story={story} />}
-            <span className="font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+            <span className="font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
               {formatStoryDate(story.publishedAt)}
             </span>
           </div>
         </div>
       </Link>
       <Link
+        prefetch={false}
         href={`/story/${story.slug}`}
         className="hidden md:block rounded-sm border p-5 md:p-6 mb-3 hover:opacity-95"
         style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}
       >
         {story.imageUrl && (
           <div className="relative w-full aspect-[3/1] rounded-sm overflow-hidden mb-3 -mt-1">
-            <Image src={story.imageUrl} alt={story.headline} fill sizes="944px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+            <SafeImage src={story.imageUrl} alt={story.headline} fill sizes="944px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
           </div>
         )}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -231,9 +244,9 @@ function HeroCard({ story }: { story: Story }) {
         {story.chanakyaAnalysis && <MoveLine analysis={story.chanakyaAnalysis} />}
         {story.impactNodes && story.impactNodes.length > 0 && <ImpactChips nodes={story.impactNodes} />}
         <div className="flex items-center gap-2.5 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
-          <span className="font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if —</span>
+          <span className="font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Affects you if:</span>
           <ImpactDots story={story} />
-          <span className="ml-auto font-mono text-[0.62rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+          <span className="ml-auto font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
             {formatStoryDate(story.publishedAt)}
           </span>
         </div>
@@ -245,13 +258,14 @@ function HeroCard({ story }: { story: Story }) {
 export function CompactCard({ story }: { story: Story }) {
   return (
     <Link
+      prefetch={false}
       href={`/story/${story.slug}`}
       className="block rounded-sm border p-3.5"
       style={{ background: "var(--surface)", borderColor: "var(--surface-border)" }}
     >
       {story.imageUrl && (
         <div className="relative w-full aspect-[5/2] rounded-sm overflow-hidden mb-2.5">
-          <Image src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 320px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+          <SafeImage src={story.imageUrl} alt={story.headline} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 320px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
         </div>
       )}
       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -264,7 +278,7 @@ export function CompactCard({ story }: { story: Story }) {
       {story.impactNodes && story.impactNodes.length > 0 && <ImpactChips nodes={story.impactNodes} />}
       <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
         <ImpactDots story={story} />
-        <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+        <span className="ml-auto font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
           {formatStoryDate(story.publishedAt)}
         </span>
       </div>
@@ -277,12 +291,13 @@ export function CompactCard({ story }: { story: Story }) {
 export function MobileRow({ story }: { story: Story }) {
   return (
     <Link
+      prefetch={false}
       href={`/story/${story.slug}`}
       className="flex gap-3 py-3.5 border-b"
       style={{ borderColor: "var(--border)" }}
     >
       <div className="flex-1 min-w-0 flex flex-col">
-        <div className="flex items-center gap-2 mb-1.5 font-mono text-[0.58rem] uppercase tracking-wide">
+        <div className="flex items-center gap-2 mb-1.5 font-mono text-[0.6875rem] uppercase tracking-wide">
           <span style={{ color: "var(--brand-soft)" }}>{story.category}</span>
           {story.status === "developing" && (
             <span className="flex items-center gap-1" style={{ color: "var(--developing)" }}>
@@ -300,14 +315,14 @@ export function MobileRow({ story }: { story: Story }) {
         <h3 className="font-display font-bold text-[1.08rem] leading-[1.2] line-clamp-4">{story.headline}</h3>
         <div className="mt-auto pt-2 flex items-center gap-2">
           {story.impactNodes && story.impactNodes.length > 0 && <ImpactDots story={story} />}
-          <span className="font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+          <span className="font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
             {formatStoryDate(story.publishedAt)}
           </span>
         </div>
       </div>
       {story.imageUrl && (
         <div className="relative shrink-0 w-[104px] h-[104px] rounded-md overflow-hidden self-start">
-          <Image src={story.imageUrl} alt="" fill sizes="104px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
+          <SafeImage src={story.imageUrl} alt="" fill sizes="104px" className="object-cover" unoptimized={!isOptimizableImageUrl(story.imageUrl)} />
         </div>
       )}
     </Link>
@@ -327,7 +342,7 @@ export function SignalPanel({ stories, moreCount, moreLabel = "More from today",
       {/* The logo comes in a dark-ink and a light-ink version; globals.css shows the one that suits the theme. */}
       {plainHeading ? (
         // The page already shows the logo (e.g. /today), so don't repeat it.
-        <h2 className="font-mono text-[0.68rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>
+        <h2 className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>
           Top signals
         </h2>
       ) : (
@@ -344,12 +359,12 @@ export function SignalPanel({ stories, moreCount, moreLabel = "More from today",
       <ol className="flex flex-col">
         {stories.map((story, i) => (
           <li key={story.slug} className={i > 0 ? "border-t" : undefined} style={{ borderColor: "var(--border)" }}>
-            <Link href={`/story/${story.slug}`} className="flex gap-3 py-2.5 lg:py-3 hover:opacity-80">
+            <Link prefetch={false} href={`/story/${story.slug}`} className="flex gap-3 py-2.5 lg:py-3 hover:opacity-80">
               <span className="font-display font-extrabold text-2xl leading-none w-6 lg:w-7 shrink-0" style={{ color: "var(--brand-soft)" }}>
                 {i + 1}
               </span>
               <span className="min-w-0">
-                <span className="flex items-center gap-2 font-mono text-[0.58rem] uppercase tracking-wide mb-1" style={{ color: "var(--text-on-ink-dim)" }}>
+                <span className="flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide mb-1" style={{ color: "var(--text-on-ink-dim)" }}>
                   {story.category}
                   {story.status === "developing" && (
                     <span className="flex items-center gap-1" style={{ color: "var(--developing)" }}>
@@ -359,7 +374,7 @@ export function SignalPanel({ stories, moreCount, moreLabel = "More from today",
                   )}
                 </span>
                 <span className="block font-display font-bold text-[1rem] leading-tight line-clamp-2 lg:line-clamp-3">{story.headline}</span>
-                <span className="hidden lg:block font-mono text-[0.58rem] mt-1.5" style={{ color: "var(--text-on-ink-dim)" }}>
+                <span className="hidden lg:block font-mono text-[0.6875rem] mt-1.5" style={{ color: "var(--text-on-ink-dim)" }}>
                   {formatStoryDate(story.publishedAt)}
                 </span>
               </span>
@@ -406,7 +421,7 @@ function CategoryRail({
         {hasMore && (
           <button
             onClick={onSeeAll}
-            className="font-mono text-[0.62rem] uppercase tracking-wide hover:opacity-80"
+            className="font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80"
             style={{ color: "var(--brand-soft)" }}
           >
             See all {stories.length} →
@@ -439,7 +454,7 @@ function LensBand({ weekly }: { weekly?: Record<string, number> }) {
             The places, powers and supply chains behind the news.
           </p>
         </div>
-        <Link href="/lens" className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
+        <Link href="/lens" className="shrink-0 font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--brand-soft)" }}>
           See all →
         </Link>
       </div>
@@ -455,7 +470,7 @@ function LensBand({ weekly }: { weekly?: Record<string, number> }) {
             >
               <span className="font-display font-bold text-[1.05rem] leading-tight" style={{ color: "var(--text-on-ink)" }}>{e.name}</span>
               <span className="text-[0.76rem] leading-snug mt-1.5 line-clamp-3" style={{ color: "var(--text-body)" }}>{e.tagline}</span>
-              <span className="mt-auto pt-2.5 font-mono text-[0.6rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
+              <span className="mt-auto pt-2.5 font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
                 {n > 0 ? `${n} ${n === 1 ? "story" : "stories"} this week` : "Explore →"}
               </span>
             </Link>
@@ -469,7 +484,7 @@ function LensBand({ weekly }: { weekly?: Record<string, number> }) {
 function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
   return (
     <div className="max-w-7xl mx-auto px-4 pt-3 flex items-center gap-2.5 overflow-x-auto no-scrollbar">
-      <span className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
+      <span className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: "var(--brand-soft)" }}>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
           <path d="M2 12l4-4 3 3 5-6" />
           <path d="M10 5h4v4" />
@@ -480,7 +495,7 @@ function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
         <Link
           key={t.slug}
           href={`/lens/${t.slug}`}
-          className="shrink-0 font-mono text-[0.68rem] whitespace-nowrap rounded-full border px-3 py-1 transition-colors hover:opacity-80"
+          className="shrink-0 font-mono text-[0.6875rem] whitespace-nowrap rounded-full border px-3 py-1 transition-colors hover:opacity-80"
           style={{ color: "var(--text-body)", borderColor: "var(--border)" }}
         >
           {t.name}
@@ -488,6 +503,32 @@ function TrendingRow({ topics }: { topics: TrendingTopic[] }) {
       ))}
     </div>
   );
+}
+
+const FOR_YOU = "My Lens";
+
+// The homepage is cached for everyone, so a reader's interests are fetched in the
+// browser. Visitors without a Supabase session cookie skip the request entirely.
+function useInterests(open: boolean): { status: "loading" | "anon" | "ready" | "off"; interests: Interest[] } {
+  const [state, setState] = useState<{ status: "loading" | "anon" | "ready" | "off"; interests: Interest[] }>({ status: "loading", interests: [] });
+  useEffect(() => {
+    let cancelled = false;
+    const hasSession = /(^|;\s*)sb-[^=]*-auth-token/.test(document.cookie);
+    const load: Promise<{ signedIn: boolean; enabled?: boolean; interests: Interest[] }> = hasSession
+      ? fetch("/api/me", { cache: "no-store" }).then((r) => r.json())
+      : Promise.resolve({ signedIn: false, interests: [] });
+    load
+      .then((d) => {
+        if (!cancelled) setState(d.signedIn && d.enabled ? { status: "ready", interests: d.interests } : !d.signedIn && open ? { status: "anon", interests: [] } : { status: "off", interests: [] });
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: "off", interests: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+  return state;
 }
 
 // The `q` search param, read in the browser after mount instead of with
@@ -511,19 +552,28 @@ function useUrlQuery(): string {
   return query;
 }
 
-export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending, lensWeek }: { stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[]; lensWeek?: Record<string, number> }) {
+export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending, lensWeek, toolsOpen }: { toolsOpen?: boolean; stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[]; lensWeek?: Record<string, number> }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
     [stories]
   );
   const [active, setActive] = useState("All");
+  const me = useInterests(!!toolsOpen);
+  const [focus, setFocus] = useState<Focus>(NO_FOCUS);
+  const [readSet, setReadSet] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    setTimeout(() => setReadSet(new Set(getLocalReads())), 0);
+  }, []);
+  const countries = useMemo(() => countryOptions(stories), [stories]);
   // Search now lives in the header (see HeaderSearch.tsx), which writes to
   // the `q` URL param -- read it here reactively rather than owning local
   // input state, since Feed no longer renders its own search box.
   const query = useUrlQuery();
-  const categoryFiltered = active === "All" ? stories : stories.filter((s) => s.category === active);
+  const categoryFiltered =
+    active === FOR_YOU ? matchInterests(stories, me.interests) : active === "All" ? stories : stories.filter((s) => s.category === active);
+  const focused = me.status === "ready" && isFocused(focus) ? applyFocus(categoryFiltered, focus, readSet) : categoryFiltered;
   const filtered = query.trim()
-    ? categoryFiltered.filter((s) => {
+    ? focused.filter((s) => {
         const q = query.trim().toLowerCase();
         return (
           s.headline.toLowerCase().includes(q) ||
@@ -531,14 +581,15 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
           s.category.toLowerCase().includes(q)
         );
       })
-    : categoryFiltered;
+    : focused;
   const treated = filtered.filter((s) => s.impactNodes?.length);
   const briefs = filtered.filter((s) => !s.impactNodes?.length);
 
   // Only group into category rails on the unfiltered, no-search "All" view --
   // once someone picks a specific category or searches, show the flat,
   // complete list they actually asked for.
-  const showRails = active === "All" && !query.trim();
+  const focusOn = me.status === "ready" && isFocused(focus);
+  const showRails = active === "All" && !query.trim() && !focusOn;
 
   // On that same default landing view, the Today's Signal panel above the
   // feed already shows the top story -- skip it as the hero pick too so
@@ -575,20 +626,53 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
         }}
       >
         <div className="flex gap-2 w-max">
+          {me.status === "anon" && (
+            <Link
+              href="/account/login"
+              className="shrink-0 font-mono text-[0.6875rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5"
+              style={{ color: "var(--brand-soft)", borderColor: "var(--brand-soft)" }}
+            >
+              My Lens
+            </Link>
+          )}
+          {me.status === "ready" && (
+            <button
+              onClick={() => {
+                setActive(FOR_YOU);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="shrink-0 font-mono text-[0.6875rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
+              style={
+                active === FOR_YOU
+                  ? { color: "var(--on-brand)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
+                  : { color: "var(--brand-soft)", borderColor: "var(--brand-soft)", background: "transparent" }
+              }
+            >
+              My Lens
+            </button>
+          )}
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => {
+                if (active === FOR_YOU) {
+                  setActive("All");
+                  setTimeout(() => {
+                    if (cat === "All") window.scrollTo({ top: 0, behavior: "smooth" });
+                    else document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }, 60);
+                  return;
+                }
                 if (cat === "All") {
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 } else {
                   document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }
               }}
-              className="shrink-0 font-mono text-[0.66rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
+              className="shrink-0 font-mono text-[0.6875rem] uppercase tracking-wide whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors"
               style={
                 active === cat
-                  ? { color: "var(--ink)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
+                  ? { color: "var(--on-brand)", background: "var(--brand-soft)", borderColor: "var(--brand-soft)" }
                   : { color: "var(--text-on-ink)", borderColor: "var(--border)", background: "transparent" }
               }
             >
@@ -597,6 +681,46 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
           ))}
         </div>
       </div>
+      {me.status === "ready" && (
+        <div className="max-w-7xl mx-auto px-4 pt-3 flex flex-wrap items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-wide">
+          <span style={{ color: "var(--text-on-ink-dim)" }}>Focus</span>
+          <button
+            onClick={() => setFocus((f) => ({ ...f, freshOnly: !f.freshOnly }))}
+            aria-pressed={focus.freshOnly}
+            className="rounded-full border px-3 py-1.5"
+            style={focus.freshOnly ? { color: "#fff", background: "#0E7080", borderColor: "#0E7080" } : { borderColor: "var(--border)" }}
+          >
+            {focus.freshOnly ? "✓ " : ""}Fresh only
+          </button>
+          <select
+            value={focus.confidence}
+            onChange={(e) => setFocus((f) => ({ ...f, confidence: e.target.value as Focus["confidence"] }))}
+            aria-label="Filter by how certain the effect is"
+            className="rounded-full border px-3 py-1.5 bg-transparent"
+            style={{ borderColor: "var(--border)" }}
+          >
+            <option value="all">Any certainty</option>
+            <option value="direct">Direct effects</option>
+            <option value="likely">Likely effects</option>
+            <option value="possible">Possible effects</option>
+          </select>
+          <select
+            value={focus.country}
+            onChange={(e) => setFocus((f) => ({ ...f, country: e.target.value }))}
+            aria-label="Filter by country"
+            className="rounded-full border px-3 py-1.5 bg-transparent"
+            style={{ borderColor: "var(--border)" }}
+          >
+            <option value="">Any country</option>
+            {countries.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          {isFocused(focus) && (
+            <button onClick={() => setFocus(NO_FOCUS)} className="underline" style={{ color: "var(--text-on-ink-dim)" }}>Clear</button>
+          )}
+        </div>
+      )}
       {trending && trending.length > 0 && (
         <TrendingRow topics={trending} />
       )}
@@ -647,7 +771,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
           )}
 
           {briefs.length > 0 && (
-            <div className="flex items-center gap-2 font-mono text-[0.62rem] pt-5.5 pb-1" style={{ color: "var(--text-on-ink-dim)" }}>
+            <div className="flex items-center gap-2 font-mono text-[0.6875rem] pt-5.5 pb-1" style={{ color: "var(--text-on-ink-dim)" }}>
               More stories
               <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
             </div>
@@ -661,6 +785,7 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
             {briefs.map((story) => (
               <Link
                 key={story.slug}
+                prefetch={false}
                 href={`/story/${story.slug}`}
                 className="block rounded-sm border p-3.5"
                 style={{ background: "var(--surface)", borderColor: "var(--surface-border)" }}
@@ -672,8 +797,8 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
                 <h3 className="font-display font-bold text-[0.95rem] leading-tight mb-2">{story.headline}</h3>
                 {story.chanakyaAnalysis && <MoveLine analysis={story.chanakyaAnalysis} />}
                 <div className="flex items-center pt-2 border-t" style={{ borderColor: "var(--border)" }}>
-                  <span className="font-mono text-[0.58rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Brief</span>
-                  <span className="ml-auto font-mono text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(story.publishedAt)}</span>
+                  <span className="font-mono text-[0.6875rem] uppercase tracking-wide" style={{ color: "var(--text-on-ink-dim)" }}>Brief</span>
+                  <span className="ml-auto font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>{formatStoryDate(story.publishedAt)}</span>
                 </div>
               </Link>
             ))}
@@ -681,7 +806,17 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
 
           {filtered.length === 0 && (
             <div className="mt-8 text-center text-sm" style={{ color: "var(--text-on-ink-dim)" }}>
-              {query ? `No stories match "${query}".` : "Nothing in this category today."}
+              {query ? (
+                `No stories match "${query}".`
+              ) : active === FOR_YOU ? (
+                me.interests.length === 0 ? (
+                  <>You are not watching anything yet. <Link href="/account/watchlist" className="underline">Build your Watchlist</Link>.</>
+                ) : (
+                  <>Nothing new on your Watchlist yet. <Link href="/account/watchlist" className="underline">Edit your Watchlist</Link>.</>
+                )
+              ) : (
+                "Nothing in this category today."
+              )}
             </div>
           )}
 

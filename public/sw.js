@@ -1,5 +1,24 @@
-// Service worker for Chanakya Lens notifications. It only shows alerts and opens
-// the story when one is tapped; it caches nothing.
+// Service worker for Chanakya Lens: shows notifications and opens the story when
+// one is tapped, and keeps story pages a reader has opened or saved so they
+// still load offline.
+const STORY_CACHE = "cl-stories-v1";
+
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET" || req.mode !== "navigate") return;
+  if (!new URL(req.url).pathname.startsWith("/story/")) return;
+  event.respondWith(
+    fetch(req)
+      .then((res) => {
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(STORY_CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        }
+        return res;
+      })
+      .catch(() => caches.match(req).then((hit) => hit || Response.error()))
+  );
+});
 self.addEventListener("push", (event) => {
   let data = {};
   try {

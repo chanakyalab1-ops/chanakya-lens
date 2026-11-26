@@ -42,7 +42,7 @@ export default function MarketTicker({ rows, onSelect }: { rows: MarketRow[]; on
 
   return (
     <div className="border-b overflow-hidden" style={{ borderColor: "var(--border)", background: "var(--surface-strong)" }}>
-      <div className="max-w-7xl mx-auto flex items-center gap-5 px-4 py-1.5 font-mono text-[0.68rem] overflow-x-auto">
+      <div className="max-w-7xl mx-auto flex items-center gap-5 px-4 py-1.5 font-mono text-[0.6875rem] overflow-x-auto">
         {fresh.map((r) => {
           const isUp = (r.change_percent ?? 0) > 0;
           const isDown = (r.change_percent ?? 0) < 0;
@@ -70,7 +70,7 @@ export default function MarketTicker({ rows, onSelect }: { rows: MarketRow[]; on
             <span key={r.symbol} className="flex items-center gap-1.5 shrink-0">{content}</span>
           );
         })}
-        <span className="shrink-0 uppercase tracking-wide text-[0.58rem]" style={{ color: "var(--text-on-ink-dim)" }}>Indicative only</span>
+        <span className="shrink-0 uppercase tracking-wide text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>Indicative only</span>
       </div>
     </div>
   );

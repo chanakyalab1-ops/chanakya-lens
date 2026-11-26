@@ -14,22 +14,25 @@ export default function Footer() {
             </p>
           </div>
           <div>
-            <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Read</div>
+            <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Read</div>
             <div className="space-y-2">
-              <Link href="/" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Latest stories</Link>
-              <Link href="/regions" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Browse by region</Link>
+              <Link prefetch={false} href="/" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Latest stories</Link>
+              <Link prefetch={false} href="/regions" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Browse by region</Link>
               <Link href="/off-lens" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Off-Lens</Link>
               <Link href="/lens" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>The Lens</Link>
+              {process.env.MEMBERSHIP_PUBLIC === "true" && <Link href="/dispatches" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Dispatches</Link>}
               <Link href="/digest" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Daily digest</Link>
+              <Link href="/membership" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Lens+ {process.env.MEMBERSHIP_PUBLIC === "true" ? "membership" : "waitlist"}</Link>
             </div>
           </div>
           <div>
-            <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>About</div>
+            <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>About</div>
             <div className="space-y-2">
               <Link href="/start-here" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Start here</Link>
               <Link href="/about" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Our approach</Link>
               <Link href="/whats-new" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>What&apos;s new</Link>
               <Link href="/how-we-rate" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>How we rate this</Link>
+              <Link href="/creators" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Creator partners</Link>
               <Link href="/feedback" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Feedback</Link>
               <Link href="/privacy" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Privacy policy</Link>
               <Link href="/terms" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Terms of service</Link>
@@ -37,7 +40,7 @@ export default function Footer() {
             </div>
           </div>
           <div>
-            <div className="font-mono text-[0.6rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Follow</div>
+            <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--brand-soft)" }}>Follow</div>
             <div className="space-y-2">
               <a href="https://www.instagram.com/chanakya.lab/" target="_blank" rel="noreferrer" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Instagram</a>
               <a href="https://www.youtube.com/@Chanakya_lab" target="_blank" rel="noreferrer" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>YouTube</a>
@@ -46,10 +49,10 @@ export default function Footer() {
           </div>
         </div>
         <div className="pt-6 border-t flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
-          <span className="font-mono text-[0.65rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+          <span className="font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
             © 2026 Chanakya Labs. All rights reserved.
           </span>
-          <span className="font-mono text-[0.65rem]" style={{ color: "var(--text-on-ink-dim)" }}>
+          <span className="font-mono text-[0.6875rem]" style={{ color: "var(--text-on-ink-dim)" }}>
             Market prices are indicative only. Not investment advice.
           </span>
         </div>

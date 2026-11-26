@@ -1,6 +1,6 @@
 import { createHmac } from "crypto";
 import { describe, expect, it } from "vitest";
-import { apiBase, isNewerEvent, isSandboxToken, membershipRow, verifyPaddleSignature } from "./paddle";
+import { shouldReplaceRecord, apiBase, isNewerEvent, isSandboxToken, membershipRow, verifyPaddleSignature } from "./paddle";
 import { isActiveMember } from "./membership";
 
 const SECRET = "pdl_ntfset_test";
@@ -66,5 +66,29 @@ describe("secret handling", () => {
     const d = signatureDebug("ts=1700000000;h1=abc", "pdl_ntfset_supersecretvalue", 1_700_000_010_000);
     expect(JSON.stringify(d)).not.toContain("supersecretvalue");
     expect(d).toMatchObject({ hasHeader: true, h1Count: 1, ageSeconds: 10, secretLength: 27 });
+  });
+});
+
+describe("api key cleaning", () => {
+  it("accepts a pasted key with whitespace and still picks the sandbox", () => {
+    const pasted = "  pdl_sdbx_apikey_abc123 \n";
+    expect(apiBase(cleanSecret(pasted))).toBe("https://sandbox-api.paddle.com");
+    expect(cleanSecret(pasted)).toBe("pdl_sdbx_apikey_abc123");
+  });
+});
+
+describe("shouldReplaceRecord", () => {
+  const live = { provider_subscription_id: "sub_a", status: "active" };
+  it("always takes events for the recorded subscription, or when nothing is recorded", () => {
+    expect(shouldReplaceRecord(null, { id: "sub_b", status: "canceled" })).toBe(true);
+    expect(shouldReplaceRecord(live, { id: "sub_a", status: "canceled" })).toBe(true);
+  });
+  it("ignores a cancellation of some other subscription while the recorded one is live", () => {
+    expect(shouldReplaceRecord(live, { id: "sub_b", status: "canceled" })).toBe(false);
+    expect(shouldReplaceRecord({ provider_subscription_id: "sub_a", status: "trialing" }, { id: "sub_b", status: "past_due" })).toBe(false);
+  });
+  it("switches to another subscription that is live, or when the recorded one has ended", () => {
+    expect(shouldReplaceRecord(live, { id: "sub_b", status: "active" })).toBe(true);
+    expect(shouldReplaceRecord({ provider_subscription_id: "sub_a", status: "canceled" }, { id: "sub_b", status: "canceled" })).toBe(true);
   });
 });

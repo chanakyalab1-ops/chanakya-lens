@@ -38,7 +38,7 @@ export function SectionNav({ links }: { links: { href: string; label: string; ba
         >
           {l.label}
           {l.badge ? (
-            <span className="rounded-full px-1.5 text-[0.6rem]" style={{ background: "var(--brand-soft)", color: "var(--ink)" }}>
+            <span className="rounded-full px-1.5 text-[0.6rem]" style={{ background: "var(--brand-soft)", color: "var(--on-brand)" }}>
               {l.badge}
             </span>
           ) : null}

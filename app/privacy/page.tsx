@@ -44,13 +44,13 @@ export default function PrivacyPage() {
       <article className="max-w-2xl mx-auto px-5 pt-7 pb-16">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-wide mb-5 hover:opacity-80"
+          className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-wide mb-5 hover:opacity-80"
           style={{ color: "var(--text-on-ink-dim)" }}
         >
           Back to feed
         </Link>
 
-        <div className="font-mono text-[0.68rem] uppercase tracking-widest mb-3" style={heading}>
+        <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={heading}>
           Legal
         </div>
 

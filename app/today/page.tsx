@@ -11,7 +11,7 @@ import { pickTodaysSignal, recentWindow } from "@/lib/signal";
 // straight away (lib/siteRefresh.ts), so this is only a safety net.
 export const revalidate = 43200;
 
-export const metadata: Metadata = pageMeta("/today", "Today's Signal", "Everything published in the last day on Chanakya Lens, with the stories that matter most on top.");
+export const metadata: Metadata = pageMeta("/today", "Today's Signal: the biggest world stories of the day", "Everything published in the last day on Chanakya Lens, with the stories that matter most on top.");
 
 export default async function TodayPage() {
   const all = await getAllStories();
