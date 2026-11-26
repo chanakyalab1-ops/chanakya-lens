@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLensPlus } from "@/lib/useLensPlus";
 
 type IconProps = { active: boolean };
 
@@ -31,8 +32,8 @@ const GlobeIcon = ({ active }: IconProps) => (
 const EyeIcon = ({ active }: IconProps) => (
   <Icon active={active}><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></Icon>
 );
-const MailIcon = ({ active }: IconProps) => (
-  <Icon active={active}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></Icon>
+const PlusIcon = ({ active }: IconProps) => (
+  <Icon active={active}><circle cx="12" cy="12" r="9" /><path d="M12 8v8" /><path d="M8 12h8" /></Icon>
 );
 const UserIcon = ({ active }: IconProps) => (
   <Icon active={active}><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" /></Icon>
@@ -42,7 +43,7 @@ const TABS = [
   { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/regions", label: "Regions", Icon: GlobeIcon },
   { href: "/off-lens", label: "Off-Lens", Icon: EyeIcon },
-  { href: "/digest", label: "Digest", Icon: MailIcon },
+  { href: "/membership", label: "Lens+", Icon: PlusIcon },
   { href: "/account", label: "Account", Icon: UserIcon },
 ];
 
@@ -50,6 +51,7 @@ const TABS = [
 // top header + drawer.
 export default function MobileTabBar() {
   const pathname = usePathname();
+  const member = useLensPlus();
   return (
     <nav
       aria-label="Primary"
@@ -61,8 +63,13 @@ export default function MobileTabBar() {
       }}
     >
       <ul className="grid grid-cols-5">
-        {TABS.map(({ href, label, Icon: TabIcon }) => {
-          const active = href === "/" ? pathname === "/" || pathname.startsWith("/story") : pathname.startsWith(href);
+        {TABS.map(({ href: baseHref, label, Icon: TabIcon }) => {
+          const isPlus = label === "Lens+";
+          // The Lens+ tab is the home of the member tools; everyone else lands on the plans.
+          const href = isPlus && member ? "/tools" : baseHref;
+          const active = isPlus
+            ? ["/membership", "/tools", "/features", "/gift", "/monthly", "/ask", "/compare", "/redeem"].some((p) => pathname.startsWith(p))
+            : href === "/" ? pathname === "/" || pathname.startsWith("/story") : pathname.startsWith(href);
           return (
             <li key={href}>
               <Link
@@ -70,7 +77,7 @@ export default function MobileTabBar() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className="flex flex-col items-center justify-center gap-0.5 py-2"
-                style={{ color: active ? "var(--brand-soft)" : "var(--text-on-ink-dim)" }}
+                style={{ color: active ? "var(--brand-soft)" : isPlus ? "#C97B4A" : "var(--text-on-ink-dim)" }}
               >
                 <TabIcon active={active} />
                 <span className="text-[0.6875rem] font-medium tracking-wide">{label}</span>
