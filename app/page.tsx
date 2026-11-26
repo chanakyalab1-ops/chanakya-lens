@@ -4,6 +4,7 @@ import NavDrawer from "@/components/NavDrawer";
 import Feed from "@/components/Feed";
 import FirstVisitStrip from "@/components/FirstVisitStrip";
 import WaitlistStrip from "@/components/WaitlistStrip";
+import GetStartedCard from "@/components/GetStartedCard";
 import LiveMarketTicker from "@/components/LiveMarketTicker";
 import { filterFreshRows } from "@/components/MarketTicker";
 import { getAllStories } from "@/lib/stories";
@@ -38,6 +39,7 @@ export default async function FeedPage() {
       <h1 className="sr-only">Chanakya Lens: geopolitics traced to what it means for you</h1>
 
       <FirstVisitStrip />
+      <GetStartedCard />
       {process.env.MEMBERSHIP_PUBLIC !== "true" && <WaitlistStrip />}
 
       <LiveMarketTicker initialRows={filterFreshRows(marketRows)} />

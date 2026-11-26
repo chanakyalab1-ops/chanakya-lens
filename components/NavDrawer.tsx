@@ -8,6 +8,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import NotifyBell from "@/components/NotifyBell";
 import ThemeSegmentedControl from "@/components/ThemeSegmentedControl";
 import { HeaderSearchDesktop, HeaderSearchMobile } from "@/components/HeaderSearch";
+import { useLensPlus, useLensPlusVisible } from "@/lib/useLensPlus";
 
 const ADMIN_EMAIL = "chanakya.lab1@gmail.com";
 const REGIONS = ["Asia", "Americas", "Europe", "Middle East", "Africa"];
@@ -16,6 +17,8 @@ export default function NavDrawer() {
   const [open, setOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [tools, setTools] = useState(false);
+  const member = useLensPlus();
+  const plusVisible = useLensPlusVisible();
   const [email, setEmail] = useState("");
   const [subStatus, setSubStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const ref = useRef<HTMLDivElement>(null);
@@ -71,6 +74,14 @@ export default function NavDrawer() {
           </Suspense>
           <div className="md:hidden"><ThemeToggle /></div>
           <NotifyBell />
+          {plusVisible && <Link
+            href={member ? "/tools" : "/membership"}
+            className="hidden md:inline-flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border font-semibold hover:opacity-90"
+            style={member ? { background: "#0E7080", borderColor: "#0E7080", color: "#fff" } : { borderColor: "#0E7080", color: "var(--brand-soft)" }}
+            title={member ? "Your Lens+ tools" : "See Lens+"}
+          >
+            Lens+
+          </Link>}
           <Link href="/account" className="hidden md:inline-block font-mono text-[0.6875rem] uppercase tracking-widest px-3 py-1.5 rounded-sm border hover:opacity-80" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
             Account
           </Link>
