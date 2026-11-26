@@ -22,8 +22,8 @@ const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
-const SITE_TITLE = "Chanakya Lens -- stay ahead of the map";
-const SITE_DESCRIPTION = "Geopolitics traced to you. Small events, real chains, plausible impact -- not forecasts.";
+const SITE_TITLE = "Chanakya Lens | Stay ahead of the map";
+const SITE_DESCRIPTION = "Geopolitics traced to you. Small events, real chains, plausible impact, not forecasts.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://chanakyalens.com"),

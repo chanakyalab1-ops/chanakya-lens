@@ -60,7 +60,7 @@ export default async function AdminPage() {
         <Link href="/review/proposals" className="col-span-2 block rounded-sm border p-4 hover:opacity-90" style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}>
           <div className="font-display font-bold text-lg" style={{ color: "var(--text-on-ink)" }}>Proposed stories</div>
           <div className="text-[0.78rem] mt-0.5" style={{ color: "var(--text-body)" }}>
-            {o.buffer.settings.mode === "approve" ? "Approve what gets generated" : "Automatic mode is on. Open to generate by hand"}
+            {o.buffer.settings.mode === "approve" ? "Pick stories by category, then approve what gets generated" : "Automatic mode is on. Open to pick by category and generate by hand"}
           </div>
         </Link>
         <Link href="/review" className="block rounded-sm border p-4 hover:opacity-90" style={{ background: "var(--surface-strong)", borderColor: "var(--brand-soft)" }}>
@@ -75,21 +75,20 @@ export default async function AdminPage() {
         </Link>
       </div>
 
-      <Link href="/admin/push" className="inline-block mb-2 mr-5 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
-        Notifications →
-      </Link>
-      <a href="/api/admin/waitlist" className="inline-block mb-2 mr-5 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
-        Lens+ waitlist{waitlist === null ? " (run waitlist.sql)" : ` (${waitlist})`}: download CSV →
-      </a>
-      <a href="/api/admin/creators" className="inline-block mb-2 mr-5 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
-        Creator applications: CSV →
-      </a>
-      <a href="/api/admin/creators?type=referrals" className="inline-block mb-2 mr-5 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
-        Sign-ups per creator link: CSV →
-      </a>
-      <Link href="/review/duplicates" className="inline-block mb-6 font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: "var(--brand-soft)" }}>
-        Possible duplicate stories →
-      </Link>
+      <div className="rounded-sm border p-4 mb-8" style={{ background: "var(--ink-card)", borderColor: "var(--border)" }}>
+        <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--text-on-ink-dim)" }}>More tools</div>
+        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2.5 text-[0.88rem]">
+          <Link href="/admin/dispatches" className="underline" style={{ color: "var(--brand-soft)" }}>Dispatches (monthly deep-dives)</Link>
+          <a href="/api/admin/groups" className="underline" style={{ color: "var(--brand-soft)" }}>Group plan requests, download CSV</a>
+          <a href="/api/admin/creators" className="underline" style={{ color: "var(--brand-soft)" }}>Creator applications, download CSV</a>
+          <a href="/api/admin/creators?type=referrals" className="underline" style={{ color: "var(--brand-soft)" }}>Sign-ups per creator link, download CSV</a>
+          <Link href="/admin/push" className="underline" style={{ color: "var(--brand-soft)" }}>Notifications</Link>
+          <Link href="/review/duplicates" className="underline" style={{ color: "var(--brand-soft)" }}>Possible duplicate stories</Link>
+          <a href="/api/admin/waitlist" className="underline" style={{ color: "var(--brand-soft)" }}>
+            Lens+ waitlist{waitlist === null ? " (run waitlist.sql)" : ` (${waitlist})`}, download CSV
+          </a>
+        </div>
+      </div>
 
       <SectionNav
         links={[

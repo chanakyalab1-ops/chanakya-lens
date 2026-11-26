@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import NavDrawer from '@/components/NavDrawer';
 import { getSessionUser } from '@/lib/supabase-user';
-import { membershipVisibleTo } from '@/lib/memberAccess';
+import { paidAccess } from '@/lib/entitlements';
+import { UpgradeNotice } from '@/components/UpgradeNotice';
 import { getAllStories, type Story } from '@/lib/stories';
 import { ACTORS, COUNTRIES, SYSTEMS, THEMES, getLensEntity, storiesFor } from '@/lib/lens';
 import { compareStories } from '@/lib/compare';
@@ -16,7 +17,21 @@ const OPTIONS = [...COUNTRIES, ...SYSTEMS, ...ACTORS, ...THEMES];
 export default async function ComparePage({ searchParams }: { searchParams: Promise<{ a?: string; b?: string }> }) {
   const user = await getSessionUser();
   if (!user) redirect('/account/login');
-  if (!membershipVisibleTo(user.email)) notFound();
+  const access = await paidAccess(user);
+  if (access === 'hidden') notFound();
+
+  if (access === 'locked') {
+    return (
+      <>
+        <NavDrawer />
+        <div className="max-w-2xl mx-auto px-5 pt-7 pb-16">
+          <Link href="/account" className="font-mono text-[0.68rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>← Your account</Link>
+          <h1 className="font-display text-3xl font-bold mt-4 mb-5">Compare</h1>
+          <UpgradeNotice feature="compare" icon="compare" />
+        </div>
+      </>
+    );
+  }
 
   const { a, b } = await searchParams;
   const ea = a ? getLensEntity(a) : undefined;

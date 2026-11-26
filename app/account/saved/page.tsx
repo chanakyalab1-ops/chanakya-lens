@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import NavDrawer from '@/components/NavDrawer';
 import { getSessionUser } from '@/lib/supabase-user';
 import { membershipVisibleTo } from '@/lib/memberAccess';
+import { paidAccess } from '@/lib/entitlements';
 import { supabaseServer } from '@/lib/supabase-server';
 import { getShelf } from '@/lib/userShelf';
 import { SavedList } from './SavedList';
@@ -16,6 +17,7 @@ export default async function SavedPage() {
   if (!user) redirect('/account/login');
   if (!membershipVisibleTo(user.email)) notFound();
 
+  const canExport = (await paidAccess(user)) === 'allowed';
   const saved = await getShelf(user.id);
   const { data } = saved.length ? await supabaseServer().from('stories').select('slug, headline, category').in('slug', saved.map((s) => s.slug)) : { data: [] };
   const bySlug = new Map(((data ?? []) as { slug: string; headline: string; category: string }[]).map((s) => [s.slug, s]));
@@ -31,7 +33,11 @@ export default async function SavedPage() {
         <div className="flex items-end justify-between gap-3 mt-4 mb-5">
           <h1 className="font-display text-3xl font-bold">Saved stories</h1>
           {items.length > 0 && (
-            <a href="/api/saved/export" download className="font-mono text-[0.6875rem] uppercase tracking-wide underline" style={{ color: 'var(--text-on-ink-dim)' }}>Download CSV</a>
+            canExport ? (
+              <a href="/api/saved/export" download className="font-mono text-[0.6875rem] uppercase tracking-wide underline" style={{ color: 'var(--text-on-ink-dim)' }}>Download CSV</a>
+            ) : (
+              <Link href="/membership" className="font-mono text-[0.6875rem] uppercase tracking-wide underline" style={{ color: 'var(--text-on-ink-dim)' }}>CSV export · Lens+</Link>
+            )
           )}
         </div>
         <SavedList initial={items} />

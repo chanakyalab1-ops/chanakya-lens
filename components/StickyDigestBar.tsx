@@ -77,7 +77,7 @@ export default function StickyDigestBar() {
               type="submit"
               disabled={status === "loading"}
               className="rounded-sm px-4 py-1.5 text-sm font-semibold shrink-0"
-              style={{ background: "var(--brand-soft)", color: "var(--ink)" }}
+              style={{ background: "var(--brand-soft)", color: "var(--on-brand)" }}
             >
               {status === "loading" ? "..." : "Subscribe"}
             </button>

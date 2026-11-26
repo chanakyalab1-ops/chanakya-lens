@@ -24,7 +24,7 @@ function triggerFactCheck(slug: string) {
   after(async () => {
     await fetch(`${baseUrl}/api/fact-check`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.CRON_SECRET ?? ''}` },
       body: JSON.stringify({ slug }),
     }).catch(() => {});
   });

@@ -66,6 +66,7 @@ export default function MobileTabBar() {
           return (
             <li key={href}>
               <Link
+                prefetch={false}
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className="flex flex-col items-center justify-center gap-0.5 py-2"

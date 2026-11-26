@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { Proposal } from '@/lib/auto-generate';
 import { timeAgo } from '../../admin/time';
 import { approveProposals, skipProposals } from '../proposalActions';
+import { GUESS_CATEGORIES } from '@/lib/categoryGuess';
 
 const MAX_PER_APPROVAL = 15;
 
@@ -16,14 +17,26 @@ const REPEAT_LABEL: Record<string, string> = {
   proposed: 'a proposal above',
 };
 
-export function ProposalList({ proposals }: { proposals: Proposal[] }) {
+const ORDER: string[] = [...GUESS_CATEGORIES, 'Other'];
+
+export function ProposalList({ proposals, categories, weekly }: { proposals: Proposal[]; categories: Record<string, string>; weekly: Record<string, number> }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState<string | null>(null);
+  const [filter, setFilter] = useState<string>('All');
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
 
   const chosen = proposals.filter((p) => selected.has(p.id));
+  const countBy = (c: string) => proposals.filter((p) => categories[p.id] === c).length;
+  const visible = filter === 'All' ? proposals : proposals.filter((p) => categories[p.id] === filter);
+
+  // The best three in each category, or the best three in the open one.
+  function topThree() {
+    const take = (list: Proposal[]) => list.slice(0, 3).map((p) => p.id);
+    const ids = filter === 'All' ? ORDER.filter((c) => c !== 'Other').flatMap((c) => take(proposals.filter((p) => categories[p.id] === c))) : take(visible);
+    setSelected((prev) => new Set([...prev, ...ids]));
+  }
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -89,6 +102,14 @@ export function ProposalList({ proposals }: { proposals: Proposal[] }) {
         </button>
         <button
           type="button"
+          onClick={topThree}
+          className="font-mono text-[0.68rem] uppercase tracking-wide px-3 py-2 rounded-sm border"
+          style={{ borderColor: 'var(--border)', color: 'var(--text-on-ink)' }}
+        >
+          {filter === 'All' ? 'Top 3 each' : `Top 3 ${filter}`}
+        </button>
+        <button
+          type="button"
           disabled={chosen.length === 0 || pending}
           onClick={() => run('skip')}
           className="font-mono text-[0.68rem] uppercase tracking-wide px-3 py-2 rounded-sm border disabled:opacity-40"
@@ -101,7 +122,7 @@ export function ProposalList({ proposals }: { proposals: Proposal[] }) {
           disabled={chosen.length === 0 || chosen.length > MAX_PER_APPROVAL || pending}
           onClick={() => run('approve')}
           className="text-[0.82rem] font-semibold px-4 py-2 rounded-sm disabled:opacity-40"
-          style={{ background: 'var(--brand-soft)', color: 'var(--ink)' }}
+          style={{ background: 'var(--brand-soft)', color: 'var(--on-brand)' }}
         >
           {pending ? 'Working…' : `Generate ${chosen.length || ''}`.trim()}
         </button>
@@ -117,8 +138,30 @@ export function ProposalList({ proposals }: { proposals: Proposal[] }) {
         </div>
       )}
 
+      <div className="flex flex-wrap gap-2 mb-4" role="tablist" aria-label="Category">
+        {['All', ...ORDER].filter((c) => c === 'All' || countBy(c) > 0).map((c) => {
+          const on = filter === c;
+          const n = c === 'All' ? proposals.length : countBy(c);
+          return (
+            <button
+              key={c}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              onClick={() => setFilter(c)}
+              className="text-left rounded-sm border px-3 py-2"
+              style={on ? { background: 'var(--brand-soft)', color: 'var(--on-brand)', borderColor: 'var(--brand-soft)' } : { borderColor: 'var(--border)', color: 'var(--text-on-ink)' }}
+            >
+              <span className="block font-mono text-[0.72rem] uppercase tracking-wide">{c} · {n}</span>
+              {c !== 'All' && c !== 'Other' && <span className="block font-mono text-[0.6875rem] opacity-70">{weekly[c] ?? 0} published this week</span>}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="flex flex-col gap-3">
-        {proposals.map((p, i) => {
+        {visible.map((p) => {
+          const i = proposals.indexOf(p);
           const isSelected = selected.has(p.id);
           const isOpen = open === p.id;
           return (
@@ -140,7 +183,7 @@ export function ProposalList({ proposals }: { proposals: Proposal[] }) {
                     {p.headline}
                   </span>
                   <span className="block font-mono text-[0.66rem] mt-1.5" style={{ color: 'var(--text-on-ink-dim)' }}>
-                    #{i + 1} · {p.outlets} {p.outlets === 1 ? 'outlet' : 'outlets'} · {p.countries} {p.countries === 1 ? 'country' : 'countries'}
+                    {categories[p.id]} · #{i + 1} · {p.outlets} {p.outlets === 1 ? 'outlet' : 'outlets'} · {p.countries} {p.countries === 1 ? 'country' : 'countries'}
                     {p.newestAt ? ` · latest ${timeAgo(p.newestAt)}` : ''}
                   </span>
                 </span>

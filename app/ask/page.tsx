@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import NavDrawer from '@/components/NavDrawer';
 import { getSessionUser } from '@/lib/supabase-user';
-import { membershipVisibleTo } from '@/lib/memberAccess';
+import { paidAccess } from '@/lib/entitlements';
+import { UpgradeNotice } from '@/components/UpgradeNotice';
 import { ASK_DAILY_LIMIT } from '@/lib/ask';
 import { AskForm } from './AskForm';
 
@@ -13,7 +14,8 @@ export const metadata: Metadata = { title: 'Ask the Lens | Chanakya Lens', robot
 export default async function AskPage() {
   const user = await getSessionUser();
   if (!user) redirect('/account/login');
-  if (!membershipVisibleTo(user.email)) notFound();
+  const access = await paidAccess(user);
+  if (access === 'hidden') notFound();
   return (
     <>
       <NavDrawer />
@@ -23,7 +25,7 @@ export default async function AskPage() {
         <p className="text-[0.95rem] leading-relaxed mb-6" style={{ color: 'var(--text-body)' }}>
           Ask a question and get an answer built only from our own stories, with the stories it came from. If we have not covered it, it says so.
         </p>
-        <AskForm limit={ASK_DAILY_LIMIT} />
+        {access === 'locked' ? <UpgradeNotice feature="ask" icon="chat" /> : <AskForm limit={ASK_DAILY_LIMIT} />}
       </div>
     </>
   );

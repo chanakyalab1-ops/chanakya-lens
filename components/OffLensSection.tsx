@@ -33,6 +33,8 @@ const NON_COUNTRIES = new Set([
 
 // More outlets than this are collapsed into "+N more" so the panel stays short.
 const CHIP_LIMIT = 8;
+// Country bars and "not in sources" tags are capped the same way.
+const COUNTRY_LIMIT = 6;
 
 export function OffLensSection({
   sources,
@@ -112,7 +114,7 @@ export function OffLensSection({
               : `${chipSources.length} source${chipSources.length !== 1 ? "s" : ""} reviewed`}
           </div>
           <div className="space-y-2.5">
-            {sorted.map(([country, count]) => {
+            {sorted.slice(0, COUNTRY_LIMIT).map(([country, count]) => {
               const pct = Math.round((count / total) * 100);
               return (
                 <div key={country} className="flex items-center gap-3">
@@ -125,6 +127,11 @@ export function OffLensSection({
                 </div>
               );
             })}
+            {sorted.length > COUNTRY_LIMIT && (
+              <div className="font-mono text-[0.65rem] pl-9" style={{ color: "var(--text-on-ink-dim)" }}>
+                +{sorted.length - COUNTRY_LIMIT} more countries
+              </div>
+            )}
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
@@ -157,11 +164,16 @@ export function OffLensSection({
             Perspectives not in sources
           </div>
           <div className="flex flex-wrap gap-2">
-            {missing.map((c) => (
+            {missing.slice(0, COUNTRY_LIMIT).map((c) => (
               <span key={c} className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] px-2.5 py-1 rounded border" style={{ borderColor: "var(--developing)", color: "var(--developing)" }}>
                 {countryToEmoji(c)} {c}
               </span>
             ))}
+            {missing.length > COUNTRY_LIMIT && (
+              <span className="inline-flex items-center px-1 py-1 text-[0.6875rem] font-mono" style={{ color: "var(--developing)" }}>
+                +{missing.length - COUNTRY_LIMIT} more
+              </span>
+            )}
           </div>
         </div>
       )}

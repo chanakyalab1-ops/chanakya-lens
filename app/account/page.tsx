@@ -5,6 +5,7 @@ import { createServerClient } from '@supabase/ssr';
 import NavDrawer from '@/components/NavDrawer';
 import { SignOutButton } from './SignOutButton';
 import { Icon } from '@/components/Icon';
+import { paidAccess } from '@/lib/entitlements';
 import { ReadingSize } from '@/components/ReadingSize';
 import { ManageButton } from '@/components/MembershipButtons';
 import { paddleConfigured } from '@/lib/paddle';
@@ -45,6 +46,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   }
 
   const tools = membershipVisibleTo(user.email);
+  const paidLocked = (await paidAccess(user)) === 'locked';
   const [membership, watching, saved] = await Promise.all([
     getMembership(user.id),
     tools ? getUserInterests(user.id) : Promise.resolve([]),
@@ -60,9 +62,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const cards = [
     { href: '/account/watchlist', icon: 'target', title: 'Watchlist', text: 'Countries, chokepoints, actors and topics you follow. They build your My Lens tab.', count: watching.length, unit: 'watched' },
     { href: '/account/saved', icon: 'bookmark', title: 'Saved stories', text: 'Stories you saved to read later.', count: saved.length, unit: 'saved' },
-    { href: '/account/reading', icon: 'compass', title: 'Reading Map', text: 'What you read, your reading streak, and which countries you keep missing.', count: null, unit: '' },
-    { href: '/ask', icon: 'chat', title: 'Ask the Lens', text: 'Ask a question and get an answer from our own stories, with sources.', count: null, unit: '' },
-    { href: '/compare', icon: 'compare', title: 'Compare', text: 'Pick two countries, places or actors and see what they share.', count: null, unit: '' },
+    { href: '/account/reading', icon: 'compass', title: 'Reading Map', text: 'What you read, your reading streak, and which countries you keep missing.', count: null, unit: '', paid: true },
+    { href: '/ask', icon: 'chat', title: 'Ask the Lens', text: 'Ask a question and get an answer from our own stories, with sources.', count: null, unit: '', paid: true },
+    { href: '/compare', icon: 'compare', title: 'Compare', text: 'Pick two countries, places or actors and see what they share.', count: null, unit: '', paid: true },
   ];
 
   return (
@@ -96,9 +98,13 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                 <p className="text-sm opacity-90 mb-4">
                   {membership.cancelAtPeriodEnd ? 'Your membership ends' : 'Renews'} {renewal}.
                 </p>
-                <div className="[&_button]:!text-white [&_button]:!border-white/70 [&_button]:!bg-white/10">
-                  <ManageButton />
-                </div>
+                {membership.providerCustomerId.startsWith('gift:') ? (
+                  <p className="text-sm opacity-90">This is a gift, so there is no billing to manage. It simply ends on that date. <Link href="/gift" className="underline">Gift Lens+ to someone</Link></p>
+                ) : (
+                  <div className="[&_button]:!text-white [&_button]:!border-white/70 [&_button]:!bg-white/10">
+                    <ManageButton />
+                  </div>
+                )}
               </div>
             ) : justJoined ? (
               <div className="rounded-sm border p-5 text-sm" style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}>
@@ -120,7 +126,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
         {tools && (
           <section className="mb-10">
-            <h2 className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: 'var(--brand-soft)' }}>Your tools</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: 'var(--brand-soft)' }}>Your tools</h2>
+              <Link href="/tools" className="font-mono text-[0.6875rem] uppercase tracking-wide underline" style={{ color: 'var(--brand-soft)' }}>See everything we added</Link>
+            </div>
             <div className="space-y-3">
               {cards.map((c) => (
                 <Link
@@ -133,6 +142,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <span className="font-display font-bold text-[1.05rem]">{c.title}</span>
+                      {c.paid && paidLocked && (
+                        <span className="font-mono text-[0.6875rem] uppercase tracking-wide rounded-full px-2 py-0.5 border" style={{ borderColor: '#C97B4A', color: '#C97B4A' }}>Lens+</span>
+                      )}
                       {c.count !== null && c.count > 0 && (
                         <span className="font-mono text-[0.6875rem] uppercase tracking-wide rounded-full px-2 py-0.5" style={{ background: '#0E7080', color: '#fff' }}>
                           {c.count} {c.unit}
