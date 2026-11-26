@@ -285,45 +285,9 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             </div>
           </section>
         )}
-        </div>
-
-        {/* RIGHT SIDEBAR */}
-        <aside className="contents md:block md:space-y-6 md:self-start">
-
-        {story.hasVideo && (
-          <div
-            className="max-md:order-1 flex gap-3 items-center p-3.5 rounded-sm border mb-6 md:mb-8"
-            style={{ borderColor: "var(--border)", background: "linear-gradient(135deg, rgba(95,168,181,0.08), transparent)" }}
-          >
-            <div className="h-8.5 w-8.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--brand)" }}>
-              <svg viewBox="0 0 12 14" fill="none" className="h-2.5 w-2.5">
-                <path d="M11 6.13a1 1 0 0 1 0 1.74L1.75 13.5A1 1 0 0 1 .25 12.63V1.37A1 1 0 0 1 1.75.5L11 6.13Z" fill="var(--paper)" />
-              </svg>
-            </div>
-            <div className="text-sm" style={{ color: "var(--text-body)" }}>
-              <strong style={{ color: "var(--text-on-ink)" }}>Video brief attached:</strong> companion piece with more detail.
-            </div>
-          </div>
-        )}
-
-        <OffLensSection
-          headline={story.headline}
-          sources={story.sources}
-          subjectCountries={story.subjectCountries}
-          offLens={story.offLens ?? undefined}
-          offLensCountries={story.offLensCountries}
-          gated={process.env.MEMBERSHIP_PUBLIC === "true"}
-        />
-
-        </aside>
-      </article>
-
-      {/* Full width below grid — Impact, Sources, Related */}
-      <div className="mt-8 md:mt-10 space-y-8 md:space-y-0 mx-auto md:grid md:grid-cols-[minmax(0,1fr)_380px] md:gap-12 md:items-start">
-        
-
+        <div className="max-md:order-5 mt-8 space-y-8 md:mt-9 md:space-y-9">
         {story.sources && story.sources.length > 0 && (
-          <section className="mt-9 md:mt-2 md:max-w-[42rem]">
+          <section className="mt-9 md:max-w-[42rem]">
             <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
               Sources
             </h2>
@@ -370,7 +334,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
                   )}
                 </div>
               );
-              const SHOWN = 6;
+              const SHOWN = 4;
               return (
                 <>
                   <div className="space-y-2">{groups.slice(0, SHOWN).map(row)}</div>
@@ -389,7 +353,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         )}
 
         {hubs.length > 0 && (
-          <section className="mt-10 md:mt-2 md:max-w-[42rem]">
+          <section className="mt-10 md:max-w-[42rem]">
             <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
               On The Lens
             </h2>
@@ -409,7 +373,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         )}
 
         {watchingNext.length > 0 && (
-          <section className="mt-10 md:mt-2 md:max-w-[42rem] border-l-4 p-4" style={{ borderColor: "var(--brand-soft)", background: "var(--ink-card)" }}>
+          <section className="mt-10 md:max-w-[42rem] border-l-4 p-4" style={{ borderColor: "var(--brand-soft)", background: "var(--ink-card)" }}>
             <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-2" style={{ color: "var(--brand-soft)" }}>
               What we&apos;re watching next
             </h2>
@@ -425,7 +389,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         )}
 
         {thread.length > 1 && (
-          <section className="mt-10 md:mt-2 md:max-w-[42rem]">
+          <section className="mt-10 md:max-w-[42rem]">
             <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: "var(--brand-soft)" }}>
               How this story developed
             </h2>
@@ -448,9 +412,8 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           </section>
         )}
         <ConnectionsSection connections={connections} open={process.env.MEMBERSHIP_PUBLIC === "true"} />
-
         {related.length > 0 && (
-          <section className="mt-10 pt-6 border-t md:mt-2 md:pt-0 md:border-t-0" style={{ borderColor: "var(--border)" }}>
+          <section className="md:hidden mt-10 pt-6 border-t" style={{ borderColor: "var(--border)" }}>
             <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-4" style={{ color: "var(--brand-soft)" }}>
               Related
             </h2>
@@ -471,8 +434,64 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             </div>
           </section>
         )}
+        </div>
+        </div>
 
-        <div className="md:col-span-2 md:mt-10 flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.6875rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
+        {/* RIGHT SIDEBAR */}
+        <aside className="contents md:block md:space-y-6 md:self-start md:sticky md:top-20">
+
+        {story.hasVideo && (
+          <div
+            className="max-md:order-1 flex gap-3 items-center p-3.5 rounded-sm border mb-6 md:mb-8"
+            style={{ borderColor: "var(--border)", background: "linear-gradient(135deg, rgba(95,168,181,0.08), transparent)" }}
+          >
+            <div className="h-8.5 w-8.5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--brand)" }}>
+              <svg viewBox="0 0 12 14" fill="none" className="h-2.5 w-2.5">
+                <path d="M11 6.13a1 1 0 0 1 0 1.74L1.75 13.5A1 1 0 0 1 .25 12.63V1.37A1 1 0 0 1 1.75.5L11 6.13Z" fill="var(--paper)" />
+              </svg>
+            </div>
+            <div className="text-sm" style={{ color: "var(--text-body)" }}>
+              <strong style={{ color: "var(--text-on-ink)" }}>Video brief attached:</strong> companion piece with more detail.
+            </div>
+          </div>
+        )}
+
+        <OffLensSection
+          headline={story.headline}
+          sources={story.sources}
+          subjectCountries={story.subjectCountries}
+          offLens={story.offLens ?? undefined}
+          offLensCountries={story.offLensCountries}
+          gated={process.env.MEMBERSHIP_PUBLIC === "true"}
+        />
+
+        {related.length > 0 && (
+          <section className="hidden md:block" style={{ borderColor: "var(--border)" }}>
+            <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-4" style={{ color: "var(--brand-soft)" }}>
+              Related
+            </h2>
+            <div className="space-y-3">
+              {related.map((r) => (
+                <Link
+                  key={r.slug}
+                  href={`/story/${r.slug}`}
+                  className="block p-3.5 rounded-sm border hover:opacity-80"
+                  style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}
+                >
+                  <div className="font-mono text-[0.6875rem] uppercase tracking-wide mb-1.5" style={{ color: "var(--brand-soft)" }}>
+                    {r.category}
+                  </div>
+                  <div className="font-display font-bold text-[0.95rem] leading-tight">{r.headline}</div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+        </aside>
+      </article>
+
+      <div className="mt-8 md:mt-10 mx-auto">
+        <div className="md:mt-10 flex items-center gap-2 mt-8.5 pt-5 border-t font-mono text-[0.6875rem]" style={{ borderColor: "var(--border)", color: "var(--text-on-ink-dim)" }}>
           <div className="flex gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--direct)" }} />
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--likely)" }} />
