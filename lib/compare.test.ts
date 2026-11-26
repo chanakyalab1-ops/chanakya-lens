@@ -17,15 +17,15 @@ describe("summarizeSide / overlapSentence", () => {
   const now = Date.parse("2026-11-26T00:00:00Z");
   const st = (slug: string, iso: string, extra: Partial<Story> = {}) => ({ slug, publishedAt: iso, category: "Trade", ...extra }) as Story;
   it("summarizes counts, recency and quality", () => {
-    const r = summarizeSide([st("a", "2026-11-20T00:00:00Z", { qualityScore: 80, status: "developing" }), st("b", "2026-08-01T00:00:00Z", { qualityScore: 60 })], now);
+    const r = summarizeSide([st("a", "2026-11-20T00:00:00Z", { sources: [{}, {}] as Story["sources"], status: "developing" }), st("b", "2026-08-01T00:00:00Z", { sources: [{}, {}, {}, {}] as Story["sources"] })], now);
     expect(r.total).toBe(2);
     expect(r.last30).toBe(1);
     expect(r.developing).toBe(1);
-    expect(r.avgQuality).toBe(70);
+    expect(r.avgSources).toBe(3);
     expect(r.topCategories).toEqual([["Trade", 2]]);
   });
   it("handles empty", () => {
-    expect(summarizeSide([], now).avgQuality).toBeNull();
+    expect(summarizeSide([], now).avgSources).toBeNull();
     expect(overlapSentence("A", "B", { both: [], onlyA: [], onlyB: [] })).toContain("no stories");
   });
   it("describes overlap", () => {

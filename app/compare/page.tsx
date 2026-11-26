@@ -133,7 +133,7 @@ function SideCard({ entity, sum }: { entity: LensEntity; sum: SideSummary }) {
         <Stat label="Stories" value={sum.total} />
         <Stat label="Last 30d" value={sum.last30} />
         <Stat label="Developing" value={sum.developing} />
-        <Stat label="Avg score" value={sum.avgQuality ?? 'n/a'} />
+        <Stat label="Avg sources" value={sum.avgSources ?? 'n/a'} />
       </div>
       <dl className="mt-4 space-y-1.5 text-[0.8rem]" style={{ color: 'var(--text-body)' }}>
         <div><dt className={dt} style={{ color: 'var(--text-on-ink-dim)' }}>Mostly</dt><dd className="inline">{list(sum.topCategories)}</dd></div>
