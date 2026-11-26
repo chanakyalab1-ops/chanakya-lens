@@ -35,6 +35,7 @@ export default function Footer() {
               <Link href="/creators" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Creator partners</Link>
               <Link href="/feedback" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Feedback</Link>
               <Link href="/privacy" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Privacy policy</Link>
+              <Link href="/refund" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Refund policy</Link>
               <Link href="/terms" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Terms of service</Link>
               <a href="mailto:chanakya.lab1@gmail.com" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Contact</a>
             </div>

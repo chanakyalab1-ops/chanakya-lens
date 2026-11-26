@@ -75,6 +75,11 @@ export async function GET() {
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://chanakyalens.com/refund</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://chanakyalens.com/whats-new</loc>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>

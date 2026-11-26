@@ -3,6 +3,7 @@ import { apiBase, cleanSecret } from "./paddle";
 import { generateGiftCode, giftEmailHtml, giftPeriodEnd, GIFT_MONTHS, normalizeGiftCode } from "./gifts";
 import { brevoConfigured, resendConfigured, sendEmail } from "./emailSend";
 import { sendAlert } from "./alerts";
+import { sendWelcomeEmail } from "./welcomeSend";
 
 export type PaddleTransaction = { id: string; customer_id?: string | null; custom_data?: { gift?: string } | null };
 
@@ -83,5 +84,6 @@ export async function redeemGiftCode(userId: string, rawCode: string): Promise<R
     await db.from("gift_codes").update({ redeemed_by: null, redeemed_at: null }).eq("code", code);
     return { ok: false, error: "Could not add Lens+ to your account. Try again." };
   }
+  await sendWelcomeEmail(userId, { gift: true, endsAt: end.toISOString() });
   return { ok: true, endsAt: end.toISOString() };
 }

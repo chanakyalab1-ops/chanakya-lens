@@ -56,7 +56,7 @@ export default function PrivacyPage() {
 
         <h1 className="font-display font-bold text-3xl leading-tight mb-2">Privacy Policy</h1>
         <p className="text-[0.8rem] mb-8" style={{ color: "var(--text-on-ink-dim)" }}>
-          Last updated October 2026
+          Last updated November 2026
         </p>
 
         <div className="space-y-8">
@@ -74,7 +74,11 @@ export default function PrivacyPage() {
                 <><B>Google sign-in:</B> if you choose it, we receive your name, email address and profile photo from Google, and nothing else. We never post on your behalf or access your other Google data.</>,
                 <><B>Daily digest:</B> your email address and the topics you choose, so we can send you the digest.</>,
                 <><B>Notifications:</B> if you turn them on, your browser&apos;s notification address (a technical token, not your name or email) and the topics you chose, so we can send alerts. You can turn them off at any time from the bell icon, and we delete the token when you do.</>,
-                <><B>Saved stories:</B> the stories you save, stored against your account.</>,
+                <><B>Saved stories and your Watchlist:</B> the stories you save and the countries, places and topics you follow, stored against your account.</>,
+                <><B>Reading history:</B> if you are signed in and use the Reading Map, the stories you open and when, so we can show you what you read. It is private to you.</>,
+                <><B>Lens+ membership:</B> if you join, we keep your subscription status, plan, renewal date and your Paddle customer reference. Paddle receives your name, email and payment details to take payment; we never see or store your card number.</>,
+                <><B>Ask the Lens:</B> the question you type is sent to an AI service (Anthropic) together with the relevant stories so it can answer. We keep only that you asked a question and when, to apply daily limits, not the text of your question.</>,
+                <><B>Waitlists, gifts and creator links:</B> your email if you join the Lens+ waitlist or ask for a group quote, the code and buyer email for a gift, and, if you arrive through a creator&apos;s link, that link&apos;s name in a cookie for 30 days so we can credit the creator.</>,
                 <><B>Feedback:</B> anything you send us through a feedback form, and your email if you include it.</>,
                 <><B>Basic usage data:</B> the page you visited, the browser type (user agent) and the page that referred you. We use this to see which stories are read. It isn&apos;t linked to your account, and we don&apos;t store your IP address in these records. Our hosting provider may keep standard server logs, which include IP addresses, for security and operations.</>,
               ]}
@@ -84,7 +88,8 @@ export default function PrivacyPage() {
           <Section title="How we use it">
             <List
               items={[
-                "To run your account, sign you in and show you your saved stories.",
+                "To run your account, sign you in and show you your saved stories, Watchlist and reading history.",
+                "To run Lens+: apply your membership, take payment through Paddle and answer your questions in Ask the Lens.",
                 "To send the daily digest and any notifications you asked for.",
                 "To understand which content is read, so we can improve the site.",
                 "To keep the site secure and prevent abuse.",
@@ -114,6 +119,8 @@ export default function PrivacyPage() {
                 <><B>Vercel</B> hosts the website.</>,
                 <><B>Brevo</B> or <B>Resend</B>, our email delivery providers, deliver our digest emails, so they receive your email address and the email content.</>,
                 <><B>Google</B> provides the optional &ldquo;Sign in with Google&rdquo; feature.</>,
+                <><B>Paddle</B> processes Lens+ payments as seller of record, and collects tax and sends receipts.</>,
+                <><B>Anthropic</B> receives the question you type into Ask the Lens, with the stories it needs to answer it, to write the answer.</>,
               ]}
             />
             <P>
