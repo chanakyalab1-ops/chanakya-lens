@@ -23,7 +23,7 @@ export function ConnectionsSection({ connections, open }: { connections: Connect
 
   if (!show || connections.length === 0) return null;
   return (
-    <section className="mt-10 md:mt-2 md:max-w-[42rem]">
+    <section className="mt-10 md:max-w-[42rem]">
       <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-1" style={{ color: 'var(--brand-soft)' }}>
         Connected through
       </h2>
