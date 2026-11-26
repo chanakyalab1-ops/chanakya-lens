@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useLensPlus } from "@/lib/useLensPlus";
 
 const COUNTRY_FLAGS: Record<string, string> = {
   "Afghanistan": "AF", "Australia": "AU", "Azerbaijan": "AZ",
@@ -35,6 +37,8 @@ const NON_COUNTRIES = new Set([
 const CHIP_LIMIT = 8;
 // Country bars and "not in sources" tags are capped the same way.
 const COUNTRY_LIMIT = 6;
+// Readers without Lens+ see this many of each (only once membership is public).
+const FREE_LIMIT = 3;
 
 export function OffLensSection({
   sources,
@@ -42,13 +46,19 @@ export function OffLensSection({
   offLens,
   offLensCountries,
   headline,
+  gated,
 }: {
   sources?: { sourceCountry: string | null; domain: string; title: string; url: string }[];
   subjectCountries?: string[];
   offLens?: string;
   offLensCountries?: Record<string, number>;
   headline?: string;
+  gated?: boolean;
 }) {
+  const member = useLensPlus();
+  const capped = !!gated && member !== true;
+  const chipMax = capped ? FREE_LIMIT : CHIP_LIMIT;
+  const countryMax = capped ? FREE_LIMIT : COUNTRY_LIMIT;
   const [liveCountries, setLiveCountries] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
@@ -114,7 +124,7 @@ export function OffLensSection({
               : `${chipSources.length} source${chipSources.length !== 1 ? "s" : ""} reviewed`}
           </div>
           <div className="space-y-2.5">
-            {sorted.slice(0, COUNTRY_LIMIT).map(([country, count]) => {
+            {sorted.slice(0, countryMax).map(([country, count]) => {
               const pct = Math.round((count / total) * 100);
               return (
                 <div key={country} className="flex items-center gap-3">
@@ -127,15 +137,15 @@ export function OffLensSection({
                 </div>
               );
             })}
-            {sorted.length > COUNTRY_LIMIT && (
+            {sorted.length > countryMax && (
               <div className="font-mono text-[0.65rem] pl-9" style={{ color: "var(--text-on-ink-dim)" }}>
-                +{sorted.length - COUNTRY_LIMIT} more countries
+                +{sorted.length - countryMax} more countries
               </div>
             )}
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            {chipSources.slice(0, CHIP_LIMIT).map((s, i) => (
+            {chipSources.slice(0, chipMax).map((s, i) => (
               <a
                 key={i}
                 href={s.url}
@@ -149,9 +159,9 @@ export function OffLensSection({
                 <span className="truncate">{s.domain.replace("www.", "")}</span>
               </a>
             ))}
-            {chipSources.length > CHIP_LIMIT && (
+            {chipSources.length > chipMax && (
               <span className="inline-flex items-center px-2 py-1 text-[0.6875rem] font-mono" style={{ color: "var(--text-on-ink-dim)" }}>
-                +{chipSources.length - CHIP_LIMIT} more
+                +{chipSources.length - chipMax} more
               </span>
             )}
           </div>
@@ -164,14 +174,14 @@ export function OffLensSection({
             Perspectives not in sources
           </div>
           <div className="flex flex-wrap gap-2">
-            {missing.slice(0, COUNTRY_LIMIT).map((c) => (
+            {missing.slice(0, countryMax).map((c) => (
               <span key={c} className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] px-2.5 py-1 rounded border" style={{ borderColor: "var(--developing)", color: "var(--developing)" }}>
                 {countryToEmoji(c)} {c}
               </span>
             ))}
-            {missing.length > COUNTRY_LIMIT && (
+            {missing.length > countryMax && (
               <span className="inline-flex items-center px-1 py-1 text-[0.6875rem] font-mono" style={{ color: "var(--developing)" }}>
-                +{missing.length - COUNTRY_LIMIT} more
+                +{missing.length - countryMax} more
               </span>
             )}
           </div>

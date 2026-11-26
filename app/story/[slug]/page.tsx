@@ -311,6 +311,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
           subjectCountries={story.subjectCountries}
           offLens={story.offLens ?? undefined}
           offLensCountries={story.offLensCountries}
+          gated={process.env.MEMBERSHIP_PUBLIC === "true"}
         />
 
         </aside>
