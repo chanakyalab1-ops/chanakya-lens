@@ -61,7 +61,7 @@ export default function TermsPage() {
         <div className="space-y-8">
           <Section title="What Chanakya Lens is">
             <P>
-              Chanakya Lens publishes geopolitical news analysis: factual summaries, sourced coverage comparisons and strategic commentary. By using this site you agree to these terms. If you don&apos;t agree, please don&apos;t use it.
+              These terms are between you and Chanakya Lens, which runs chanakyalens.com (&ldquo;we&rdquo;, &ldquo;us&rdquo;). Chanakya Lens publishes geopolitical news analysis: factual summaries, sourced coverage comparisons and strategic commentary. By using this site you agree to these terms. If you don&apos;t agree, please don&apos;t use it.
             </P>
           </Section>
 
