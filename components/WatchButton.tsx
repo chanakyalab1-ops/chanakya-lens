@@ -23,7 +23,11 @@ export function WatchButton({ slug, open, compact }: { slug: string; open?: bool
     fetch('/api/me', { cache: 'no-store' })
       .then((r) => r.json())
       .then((d: { enabled?: boolean; watching?: string[]; paid?: string }) => {
-        if (off || !d.enabled) return;
+        if (off) return;
+        if (!d.enabled) {
+          if (open) { setLocked(true); setShow(true); }
+          return;
+        }
         setLocked(d.paid === 'locked');
         setWatching((d.watching ?? []).includes(slug));
         setShow(true);

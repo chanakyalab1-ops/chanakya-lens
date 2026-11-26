@@ -23,13 +23,3 @@ export function useLensPlus(): boolean | null {
   return member;
 }
 
-// Whether the Lens+ label may be shown at all: everyone once membership is public,
-// and until then only members and the owner. Starts false so nothing flashes.
-export function useLensPlusVisible(): boolean {
-  const member = useLensPlus();
-  const [isPublic, setPublic] = useState(false);
-  useEffect(() => {
-    setTimeout(() => setPublic(document.documentElement.dataset.lensplus === 'public'), 0);
-  }, []);
-  return isPublic || member === true;
-}
