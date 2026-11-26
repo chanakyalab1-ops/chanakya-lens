@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { deleteDispatch, saveDispatch } from './actions';
-import type { Dispatch } from '@/lib/dispatches';
+import type { Dispatch } from '@/lib/monthly';
 
 export function DispatchEditor({ initial }: { initial: Dispatch | null }) {
   const router = useRouter();
@@ -13,6 +13,7 @@ export function DispatchEditor({ initial }: { initial: Dispatch | null }) {
   const [heroUrl, setHeroUrl] = useState(initial?.heroUrl ?? '');
   const [body, setBody] = useState(initial?.body ?? '');
   const [published, setPublished] = useState(initial?.published ?? false);
+  const [period, setPeriod] = useState(initial?.period ?? '');
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -24,10 +25,11 @@ export function DispatchEditor({ initial }: { initial: Dispatch | null }) {
         <input value={theme} onChange={(e) => setTheme(e.target.value)} placeholder="Theme, e.g. Red Sea" className={input} />
         <input value={heroUrl} onChange={(e) => setHeroUrl(e.target.value)} placeholder="Hero image link (https://...)" className={input} />
       </div>
+      <input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="Month for the charts, like 2026-11 (optional)" className={input} />
       <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={2} maxLength={400} placeholder="One or two sentences shown on the list and as the standfirst" className={input} />
-      <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={22} placeholder="Write the Dispatch here" className={`${input} font-mono`} />
+      <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={22} placeholder="Write the report here" className={`${input} font-mono`} />
       <p className="text-xs text-[#8A93A6]">
-        Formatting: <code>## Heading</code>, <code>### Subheading</code>, blank line between paragraphs, <code>- list item</code>, <code>&gt; quote</code>, <code>**bold**</code>, <code>*italic*</code>, <code>[text](https://link)</code>, and an image on its own line: <code>![what it shows](https://image-link)</code>. Free readers see only the first three blocks, so put the hook up top.
+        Formatting: <code>## Heading</code>, <code>### Subheading</code>, blank line between paragraphs, <code>- list item</code>, <code>&gt; quote</code>, <code>**bold**</code>, <code>*italic*</code>, <code>[text](https://link)</code>, a chart on its own line (<code>[[chart:countries]]</code>, <code>[[chart:regions]]</code>, <code>[[chart:chokepoints]]</code> or <code>[[chart:effects]]</code>, drawn from the month above), and an image on its own line: <code>![what it shows](https://image-link)</code>. Free readers see only the first three blocks, so put the hook up top.
       </p>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} /> Published
@@ -37,9 +39,9 @@ export function DispatchEditor({ initial }: { initial: Dispatch | null }) {
           disabled={pending || !title.trim()}
           onClick={() =>
             start(async () => {
-              const r = await saveDispatch({ slug: initial?.slug, title, theme, summary, heroUrl, body, published });
+              const r = await saveDispatch({ slug: initial?.slug, title, theme, summary, heroUrl, body, published, period });
               setMsg(r.ok ? 'Saved.' : r.error);
-              if (r.ok) router.push(`/admin/dispatches?edit=${r.slug}`);
+              if (r.ok) router.push(`/admin/monthly?edit=${r.slug}`);
               router.refresh();
             })
           }
@@ -49,9 +51,9 @@ export function DispatchEditor({ initial }: { initial: Dispatch | null }) {
         </button>
         {initial && (
           <>
-            <a href={`/dispatches/${initial.slug}`} target="_blank" rel="noreferrer" className="text-sm underline">Preview</a>
+            <a href={`/monthly/${initial.slug}`} target="_blank" rel="noreferrer" className="text-sm underline">Preview</a>
             <button
-              onClick={() => window.confirm('Delete this Dispatch?') && start(async () => { await deleteDispatch(initial.slug); router.push('/admin/dispatches'); router.refresh(); })}
+              onClick={() => window.confirm('Delete this report?') && start(async () => { await deleteDispatch(initial.slug); router.push('/admin/monthly'); router.refresh(); })}
               className="text-sm underline text-red-300"
             >
               Delete

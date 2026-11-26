@@ -1,4 +1,6 @@
 import type { Block, Inline } from '@/lib/miniMarkdown';
+import type { MonthlyStats } from '@/lib/monthlyStats';
+import { MonthlyChart } from '@/components/MonthlyCharts';
 
 function Inlines({ items }: { items: Inline[] }) {
   return (
@@ -14,8 +16,8 @@ function Inlines({ items }: { items: Inline[] }) {
   );
 }
 
-// Renders parsed Dispatch blocks. Nothing is injected as raw HTML.
-export function DispatchBody({ blocks }: { blocks: Block[] }) {
+// Renders parsed report blocks. Nothing is injected as raw HTML.
+export function DispatchBody({ blocks, stats }: { blocks: Block[]; stats?: MonthlyStats | null }) {
   return (
     <div className="space-y-5">
       {blocks.map((b, i) => {
@@ -29,6 +31,7 @@ export function DispatchBody({ blocks }: { blocks: Block[] }) {
         if (b.t === 'quote') return (
           <blockquote key={i} className="border-l-4 pl-4 italic text-[1.02rem] leading-relaxed" style={{ borderColor: 'var(--brand-soft)', color: 'var(--text-body)' }}><Inlines items={b.v} /></blockquote>
         );
+        if (b.t === 'chart') return stats ? <MonthlyChart key={i} kind={b.kind} stats={stats} /> : null;
         if (b.t === 'img') return (
           // eslint-disable-next-line @next/next/no-img-element
           <img key={i} src={b.src} alt={b.alt} loading="lazy" className="w-full rounded-sm border" style={{ borderColor: 'var(--border)' }} />

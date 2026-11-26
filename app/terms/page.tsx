@@ -103,7 +103,7 @@ export default function TermsPage() {
 
           <Section title="Lens+ membership and payments">
             <P>
-              Lens+ is an optional paid membership that adds tools such as an unlimited Watchlist, Ask the Lens, the Reading Map and Dispatches. Reading our stories stays free.
+              Lens+ is an optional paid membership that adds tools such as an unlimited Watchlist, Ask the Lens, the Reading Map and the monthly Lens Monthly report. Reading our stories stays free.
             </P>
             <List
               items={[

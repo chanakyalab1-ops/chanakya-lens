@@ -16,6 +16,13 @@ describe("parseInline", () => {
   });
 });
 
+describe("charts", () => {
+  it("recognises a chart line and ignores unknown ones", () => {
+    expect(parseBlocks("[[chart:countries]]")).toEqual([{ t: "chart", kind: "countries" }]);
+    expect(parseBlocks("[[chart:nope]]").map((b) => b.t)).toEqual(["p"]);
+  });
+});
+
 describe("parseBlocks", () => {
   const md = "## Title\n\nIntro with **bold**.\n\n- one\n- two\n\n![map](https://img.co/a.png)\n\n> quoted line\n\n### Sub";
   it("splits into headings, paragraphs, lists, images and quotes", () => {

@@ -1,4 +1,4 @@
-// A tiny, safe subset of Markdown for Dispatches. Nothing is ever inserted as raw
+// A tiny, safe subset of Markdown for Lens Monthly reports. Nothing is ever inserted as raw
 // HTML: text becomes plain strings, links must be https, images must be https.
 export type Inline = { t: "text"; v: string } | { t: "b"; v: string } | { t: "i"; v: string } | { t: "a"; v: string; href: string };
 export type Block =
@@ -7,7 +7,11 @@ export type Block =
   | { t: "p"; v: Inline[] }
   | { t: "ul"; v: Inline[][] }
   | { t: "quote"; v: Inline[] }
-  | { t: "img"; alt: string; src: string };
+  | { t: "img"; alt: string; src: string }
+  | { t: "chart"; kind: ChartKind };
+
+export const CHART_KINDS = ["countries", "chokepoints", "effects", "regions"] as const;
+export type ChartKind = (typeof CHART_KINDS)[number];
 
 const isHttps = (u: string) => /^https:\/\/[^\s]+$/i.test(u);
 
@@ -33,6 +37,11 @@ export function parseBlocks(md: string): Block[] {
   for (const raw of paras) {
     const chunk = raw.trim();
     if (!chunk) continue;
+    const chart = chunk.match(/^\[\[chart:([a-z]+)\]\]$/);
+    if (chart && (CHART_KINDS as readonly string[]).includes(chart[1])) {
+      blocks.push({ t: "chart", kind: chart[1] as ChartKind });
+      continue;
+    }
     const img = chunk.match(/^!\[([^\]]*)\]\((https:\/\/[^\s)]+)\)$/);
     if (img && isHttps(img[2])) blocks.push({ t: "img", alt: img[1], src: img[2] });
     else if (chunk.startsWith("### ")) blocks.push({ t: "h3", v: chunk.slice(4).trim() });

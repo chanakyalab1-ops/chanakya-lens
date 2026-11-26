@@ -5,7 +5,13 @@ const nextConfig: NextConfig = {
   // /logo-mark.png, so send them there instead of returning a 404 (Search
   // Console flagged the 404).
   async redirects() {
-    return [{ source: "/favicon.ico", destination: "/logo-mark.png", permanent: true }];
+    return [
+      { source: "/favicon.ico", destination: "/logo-mark.png", permanent: true },
+      // Lens Monthly was first called Dispatches.
+      { source: "/dispatches", destination: "/monthly", permanent: true },
+      { source: "/dispatches/:slug", destination: "/monthly/:slug", permanent: true },
+      { source: "/admin/dispatches", destination: "/admin/monthly", permanent: true },
+    ];
   },
   // Basic hardening headers. No Content-Security-Policy yet: Paddle's checkout and
   // the site's inline scripts need a carefully tested policy first.

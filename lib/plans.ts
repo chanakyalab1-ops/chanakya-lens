@@ -9,6 +9,7 @@ export const PERKS: Perk[] = [
   { icon: "chat", title: "Ask the Lens", text: "Ask a question and get an answer built only from our own stories, with the stories it came from. 5 a day." },
   { icon: "compass", title: "Reading Map and streak", text: "See what you read, how long your streak is, and which countries you keep missing." },
   { icon: "compare", title: "Compare", text: "Pick two countries, places or actors and see what they share and where they differ." },
+  { icon: "compass", title: "Lens Monthly", text: "A report on the month in world news, with charts drawn from our own data. Everyone reads the opening; members get the whole report." },
   { icon: "eye", title: "Watch single stories", text: "An alert when one specific story is updated, with a plain note on what changed." },
   { icon: "mail", title: "Email me a story, export your saves", text: "Send any story to your inbox, and download your saved stories as a spreadsheet." },
 ];
@@ -25,6 +26,7 @@ export const COMPARE: { row: string; free: string; paid: string }[] = [
   { row: "Ask the Lens", free: "–", paid: "5 a day" },
   { row: "Reading Map and streak", free: "–", paid: "✓" },
   { row: "Compare", free: "–", paid: "✓" },
+  { row: "Lens Monthly report", free: "Opening", paid: "Full report" },
   { row: "Watch a single story", free: "–", paid: "✓" },
   { row: "Email me, CSV export", free: "–", paid: "✓" },
 ];
