@@ -15,17 +15,17 @@ describe("PostEditor", () => {
     expect(html).toContain(">Publish<");
     expect(html).not.toContain("Send to the editor");
     expect(html).toContain("10 more to publish");
-    expect(html).toContain("On our story:");
+    expect(html).toContain("Is this about one of our stories?");
     expect(html).toContain("A story headline");
     expect(html).toContain("Heading");
     expect(html).not.toContain("Tags");
     expect(html).not.toContain("Header image");
     expect(html).not.toContain("summary");
   });
-  it("asks which story only when none is chosen yet", () => {
+  it("makes the story optional, so a write-up can stand on its own", () => {
     const html = renderToString(<PostEditor stories={stories} initial={null} locked={false} isOwner={false} />);
-    expect(html).toContain("The story this write-up is about");
-    expect(html).toContain("Choose a story");
+    expect(html).toContain("(optional)");
+    expect(html).toContain("No, it stands on its own");
   });
   it("shows the editor's note when changes were requested", () => {
     const html = renderToString(<PostEditor stories={stories} initial={{ ...post, status: "changes", editorNote: "Tighten the second section" }} locked={false} isOwner={false} />);

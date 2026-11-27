@@ -35,7 +35,7 @@ export async function savePost(input: { id?: string; storySlug: string; title: s
     summary: deriveSummary(body),
   };
   if (input.publish) {
-    const problems = publishProblems({ title: fields.title, body: fields.body, storySlug });
+    const problems = publishProblems({ title: fields.title, body: fields.body });
     if (problems.length) return { ok: false, error: problems.join(' ') };
   }
 

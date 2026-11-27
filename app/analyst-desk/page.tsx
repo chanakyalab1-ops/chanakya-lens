@@ -5,7 +5,7 @@ import { listPosts, readMinutes } from '@/lib/analystDesk';
 import { getAllStories } from '@/lib/stories';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'The Analyst Desk | Chanakya Lens', description: 'In-depth analysis from our analysts on the stories we publish, with the reasoning shown.' };
+export const metadata: Metadata = { title: 'The Analyst Desk | Chanakya Lens', description: 'In-depth analysis from our analysts, on the stories we publish and the bigger questions behind them, with the reasoning shown.' };
 
 export default async function AnalystDeskPage() {
   const [posts, stories] = await Promise.all([listPosts({ status: 'published' }), getAllStories()]);
@@ -18,7 +18,7 @@ export default async function AnalystDeskPage() {
       <main className="max-w-3xl mx-auto px-5 pt-8 pb-20">
         <h1 className="font-display font-extrabold text-4xl mb-2">The Analyst Desk</h1>
         <p className="text-[1rem] leading-relaxed mb-8" style={{ color: 'var(--text-body)' }}>
-          Longer analysis from our analysts on the stories we publish, with the reasoning shown. Free to read.
+          Longer analysis from our analysts, on the stories we publish and the bigger questions behind them, with the reasoning shown. Free to read.
         </p>
         {posts.length === 0 ? (
           <p className="text-sm" style={{ color: 'var(--text-on-ink-dim)' }}>The first piece is on its way.</p>
