@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { addCreator, addCreatorsBulk, markSent, removeDraft, setOutreachStatus, updateCreatorDetails } from './actions';
-import { buildEmail, buildFollowup, gmailComposeUrl, mailtoUrl, needsFollowup, parseBulk, type OutreachVersion } from '@/lib/outreachEmail';
+import { buildDm, buildDmFollowup, buildEmail, buildFollowup, gmailComposeUrl, mailtoUrl, needsFollowup, parseBulk, routeOf, type OutreachVersion } from '@/lib/outreachEmail';
 
 export type OutreachRow = {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   channel_url: string;
   video_title: string;
   topic: string;
@@ -92,8 +92,8 @@ function AddForm() {
       <div className="font-mono text-[0.6875rem] uppercase tracking-widest" style={dim}>Add a creator</div>
       <div className="grid sm:grid-cols-2 gap-3">
         <input required value={f.name} onChange={set('name')} placeholder="Their name" className={field} style={bd} />
-        <input required type="email" value={f.email} onChange={set('email')} placeholder="Business email (from their About page)" className={field} style={bd} />
-        <input value={f.channelUrl} onChange={set('channelUrl')} placeholder="Channel or site link (for your reference)" className={field} style={bd} />
+        <input type="email" value={f.email} onChange={set('email')} placeholder="Business email (leave empty to DM them)" className={field} style={bd} />
+        <input value={f.channelUrl} onChange={set('channelUrl')} placeholder="@instagram handle, or their link or contact page" className={field} style={bd} />
         <select value={f.version} onChange={set('version')} className={field} style={bd}>
           <option value="geo">Geopolitics and current affairs</option>
           <option value="econ">Indian economy and finance</option>
@@ -118,7 +118,7 @@ function BulkAdd() {
   return (
     <details className="rounded-sm border p-4" style={{ ...bd, background: 'var(--ink-card)' }}>
       <summary className="cursor-pointer font-mono text-[0.6875rem] uppercase tracking-widest" style={dim}>Add many at once</summary>
-      <p className="text-xs mt-3 mb-2" style={dim}>One creator per line: name | email | @handle | geo or econ (the last two are optional). They are added as drafts with a plain opener (&ldquo;I really like the geopolitics content you post&rdquo;). If you watch a video, add it to a draft and the email becomes specific.</p>
+      <p className="text-xs mt-3 mb-2" style={dim}>One creator per line: name | email | @handle | geo or econ. Use an email, or only an @handle (or a contact-page link) to reach them by DM. They are added as drafts with a plain opener (&ldquo;I really like the geopolitics content you post&rdquo;). If you watch a video, add it to a draft and the email becomes specific.</p>
       <textarea value={text} onChange={(e) => setText(e.target.value)} rows={6} className={`${field} font-mono`} style={bd} placeholder={'Tanya Vats | name@gmail.com | @tanyaavats_ | geo'} />
       <div className="flex items-center gap-3 mt-2 flex-wrap">
         <button
@@ -198,6 +198,18 @@ function Row({ r, sender, now }: { r: OutreachRow; sender: string; now: number }
   const dueFollow = needsFollowup(r, now);
   const blocked = r.status === 'no';
   const mail = dueFollow ? followup : first;
+  const route = routeOf(r);
+  const dmText = dueFollow ? buildDmFollowup({ name: r.name, sender }) : buildDm({ name: r.name, topic: r.topic, version: r.version, sender, videoTitle: r.video_title, specific: r.specific });
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(dmText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setMsg('Could not copy. Open the message and copy it by hand.');
+    }
+  };
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>) => start(async () => { const x = await fn(); setMsg(x.ok ? null : x.error ?? 'Failed'); });
   const btn = 'px-3 py-1.5 text-xs font-semibold rounded-sm border hover:opacity-80 disabled:opacity-50';
 
@@ -205,7 +217,7 @@ function Row({ r, sender, now }: { r: OutreachRow; sender: string; now: number }
     <li className="rounded-sm border p-3" style={{ ...bd, background: 'var(--ink-card)' }}>
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <span className="font-semibold">{r.name}</span> <span className="text-xs" style={dim}>{r.email}</span>
+          <span className="font-semibold">{r.name}</span> <span className="text-xs" style={dim}>{r.email ?? (route === 'dm' ? 'Instagram DM' : 'contact page')}</span>
           {r.channel_url && (
             <a href={r.channel_url} target="_blank" rel="noreferrer" className="text-xs ml-2 underline" style={link}>channel</a>
           )}
@@ -220,20 +232,31 @@ function Row({ r, sender, now }: { r: OutreachRow; sender: string; now: number }
       {r.status === 'draft' && <DraftDetails key={`${r.video_title}|${r.specific}|${r.topic}|${r.version}`} r={r} />}
       {!blocked && ['draft', 'sent'].includes(r.status) && (
         <details className="mt-2">
-          <summary className="cursor-pointer text-xs" style={link}>{dueFollow ? 'Show follow-up' : 'Show email'}</summary>
-          <pre className="whitespace-pre-wrap text-[0.78rem] leading-snug mt-2 p-3 rounded-sm border" style={{ ...bd, color: 'var(--text-body)' }}>{`Subject: ${mail.subject}\n\n${mail.body}`}</pre>
+          <summary className="cursor-pointer text-xs" style={link}>{dueFollow ? 'Show follow-up' : route === 'email' ? 'Show email' : 'Show message'}</summary>
+          <pre className="whitespace-pre-wrap text-[0.78rem] leading-snug mt-2 p-3 rounded-sm border" style={{ ...bd, color: 'var(--text-body)' }}>{route === 'email' ? `Subject: ${mail.subject}\n\n${mail.body}` : dmText}</pre>
         </details>
       )}
 
       <div className="flex flex-wrap items-center gap-2 mt-3">
         {!blocked && (r.status === 'draft' || dueFollow) && (
           <>
-            <a href={gmailComposeUrl(r.email, mail.subject, mail.body)} target="_blank" rel="noreferrer" className={btn} style={{ ...bd, ...link }}>
-              Open in Gmail
-            </a>
-            <a href={mailtoUrl(r.email, mail.subject, mail.body)} className={btn} style={{ ...bd, ...link }}>
-              Open in phone mail app
-            </a>
+            {route === 'email' && r.email ? (
+              <>
+                <a href={gmailComposeUrl(r.email, mail.subject, mail.body)} target="_blank" rel="noreferrer" className={btn} style={{ ...bd, ...link }}>
+                  Open in Gmail
+                </a>
+                <a href={mailtoUrl(r.email, mail.subject, mail.body)} className={btn} style={{ ...bd, ...link }}>
+                  Open in phone mail app
+                </a>
+              </>
+            ) : (
+              <>
+                <button onClick={copy} className={btn} style={{ ...bd, ...link }}>{copied ? 'Copied' : 'Copy message'}</button>
+                <a href={r.channel_url} target="_blank" rel="noreferrer" className={btn} style={{ ...bd, ...link }}>
+                  {route === 'dm' ? 'Open Instagram profile' : 'Open contact page'}
+                </a>
+              </>
+            )}
             <button disabled={pending} onClick={() => run(() => markSent(r.id, dueFollow ? 'followup' : 'first'))} className={btn} style={bd}>
               I sent it
             </button>

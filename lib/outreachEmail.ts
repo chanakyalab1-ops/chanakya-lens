@@ -104,8 +104,26 @@ export function validEmail(s: string): boolean {
 
 export type BulkRow = { name: string; email: string; channelUrl: string; version: OutreachVersion };
 
+export const isInstagram = (url: string): boolean => /^https?:\/\/(www\.)?instagram\.com\//i.test(url);
+
+// "@handle" or a bare handle becomes an Instagram link; a full link is kept.
+export function normalizeChannel(raw: string): string {
+  const v = raw.trim();
+  if (!v) return "";
+  if (/^https?:\/\//i.test(v)) return v;
+  if (v.startsWith("@")) return `https://instagram.com/${v.slice(1)}`;
+  return "";
+}
+
+// How we reach someone: by email, by an Instagram DM, or through a contact form on their site.
+export type OutreachRoute = "email" | "dm" | "form";
+export function routeOf(r: { email: string | null; channel_url: string }): OutreachRoute {
+  if (r.email) return "email";
+  return isInstagram(r.channel_url) ? "dm" : "form";
+}
+
 // Parses pasted lines like "Tanya Vats | tanya@x.com | @tanyaavats_ | geo". Separators: | , or tab.
-// Lines without a valid email are returned as errors so nothing is silently dropped.
+// A line needs an email, or an @handle or link to reach them by DM or contact page.
 export function parseBulk(text: string): { rows: BulkRow[]; errors: string[] } {
   const rows: BulkRow[] = [];
   const errors: string[] = [];
@@ -114,25 +132,48 @@ export function parseBulk(text: string): { rows: BulkRow[]; errors: string[] } {
     const line = raw.trim();
     if (!line || line.startsWith("#")) continue;
     const parts = line.split(/[|\t,]/).map((p) => p.trim()).filter(Boolean);
-    const email = parts.find((p) => validEmail(p));
-    if (!email) {
-      errors.push(`No valid email: ${line.slice(0, 60)}`);
-      continue;
-    }
+    const email = parts.find((p) => validEmail(p)) ?? "";
     const rest = parts.filter((p) => p !== email);
     const name = rest.find((p) => !/^https?:\/\//i.test(p) && !p.startsWith("@") && !/^(geo|econ)$/i.test(p)) ?? "";
     if (!name) {
       errors.push(`No name: ${line.slice(0, 60)}`);
       continue;
     }
-    const handleOrUrl = rest.find((p) => /^https?:\/\//i.test(p) || p.startsWith("@")) ?? "";
-    const channelUrl = handleOrUrl.startsWith("@") ? `https://instagram.com/${handleOrUrl.slice(1)}` : handleOrUrl;
+    const channelUrl = normalizeChannel(rest.find((p) => /^https?:\/\//i.test(p) || p.startsWith("@")) ?? "");
+    if (!email && !channelUrl) {
+      errors.push(`Add an email, @handle or link: ${line.slice(0, 60)}`);
+      continue;
+    }
     const v = rest.find((p) => /^(geo|econ)$/i.test(p));
-    const key = email.toLowerCase();
+    const key = (email || channelUrl).toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    rows.push({ name, email: key, channelUrl, version: v && v.toLowerCase() === "econ" ? "econ" : "geo" });
+    rows.push({ name, email: email.toLowerCase(), channelUrl, version: v && v.toLowerCase() === "econ" ? "econ" : "geo" });
   }
   return { rows, errors };
 }
 
+// A short message for an Instagram DM or a website contact form.
+export function buildDm(i: Pick<OutreachInput, "name" | "topic" | "version" | "sender" | "videoTitle" | "specific">): string {
+  const topic = i.topic.trim();
+  const liked = i.videoTitle.trim() && i.specific.trim()
+    ? `I watched your "${i.videoTitle.trim()}" and liked how you ${i.specific.trim().replace(/[.\s]+$/, "")}.`
+    : `I really like the ${i.version === "econ" ? "geopolitics and economy" : "geopolitics"} content you post${topic ? ` on ${topic}` : ""}.`;
+  return [
+    `Hi ${firstName(i.name)}, ${liked}`,
+    "",
+    "I run Chanakya Lens (chanakyalens.com). For each world story we show what happened, who it affects, and who is covering it and who is not.",
+    "",
+    "I would like to invite you to partner with us: free Lens+, a personal link so every signup is counted for you, and 20% of first-year revenue from members you bring in (payouts start when paid membership opens). No fee, no script. Say only what you honestly think, and disclose the partnership as your platform requires.",
+    "",
+    "Details: chanakyalens.com/creators. If you would like to try it first, reply \"yes\" and I will set up a free account.",
+    "",
+    'If it is not for you, just say "no thanks" and I will not message again.',
+    "",
+    `${i.sender.trim() || "[Your name]"}, Chanakya Lens (@chanakya.lab)`,
+  ].join("\n");
+}
+
+export function buildDmFollowup(i: Pick<OutreachInput, "name" | "sender">): string {
+  return `Hi ${firstName(i.name)}, a quick nudge in case this got buried. I am happy to set up a free Lens+ account so you can look around, with nothing expected in return. Just reply "yes". If now is not the time, I will not message again. ${i.sender.trim() || "[Your name]"}`;
+}

@@ -74,3 +74,34 @@ describe("parseBulk", () => {
     expect(r.errors).toHaveLength(1);
   });
 });
+
+import { buildDm, buildDmFollowup, normalizeChannel, routeOf } from "./outreachEmail";
+describe("DM route", () => {
+  it("accepts a line with only a handle or contact page", () => {
+    const r = parseBulk("Chervine R | @thegeopoliticalreport | geo\nGeopolitics Explained | https://geopolitics-explained.com/contact\nJust a name");
+    expect(r.rows).toEqual([
+      { name: "Chervine R", email: "", channelUrl: "https://instagram.com/thegeopoliticalreport", version: "geo" },
+      { name: "Geopolitics Explained", email: "", channelUrl: "https://geopolitics-explained.com/contact", version: "geo" },
+    ]);
+    expect(r.errors).toHaveLength(1);
+  });
+  it("chooses the route", () => {
+    expect(routeOf({ email: "a@b.co", channel_url: "https://instagram.com/x" })).toBe("email");
+    expect(routeOf({ email: null, channel_url: "https://instagram.com/x" })).toBe("dm");
+    expect(routeOf({ email: null, channel_url: "https://site.com/contact" })).toBe("form");
+    expect(normalizeChannel("@abc")).toBe("https://instagram.com/abc");
+    expect(normalizeChannel("abc")).toBe("");
+  });
+  it("writes a short honest DM with opt-out, disclosure and our Instagram", () => {
+    const d = buildDm({ name: "Chervine Razmazma", topic: "", version: "geo", sender: "Sam", videoTitle: "", specific: "" });
+    expect(d).toContain("Hi Chervine, I really like the geopolitics content you post.");
+    expect(d).toContain('"no thanks"');
+    expect(d).toContain("disclose the partnership");
+    expect(d).toContain("@chanakya.lab");
+    expect(d).not.toContain("I watched");
+    expect(buildDm({ name: "A", topic: "", version: "geo", sender: "", videoTitle: "Why oil moves", specific: "explain it." })).toContain('I watched your "Why oil moves" and liked how you explain it.');
+  });
+  it("has a DM follow-up", () => {
+    expect(buildDmFollowup({ name: "Chervine R", sender: "Sam" })).toContain("Hi Chervine, a quick nudge");
+  });
+});

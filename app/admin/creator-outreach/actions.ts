@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { getSessionUser } from '@/lib/supabase-user';
 import { isOwnerEmail } from '@/lib/memberAccess';
 import { supabaseServer } from '@/lib/supabase-server';
-import { needsFollowup, validEmail, type OutreachVersion } from '@/lib/outreachEmail';
+import { needsFollowup, normalizeChannel, validEmail, type OutreachVersion } from '@/lib/outreachEmail';
 
 type Result = { ok: boolean; error?: string };
 
@@ -19,18 +19,25 @@ export async function addCreator(input: { name: string; email: string; channelUr
   if (!(await owner())) return { ok: false, error: 'Not allowed.' };
   const email = clip(input.email, 200).toLowerCase();
   const name = clip(input.name, 100);
+  const channelUrl = normalizeChannel(clip(input.channelUrl, 300)) || clip(input.channelUrl, 300);
   if (!name) return { ok: false, error: 'Add their name.' };
-  if (!validEmail(email)) return { ok: false, error: 'That email does not look right.' };
-  const { error } = await supabaseServer().from('creator_outreach').insert({
+  if (email && !validEmail(email)) return { ok: false, error: 'That email does not look right.' };
+  if (!email && !/^https?:\/\//i.test(channelUrl)) return { ok: false, error: 'Add an email, or an @handle or link so you can message them.' };
+  const db = supabaseServer();
+  if (!email) {
+    const { data: dupe } = await db.from('creator_outreach').select('id').eq('channel_url', channelUrl).limit(1);
+    if (dupe && dupe.length > 0) return { ok: false, error: 'You already have this profile on the list.' };
+  }
+  const { error } = await db.from('creator_outreach').insert({
     name,
-    email,
-    channel_url: clip(input.channelUrl, 300),
+    email: email || null,
+    channel_url: channelUrl,
     video_title: clip(input.videoTitle, 200),
     topic: clip(input.topic, 120),
     specific: clip(input.specific, 300),
     version: input.version === 'econ' ? 'econ' : 'geo',
   });
-  if (error) return { ok: false, error: error.code === '23505' ? 'You already have this email on the list.' : 'Could not save. Has supabase/creator-outreach.sql been run?' };
+  if (error) return { ok: false, error: error.code === '23505' ? 'You already have this email on the list.' : 'Could not save. Has the latest supabase/creator-outreach.sql been run?' };
   revalidatePath('/admin/creator-outreach');
   return { ok: true };
 }
@@ -78,15 +85,21 @@ export async function addCreatorsBulk(rows: { name: string; email: string; chann
   const clean = rows
     .slice(0, 100)
     .map((r) => ({ name: clip(r.name, 100), email: clip(r.email, 200).toLowerCase(), channel_url: clip(r.channelUrl, 300), version: r.version === 'econ' ? 'econ' : 'geo' }))
-    .filter((r) => r.name && validEmail(r.email));
+    .filter((r) => r.name && (r.email ? validEmail(r.email) : /^https?:\/\//i.test(r.channel_url)));
   if (clean.length === 0) return { ok: false, added: 0, skipped: 0, error: 'Nothing valid to add.' };
   const db = supabaseServer();
-  const { data: existing } = await db.from('creator_outreach').select('email').in('email', clean.map((r) => r.email));
-  const have = new Set(((existing ?? []) as { email: string }[]).map((r) => r.email));
-  const fresh = clean.filter((r) => !have.has(r.email));
+  const emails = clean.filter((r) => r.email).map((r) => r.email);
+  const urls = clean.filter((r) => !r.email).map((r) => r.channel_url);
+  const [byEmail, byUrl] = await Promise.all([
+    emails.length ? db.from('creator_outreach').select('email').in('email', emails) : Promise.resolve({ data: [] }),
+    urls.length ? db.from('creator_outreach').select('channel_url').in('channel_url', urls) : Promise.resolve({ data: [] }),
+  ]);
+  const haveEmail = new Set(((byEmail.data ?? []) as { email: string }[]).map((r) => r.email));
+  const haveUrl = new Set(((byUrl.data ?? []) as { channel_url: string }[]).map((r) => r.channel_url));
+  const fresh = clean.filter((r) => (r.email ? !haveEmail.has(r.email) : !haveUrl.has(r.channel_url))).map((r) => ({ ...r, email: r.email || null }));
   if (fresh.length > 0) {
     const { error } = await db.from('creator_outreach').insert(fresh);
-    if (error) return { ok: false, added: 0, skipped: 0, error: 'Could not save. Has supabase/creator-outreach.sql been run?' };
+    if (error) return { ok: false, added: 0, skipped: 0, error: 'Could not save. Has the latest supabase/creator-outreach.sql been run?' };
   }
   revalidatePath('/admin/creator-outreach');
   return { ok: true, added: fresh.length, skipped: clean.length - fresh.length };

@@ -29,4 +29,20 @@ describe("OutreachBoard", () => {
     expect(html).toContain("mail.google.com");
     expect(html).toContain("Add many at once");
   });
+  it("gives a creator with no email a copyable DM and a profile link, and no mail buttons", () => {
+    const html = renderToString(<OutreachBoard rows={[row({ email: null, channel_url: "https://instagram.com/thegeopoliticalreport", name: "Chervine R" })]} />);
+    expect(html).toContain("Copy message");
+    expect(html).toContain("Open Instagram profile");
+    expect(html).toContain("Instagram DM");
+    expect(html).not.toContain("mail.google.com");
+    expect(html).not.toContain("phone mail app");
+  });
+  it("uses a contact page for a site link", () => {
+    const html = renderToString(<OutreachBoard rows={[row({ email: null, channel_url: "https://site.com/contact" })]} />);
+    expect(html).toContain("Open contact page");
+  });
+  it("never offers a DM to someone who said no", () => {
+    const html = renderToString(<OutreachBoard rows={[row({ email: null, channel_url: "https://instagram.com/x", status: "no" })]} />);
+    expect(html).not.toContain("Copy message");
+  });
 });
