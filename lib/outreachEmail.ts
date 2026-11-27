@@ -5,6 +5,7 @@ export type OutreachVersion = "geo" | "econ";
 export type OutreachStatus = "draft" | "sent" | "replied" | "yes" | "no";
 
 export const FOLLOWUP_DAYS = 5;
+export const INSTAGRAM_URL = "instagram.com/chanakya.lab";
 
 export type OutreachInput = {
   name: string;
@@ -48,6 +49,8 @@ export function buildEmail(i: OutreachInput): { subject: string; body: string } 
     "There is no fee and no script. Say only what you honestly think, and disclose the partnership as your platform requires.",
     "",
     'If you would like to try it first, reply "yes" and I will set up a free account. Details are at chanakyalens.com/creators.',
+    "",
+    `To see what we post, we are on Instagram: ${INSTAGRAM_URL} (@chanakya.lab).`,
     "",
     'If it is not for you, reply "no thanks" and I will not write again.',
     "",
