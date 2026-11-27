@@ -11,6 +11,7 @@ describe("buildEmail", () => {
     expect(e.body).toContain('reply "no thanks"');
     expect(e.body).toContain("disclose the partnership");
     expect(e.body).toContain("payouts start when paid membership opens");
+    expect(e.body).toContain("we are on Instagram: instagram.com/chanakya.lab (@chanakya.lab)");
     expect(e.body.endsWith("chanakyalens.com")).toBe(true);
     expect(e.subject).toBe("A tool for your audience on oil prices");
   });
