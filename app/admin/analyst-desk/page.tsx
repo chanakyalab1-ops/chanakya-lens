@@ -15,7 +15,7 @@ export default async function AnalystDeskAdminPage() {
         <Link href="/admin" className="font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: 'var(--text-on-ink-dim)' }}>← Admin</Link>
       </div>
       <p className="text-[0.85rem] mb-6" style={{ color: 'var(--text-body)' }}>
-        Add your writers, review their analysis of our stories, and publish. Each write-up is attached to one story and is free to read: it appears on that story&apos;s page and in The Analyst Desk. Writers use chanakyalens.com/writer, which is their own dashboard.
+        Add your writers. They publish their own analysis of our stories, and it goes live straight away, free to read, on that story&apos;s page and in The Analyst Desk. You read it afterwards and can ask for changes, which takes it down until she fixes it. You get an alert whenever something is published. Writers use chanakyalens.com/writer, which is their own dashboard.
       </p>
       <AnalystAdmin analysts={analysts} posts={posts} headlines={headlines} />
     </div>

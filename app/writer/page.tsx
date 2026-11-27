@@ -39,16 +39,15 @@ export default async function WriterDashboard() {
           <div>
             <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-1" style={{ color: 'var(--brand-soft)' }}>The Analyst Desk</div>
             <h1 className="font-display font-extrabold text-4xl">Hi {name}</h1>
-            <p className="text-[0.95rem] mt-1" style={{ color: 'var(--text-body)' }}>Your analysis of our stories, in one place. Pick a story, write, save drafts, send a piece to the editor when it is ready, and see what comes back.</p>
+            <p className="text-[0.95rem] mt-1" style={{ color: 'var(--text-body)' }}>Your analysis of our stories, in one place. Pick a story, write, and publish when it is ready. It goes live straight away, and if the editor asks for changes you will see the note here.</p>
           </div>
           <Link href="/writer/new" className="px-5 py-3 text-sm font-semibold rounded-sm text-white" style={{ background: '#0E7080' }}>New write-up</Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
           {card('Drafts', stats.drafts)}
-          {card('With the editor', stats.withEditor)}
           {card('Changes requested', stats.changes, stats.changes ? 'var(--developing)' : undefined)}
-          {card('Published', stats.published, 'var(--possible)')}
+          {card('Live', stats.published, 'var(--possible)')}
           {card('Words written', stats.words.toLocaleString('en-GB'))}
         </div>
 

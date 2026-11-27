@@ -21,11 +21,12 @@ export type Post = {
   updatedAt: string;
 };
 
-export const STATUS_LABEL: Record<PostStatus, string> = { draft: "Draft", submitted: "With the editor", changes: "Changes requested", published: "Published" };
-export const MIN_WORDS_TO_SUBMIT = 150;
+export const STATUS_LABEL: Record<PostStatus, string> = { draft: "Draft", submitted: "With the editor", changes: "Changes requested", published: "Live" };
+export const MIN_WORDS_TO_PUBLISH = 150;
 
-// A writer can edit her own piece while it is a draft or the editor has asked for changes.
-export const canWriterEdit = (s: PostStatus): boolean => s === "draft" || s === "changes";
+// A writer can edit her own piece at any time except a legacy "with the editor" one. She publishes it herself;
+// the editor can ask for changes afterwards, which takes it down until she fixes and republishes it.
+export const canWriterEdit = (s: PostStatus): boolean => s !== "submitted";
 
 export function wordCount(md: string): number {
   return md.trim() ? md.trim().split(/\s+/).length : 0;
@@ -58,12 +59,12 @@ export function writerStats(posts: Pick<Post, "status" | "body">[]): WriterStats
 }
 
 // What blocks a piece from being sent to the editor. Empty when it is ready.
-export function submitProblems(p: { title: string; summary: string; body: string; storySlug: string }): string[] {
+export function publishProblems(p: { title: string; summary: string; body: string; storySlug: string }): string[] {
   const out: string[] = [];
   if (!p.storySlug.trim()) out.push("Choose the story this write-up is about.");
   if (!p.title.trim()) out.push("Add a title.");
   if (!p.summary.trim()) out.push("Add a one or two sentence summary.");
-  if (wordCount(p.body) < MIN_WORDS_TO_SUBMIT) out.push(`Write at least ${MIN_WORDS_TO_SUBMIT} words (you have ${wordCount(p.body)}).`);
+  if (wordCount(p.body) < MIN_WORDS_TO_PUBLISH) out.push(`Write at least ${MIN_WORDS_TO_PUBLISH} words (you have ${wordCount(p.body)}).`);
   return out;
 }
 

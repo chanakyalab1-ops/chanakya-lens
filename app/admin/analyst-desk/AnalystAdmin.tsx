@@ -18,9 +18,9 @@ export function AnalystAdmin({ analysts, posts, headlines = {} }: { analysts: An
   return (
     <div className="space-y-8">
       <Writers analysts={analysts} />
-      <Group title={`Waiting for you (${waiting.length})`} posts={waiting} headlines={headlines} empty="Nothing to review." accent />
+      <Group title={`Live (${published.length})`} posts={published} headlines={headlines} empty="Nothing published yet. Pieces go live as soon as a writer publishes them." />
       <Group title={`Sent back for changes (${changes.length})`} posts={changes} headlines={headlines} />
-      <Group title={`Published (${published.length})`} posts={published} headlines={headlines} />
+      {waiting.length > 0 && <Group title={`Waiting for you (${waiting.length})`} posts={waiting} headlines={headlines} accent />}
       <Group title={`Drafts (${drafts.length})`} posts={drafts} headlines={headlines} />
     </div>
   );
@@ -94,14 +94,14 @@ function Item({ p, story }: { p: Post; story: string }) {
           <Link href={`/analyst-desk/${p.slug}`} target="_blank" className={btn} style={bd}>Preview</Link>
           <Link href={`/writer/${p.id}`} className={btn} style={bd}>Edit</Link>
           {p.status !== 'published' && <button disabled={pending} onClick={() => window.confirm('Publish this piece?') && run(() => publishPost(p.id))} className={btn} style={{ ...bd, color: 'var(--possible)' }}>Publish</button>}
-          {p.status === 'submitted' && <button disabled={pending} onClick={() => setAsking(!asking)} className={btn} style={bd}>Request changes</button>}
+          {(p.status === 'published' || p.status === 'submitted') && <button disabled={pending} onClick={() => setAsking(!asking)} className={btn} style={bd}>Request changes</button>}
           {p.status === 'published' && <button disabled={pending} onClick={() => run(() => unpublishPost(p.id))} className={btn} style={bd}>Unpublish</button>}
         </div>
       </div>
       {asking && (
         <div className="mt-3 space-y-2">
           <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} maxLength={1000} placeholder="What should she change?" className={field} style={bd} />
-          <button disabled={pending || !note.trim()} onClick={() => run(() => requestChanges(p.id, note))} className={btn} style={bd}>Send back</button>
+          <button disabled={pending || !note.trim()} onClick={() => window.confirm(p.status === 'published' ? 'This takes the piece off the site until she fixes it and publishes again. Send back?' : 'Send back?') && run(() => requestChanges(p.id, note))} className={btn} style={bd}>Send back</button>
         </div>
       )}
       {msg && <div className="text-xs mt-2" style={{ color: 'var(--developing)' }}>{msg}</div>}

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { savePost, deleteMyDraft } from './actions';
 import { DispatchBody } from '@/components/DispatchBody';
 import { parseBlocks } from '@/lib/miniMarkdown';
-import { MIN_WORDS_TO_SUBMIT, STATUS_LABEL, readMinutes, wordCount, type PostStatus } from '@/lib/analystDesk';
+import { MIN_WORDS_TO_PUBLISH, STATUS_LABEL, readMinutes, wordCount, type PostStatus } from '@/lib/analystDesk';
 
 type Initial = { id: string; storySlug: string; title: string; summary: string; body: string; heroUrl: string; tags: string; status: PostStatus; editorNote: string; slug: string };
 
@@ -26,14 +26,14 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
   const words = wordCount(body);
   const blocks = useMemo(() => parseBlocks(body), [body]);
 
-  function save(submit: boolean) {
-    if (submit && !window.confirm('Send this to the editor? You will not be able to edit it until it comes back.')) return;
+  function save(publish: boolean) {
+    if (publish && !window.confirm('Publish this now? It goes live straight away under the story. You can still edit it later.')) return;
     setMsg(null);
     start(async () => {
-      const r = await savePost({ id: initial?.id, storySlug, title, summary, body, heroUrl, tags, submit });
+      const r = await savePost({ id: initial?.id, storySlug, title, summary, body, heroUrl, tags, publish });
       if (!r.ok) return setMsg({ ok: false, text: r.error ?? 'Could not save.' });
-      setMsg({ ok: true, text: submit ? 'Sent to the editor.' : 'Saved.' });
-      if (submit) router.push('/writer');
+      setMsg({ ok: true, text: publish ? 'Published.' : 'Saved.' });
+      if (publish && !initial) router.push('/writer');
       else if (!initial && r.id) router.replace(`/writer/${r.id}`);
       else router.refresh();
     });
@@ -42,17 +42,17 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
   return (
     <div className="space-y-4">
       {initial && (
-        <div className="font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: 'var(--text-on-ink-dim)' }}>Status: {STATUS_LABEL[initial.status]}</div>
+        <div className="font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: 'var(--text-on-ink-dim)' }}>Status: {STATUS_LABEL[initial.status]}{initial.status === 'published' ? ' · changes you save are live straight away' : ''}</div>
       )}
       {initial?.status === 'changes' && initial.editorNote && (
         <div className="rounded-sm border-l-4 border p-4" style={{ borderColor: 'var(--border)', borderLeftColor: 'var(--developing)', background: 'var(--ink-card)' }}>
-          <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-1" style={{ color: 'var(--developing)' }}>From the editor</div>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-1" style={{ color: 'var(--developing)' }}>From the editor, please fix and publish again</div>
           <p className="text-[0.92rem]" style={{ color: 'var(--text-body)' }}>{initial.editorNote}</p>
         </div>
       )}
       {locked && (
         <div className="rounded-sm border p-4 text-sm" style={{ borderColor: '#0E7080', background: 'var(--ink-card)' }}>
-          This piece is with the editor, so it is read-only for now. You will see it here again if changes are requested.
+          This piece is read-only right now.
         </div>
       )}
 
@@ -74,7 +74,7 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
 
       <div className="flex items-center justify-between">
         <div className="text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
-          {words.toLocaleString('en-GB')} words · {readMinutes(body)} min read{!isOwner && words < MIN_WORDS_TO_SUBMIT ? ` · ${MIN_WORDS_TO_SUBMIT - words} more to send` : ''}
+          {words.toLocaleString('en-GB')} words · {readMinutes(body)} min read{!isOwner && initial?.status !== 'published' && words < MIN_WORDS_TO_PUBLISH ? ` · ${MIN_WORDS_TO_PUBLISH - words} more to publish` : ''}
         </div>
         <div className="flex gap-1 text-xs">
           <button type="button" onClick={() => setPreview(false)} className="px-3 py-1 rounded-sm border" style={{ ...bd, background: !preview ? 'var(--ink-card)' : 'transparent' }}>Write</button>
@@ -100,11 +100,11 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
       {!locked && (
         <div className="flex items-center gap-3 flex-wrap pt-2">
           <button disabled={pending} onClick={() => save(false)} className="px-5 py-2.5 text-sm font-semibold rounded-sm border disabled:opacity-50" style={bd}>
-            {pending ? 'Saving…' : 'Save draft'}
+            {pending ? 'Saving…' : initial?.status === 'published' ? 'Save changes' : 'Save draft'}
           </button>
-          {!isOwner && (
+          {initial?.status !== 'published' && (
             <button disabled={pending} onClick={() => save(true)} className="px-5 py-2.5 text-sm font-semibold rounded-sm text-white disabled:opacity-50" style={{ background: '#0E7080' }}>
-              Send to the editor
+              Publish
             </button>
           )}
           {initial?.status === 'draft' && (

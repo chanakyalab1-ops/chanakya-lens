@@ -14,6 +14,7 @@ import { WatchButton } from "@/components/WatchButton";
 import { getStoryUpdates } from "@/lib/storyUpdates";
 import { getWatchingNext } from "@/lib/watchingNext";
 import { getPostsForStory } from "@/lib/analystDesk";
+import { AnalystPrompt } from "@/components/AnalystPrompt";
 import { ReadMarker } from "@/components/ReadMarker";
 import { ConnectionsSection } from "@/components/ConnectionsSection";
 import { connectionsFor } from "@/lib/connections";
@@ -237,6 +238,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
         )}
         <h1 className="font-display font-bold text-[1.75rem] md:text-[2.6rem] leading-[1.15] md:leading-[1.08] mb-3 md:mb-4 md:max-w-[46rem]">{story.headline}</h1>
         <p className="text-[1.02rem] md:text-xl mb-5 md:mb-7 leading-snug md:leading-snug md:max-w-[46rem]" style={{ color: "var(--text-on-ink-dim)" }}>{story.dek}</p>
+        <AnalystPrompt slug={slug} />
 
         <div className="max-md:order-2 mb-6 md:mb-8 space-y-4 md:space-y-5 md:max-w-[42rem]">
           <h2 className="sr-only">What happened</h2>
