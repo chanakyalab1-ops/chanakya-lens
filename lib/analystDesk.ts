@@ -194,14 +194,3 @@ export async function getPostById(id: string): Promise<Post | null> {
     return null;
   }
 }
-
-// Published write-ups about one story, newest first. Empty if the column or table is missing.
-export async function getPostsForStory(storySlug: string): Promise<Post[]> {
-  try {
-    const { data, error } = await supabaseServer().from("analyst_posts").select(COLS).eq("story_slug", storySlug).eq("status", "published").order("published_at", { ascending: false }).limit(3);
-    if (error || !data) return [];
-    return (data as unknown as Row[]).map((r) => toPost(r, new Map()));
-  } catch {
-    return [];
-  }
-}
