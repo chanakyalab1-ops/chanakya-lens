@@ -15,3 +15,6 @@ create table if not exists creator_outreach (
   created_at timestamptz not null default now()
 );
 alter table creator_outreach enable row level security;
+
+-- Creators reached by Instagram DM or a contact page have no email.
+alter table creator_outreach alter column email drop not null;
