@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { addCreator, addCreatorsBulk, markSent, removeDraft, setOutreachStatus, updateCreatorDetails } from './actions';
-import { buildEmail, buildFollowup, gmailComposeUrl, needsFollowup, parseBulk, type OutreachVersion } from '@/lib/outreachEmail';
+import { buildEmail, buildFollowup, gmailComposeUrl, mailtoUrl, needsFollowup, parseBulk, type OutreachVersion } from '@/lib/outreachEmail';
 
 export type OutreachRow = {
   id: string;
@@ -230,6 +230,9 @@ function Row({ r, sender, now }: { r: OutreachRow; sender: string; now: number }
           <>
             <a href={gmailComposeUrl(r.email, mail.subject, mail.body)} target="_blank" rel="noreferrer" className={btn} style={{ ...bd, ...link }}>
               Open in Gmail
+            </a>
+            <a href={mailtoUrl(r.email, mail.subject, mail.body)} className={btn} style={{ ...bd, ...link }}>
+              Open in phone mail app
             </a>
             <button disabled={pending} onClick={() => run(() => markSent(r.id, dueFollow ? 'followup' : 'first'))} className={btn} style={bd}>
               I sent it

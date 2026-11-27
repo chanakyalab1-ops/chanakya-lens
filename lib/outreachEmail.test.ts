@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildEmail, buildFollowup, firstName, followupDueAt, gmailComposeUrl, needsFollowup, validEmail } from "./outreachEmail";
+import { buildEmail, buildFollowup, firstName, followupDueAt, gmailComposeUrl, mailtoUrl, needsFollowup, validEmail } from "./outreachEmail";
 
 const base = { name: "Priya Sharma", videoTitle: "Why oil moves", topic: "oil prices", specific: "explain the shipping angle.", version: "geo" as const, sender: "Sam" };
 
@@ -39,6 +39,10 @@ describe("followups and links", () => {
     expect(u).toContain("https://mail.google.com/mail/?view=cm");
     expect(u).toContain("to=a%40b.com");
     expect(decodeURIComponent(u.replace(/\+/g, " "))).toContain("Hi & bye");
+  });
+  it("builds a mailto link that keeps spaces and line breaks", () => {
+    const u = mailtoUrl("a@b.com", "Hi there", "line1\nline2");
+    expect(u).toBe("mailto:a@b.com?subject=Hi%20there&body=line1%0Aline2");
   });
   it("flags a follow-up only after 5 days, once, and not after a reply", () => {
     const sent = "2026-11-01T00:00:00Z";

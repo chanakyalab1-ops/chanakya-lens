@@ -77,6 +77,11 @@ export function gmailComposeUrl(to: string, subject: string, body: string): stri
   return `https://mail.google.com/mail/?${q.toString()}`;
 }
 
+// Opens the phone's default mail app (Gmail on most Android phones) with the email filled in.
+export function mailtoUrl(to: string, subject: string, body: string): string {
+  return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 export function followupDueAt(sentAt: string | null, days = FOLLOWUP_DAYS): Date | null {
   if (!sentAt) return null;
   const t = new Date(sentAt).getTime();
