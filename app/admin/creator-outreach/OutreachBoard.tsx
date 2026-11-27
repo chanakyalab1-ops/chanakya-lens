@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { addCreator, markSent, removeDraft, setOutreachStatus } from './actions';
-import { buildEmail, buildFollowup, gmailComposeUrl, needsFollowup, type OutreachVersion } from '@/lib/outreachEmail';
+import { addCreator, addCreatorsBulk, markSent, removeDraft, setOutreachStatus, updateCreatorDetails } from './actions';
+import { buildEmail, buildFollowup, gmailComposeUrl, isPersonalised, needsFollowup, parseBulk, type OutreachVersion } from '@/lib/outreachEmail';
 
 export type OutreachRow = {
   id: string;
@@ -58,6 +58,7 @@ export function OutreachBoard({ rows }: { rows: OutreachRow[] }) {
       </div>
 
       <AddForm />
+      <BulkAdd />
 
       {due.length > 0 && <Group title={`Follow-up due (${due.length})`} rows={due} sender={sender} now={now} />}
       <Group title={`To send (${drafts.length})`} rows={drafts} sender={sender} now={now} empty="No drafts. Add a creator above." />
@@ -109,6 +110,69 @@ function AddForm() {
   );
 }
 
+function BulkAdd() {
+  const [text, setText] = useState('');
+  const [msg, setMsg] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const parsed = parseBulk(text);
+  return (
+    <details className="rounded-sm border p-4" style={{ ...bd, background: 'var(--ink-card)' }}>
+      <summary className="cursor-pointer font-mono text-[0.6875rem] uppercase tracking-widest" style={dim}>Add many at once</summary>
+      <p className="text-xs mt-3 mb-2" style={dim}>One creator per line: name | email | @handle | geo or econ (the last two are optional). They are added as drafts. Before you can open the email in Gmail you add the video you watched and one thing you liked.</p>
+      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={6} className={`${field} font-mono`} style={bd} placeholder={'Tanya Vats | name@gmail.com | @tanyaavats_ | geo'} />
+      <div className="flex items-center gap-3 mt-2 flex-wrap">
+        <button
+          disabled={pending || parsed.rows.length === 0}
+          onClick={() =>
+            start(async () => {
+              const r = await addCreatorsBulk(parsed.rows);
+              setMsg(r.ok ? `Added ${r.added}${r.skipped ? `, skipped ${r.skipped} already on the list` : ''}.` : r.error ?? 'Could not add.');
+              if (r.ok) setText('');
+            })
+          }
+          className="px-4 py-2 text-sm font-semibold text-white rounded-sm disabled:opacity-50"
+          style={{ background: '#0E7080' }}
+        >
+          {pending ? 'Adding…' : `Add ${parsed.rows.length || ''} as drafts`}
+        </button>
+        {parsed.errors.length > 0 && <span className="text-xs" style={{ color: 'var(--developing)' }}>{parsed.errors.join(' · ')}</span>}
+        {msg && <span className="text-xs" style={dim}>{msg}</span>}
+      </div>
+    </details>
+  );
+}
+
+function DraftDetails({ r }: { r: OutreachRow }) {
+  const [f, setF] = useState({ videoTitle: r.video_title, topic: r.topic, specific: r.specific, version: r.version });
+  const [msg, setMsg] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const set = (k: 'videoTitle' | 'topic' | 'specific') => (e: React.ChangeEvent<HTMLInputElement>) => setF((p) => ({ ...p, [k]: e.target.value }));
+  return (
+    <div className="mt-3 space-y-2">
+      <div className="grid sm:grid-cols-2 gap-2">
+        <input value={f.videoTitle} onChange={set('videoTitle')} placeholder="A video or post you really watched" className={field} style={bd} />
+        <input value={f.topic} onChange={set('topic')} placeholder="Its topic, e.g. oil prices" className={field} style={bd} />
+      </div>
+      <input value={f.specific} onChange={set('specific')} placeholder="One specific thing you liked: explain the shipping angle" className={field} style={bd} />
+      <div className="flex items-center gap-3 flex-wrap">
+        <select value={f.version} onChange={(e) => setF((p) => ({ ...p, version: e.target.value as OutreachVersion }))} className="rounded-sm border px-2 py-1 bg-transparent text-xs" style={bd}>
+          <option value="geo">Geopolitics wording</option>
+          <option value="econ">Economy and India wording</option>
+        </select>
+        <button
+          disabled={pending}
+          onClick={() => start(async () => { const x = await updateCreatorDetails(r.id, f); setMsg(x.ok ? 'Saved.' : x.error ?? 'Failed'); })}
+          className="px-3 py-1.5 text-xs font-semibold rounded-sm border hover:opacity-80 disabled:opacity-50"
+          style={bd}
+        >
+          Save details
+        </button>
+        {msg && <span className="text-xs" style={dim}>{msg}</span>}
+      </div>
+    </div>
+  );
+}
+
 function Group({ title, rows, sender, now, empty }: { title: string; rows: OutreachRow[]; sender: string; now: number; empty?: string }) {
   return (
     <section>
@@ -153,6 +217,7 @@ function Row({ r, sender, now }: { r: OutreachRow; sender: string; now: number }
         </span>
       </div>
 
+      {r.status === 'draft' && <DraftDetails key={`${r.video_title}|${r.specific}|${r.topic}|${r.version}`} r={r} />}
       {!blocked && ['draft', 'sent'].includes(r.status) && (
         <details className="mt-2">
           <summary className="cursor-pointer text-xs" style={link}>{dueFollow ? 'Show follow-up' : 'Show email'}</summary>
@@ -163,12 +228,18 @@ function Row({ r, sender, now }: { r: OutreachRow; sender: string; now: number }
       <div className="flex flex-wrap items-center gap-2 mt-3">
         {!blocked && (r.status === 'draft' || dueFollow) && (
           <>
-            <a href={gmailComposeUrl(r.email, mail.subject, mail.body)} target="_blank" rel="noreferrer" className={btn} style={{ ...bd, ...link }}>
-              Open in Gmail
-            </a>
-            <button disabled={pending} onClick={() => run(() => markSent(r.id, dueFollow ? 'followup' : 'first'))} className={btn} style={bd}>
-              I sent it
-            </button>
+            {r.status === 'draft' && !isPersonalised(r) ? (
+              <span className="text-xs" style={{ color: 'var(--developing)' }}>Add the video you watched and one thing you liked, then save, to open the email.</span>
+            ) : (
+              <>
+                <a href={gmailComposeUrl(r.email, mail.subject, mail.body)} target="_blank" rel="noreferrer" className={btn} style={{ ...bd, ...link }}>
+                  Open in Gmail
+                </a>
+                <button disabled={pending} onClick={() => run(() => markSent(r.id, dueFollow ? 'followup' : 'first'))} className={btn} style={bd}>
+                  I sent it
+                </button>
+              </>
+            )}
           </>
         )}
         {!blocked && r.status !== 'no' && ['sent', 'draft'].includes(r.status) && (

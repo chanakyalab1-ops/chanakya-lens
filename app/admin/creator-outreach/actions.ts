@@ -72,3 +72,35 @@ export async function removeDraft(id: string): Promise<Result> {
   revalidatePath('/admin/creator-outreach');
   return { ok: true };
 }
+
+export async function addCreatorsBulk(rows: { name: string; email: string; channelUrl: string; version: OutreachVersion }[]): Promise<{ ok: boolean; added: number; skipped: number; error?: string }> {
+  if (!(await owner())) return { ok: false, added: 0, skipped: 0, error: 'Not allowed.' };
+  const clean = rows
+    .slice(0, 100)
+    .map((r) => ({ name: clip(r.name, 100), email: clip(r.email, 200).toLowerCase(), channel_url: clip(r.channelUrl, 300), version: r.version === 'econ' ? 'econ' : 'geo' }))
+    .filter((r) => r.name && validEmail(r.email));
+  if (clean.length === 0) return { ok: false, added: 0, skipped: 0, error: 'Nothing valid to add.' };
+  const db = supabaseServer();
+  const { data: existing } = await db.from('creator_outreach').select('email').in('email', clean.map((r) => r.email));
+  const have = new Set(((existing ?? []) as { email: string }[]).map((r) => r.email));
+  const fresh = clean.filter((r) => !have.has(r.email));
+  if (fresh.length > 0) {
+    const { error } = await db.from('creator_outreach').insert(fresh);
+    if (error) return { ok: false, added: 0, skipped: 0, error: 'Could not save. Has supabase/creator-outreach.sql been run?' };
+  }
+  revalidatePath('/admin/creator-outreach');
+  return { ok: true, added: fresh.length, skipped: clean.length - fresh.length };
+}
+
+// Fills in the personal details that make an email real. Only for drafts.
+export async function updateCreatorDetails(id: string, d: { videoTitle: string; topic: string; specific: string; version: OutreachVersion }): Promise<Result> {
+  if (!(await owner())) return { ok: false, error: 'Not allowed.' };
+  const { error } = await supabaseServer()
+    .from('creator_outreach')
+    .update({ video_title: clip(d.videoTitle, 200), topic: clip(d.topic, 120), specific: clip(d.specific, 300), version: d.version === 'econ' ? 'econ' : 'geo' })
+    .eq('id', id)
+    .eq('status', 'draft');
+  if (error) return { ok: false, error: 'Could not save.' };
+  revalidatePath('/admin/creator-outreach');
+  return { ok: true };
+}
