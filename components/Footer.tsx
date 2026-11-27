@@ -20,6 +20,7 @@ export default function Footer() {
               <Link prefetch={false} href="/regions" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Browse by region</Link>
               <Link href="/off-lens" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Off-Lens</Link>
               <Link href="/lens" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>The Lens</Link>
+              <Link href="/analyst-desk" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>The Analyst Desk</Link>
               {process.env.MEMBERSHIP_PUBLIC === "true" && <Link href="/monthly" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Lens Monthly</Link>}
               <Link href="/digest" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Daily digest</Link>
               <Link href="/membership" className="block text-sm hover:opacity-80" style={{ color: "var(--text-body)" }}>Lens+ {process.env.MEMBERSHIP_PUBLIC === "true" ? "membership" : "waitlist"}</Link>

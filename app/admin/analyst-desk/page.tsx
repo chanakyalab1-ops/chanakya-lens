@@ -15,7 +15,7 @@ export default async function AnalystDeskAdminPage() {
         <Link href="/admin" className="font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: 'var(--text-on-ink-dim)' }}>← Admin</Link>
       </div>
       <p className="text-[0.85rem] mb-6" style={{ color: 'var(--text-body)' }}>
-        Add your writers, review their analysis of our stories, and publish. Each write-up is attached to one story and appears on that story&apos;s page once membership is public. Writers use chanakyalens.com/writer, which is their own dashboard. Published pieces stay hidden from readers until membership is public, like Lens Monthly.
+        Add your writers, review their analysis of our stories, and publish. Each write-up is attached to one story and is free to read: it appears on that story&apos;s page and in The Analyst Desk. Writers use chanakyalens.com/writer, which is their own dashboard.
       </p>
       <AnalystAdmin analysts={analysts} posts={posts} headlines={headlines} />
     </div>

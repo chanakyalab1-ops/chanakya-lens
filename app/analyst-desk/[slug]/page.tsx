@@ -5,9 +5,8 @@ import NavDrawer from '@/components/NavDrawer';
 import { DispatchBody } from '@/components/DispatchBody';
 import { getSessionUser } from '@/lib/supabase-user';
 import { isOwnerEmail } from '@/lib/memberAccess';
-import { dispatchAccess } from '@/lib/monthly';
 import { getAnalyst, getPostBySlug, readMinutes } from '@/lib/analystDesk';
-import { parseBlocks, previewBlocks } from '@/lib/miniMarkdown';
+import { parseBlocks } from '@/lib/miniMarkdown';
 import { getLensEntity } from '@/lib/lens';
 import { getAllStories } from '@/lib/stories';
 import { slugifyPost } from '@/lib/analystDesk';
@@ -23,15 +22,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function AnalystPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const user = await getSessionUser();
-  const access = await dispatchAccess(user);
-  if (access === 'hidden') notFound();
   // The owner can open an unpublished piece to check it before publishing.
   const post = await getPostBySlug(slug, { includeUnpublished: isOwnerEmail(user?.email) });
   if (!post) notFound();
   const author = await getAnalyst(post.authorEmail);
   const story = post.storySlug ? (await getAllStories()).find((st) => st.slug === post.storySlug) : undefined;
   const blocks = parseBlocks(post.body);
-  const shown = access === 'allowed' ? blocks : previewBlocks(blocks);
 
   return (
     <>
@@ -69,15 +65,7 @@ export default async function AnalystPostPage({ params }: { params: Promise<{ sl
           // eslint-disable-next-line @next/next/no-img-element
           <img src={post.heroUrl} alt="" className="w-full rounded-sm border mb-8" style={{ borderColor: 'var(--border)' }} />
         )}
-        <DispatchBody blocks={shown} />
-        {access !== 'allowed' && blocks.length > shown.length && (
-          <div className="mt-10 rounded-sm border p-6 text-center" style={{ borderColor: '#0E7080', background: 'var(--ink-card)' }}>
-            <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>Lens+ members</div>
-            <h2 className="font-display font-extrabold text-2xl mb-2">Read the whole piece</h2>
-            <p className="text-[0.92rem] max-w-md mx-auto mb-5" style={{ color: 'var(--text-body)' }}>The rest of this analysis is for Lens+ members. Every story on the site stays free.</p>
-            <Link href="/membership" className="inline-block px-6 py-3 text-sm font-semibold rounded-sm" style={{ background: '#0E7080', color: '#fff' }}>Upgrade to Lens+</Link>
-          </div>
-        )}
+        <DispatchBody blocks={blocks} />
         {author?.bio && (
           <div className="mt-12 pt-6 border-t text-[0.88rem]" style={{ borderColor: 'var(--border)', color: 'var(--text-body)' }}>
             <span className="font-semibold">{author.name}.</span> {author.bio}

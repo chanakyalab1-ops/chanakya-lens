@@ -75,8 +75,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
   const hubs = hubsForStory(story, allStories);
   const connections = connectionsFor(story, allStories);
-  // Analyst write-ups appear on stories only once membership is public.
-  const [updates, watchingNext, analysis] = await Promise.all([getStoryUpdates(slug), getWatchingNext(slug), process.env.MEMBERSHIP_PUBLIC === "true" ? getPostsForStory(slug) : Promise.resolve([])]);
+  const [updates, watchingNext, analysis] = await Promise.all([getStoryUpdates(slug), getWatchingNext(slug), getPostsForStory(slug)]);
 
   const schemaData = {
     "@context": "https://schema.org",
@@ -434,7 +433,7 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             <div className="space-y-3">
               {analysis.map((a) => (
                 <Link key={a.id} href={`/analyst-desk/${a.slug}`} className="block p-4 rounded-sm border hover:opacity-90" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
-                  <div className="font-mono text-[0.6875rem] uppercase tracking-wide mb-1.5" style={{ color: "var(--brand-soft)" }}>The Analyst Desk · Lens+</div>
+                  <div className="font-mono text-[0.6875rem] uppercase tracking-wide mb-1.5" style={{ color: "var(--brand-soft)" }}>The Analyst Desk</div>
                   <div className="font-display font-bold text-[1.1rem] leading-tight mb-1">{a.title}</div>
                   <div className="text-[0.88rem]" style={{ color: "var(--text-body)" }}>{a.summary}</div>
                 </Link>

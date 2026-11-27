@@ -1,18 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import NavDrawer from '@/components/NavDrawer';
-import { getSessionUser } from '@/lib/supabase-user';
-import { dispatchAccess } from '@/lib/monthly';
 import { listPosts, readMinutes } from '@/lib/analystDesk';
 import { getAllStories } from '@/lib/stories';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'The Analyst Desk | Chanakya Lens', description: 'In-depth analysis from our analysts, with the reasoning shown. Everyone can read the opening; Lens+ members get the whole piece.' };
+export const metadata: Metadata = { title: 'The Analyst Desk | Chanakya Lens', description: 'In-depth analysis from our analysts on the stories we publish, with the reasoning shown.' };
 
 export default async function AnalystDeskPage() {
-  const user = await getSessionUser();
-  if ((await dispatchAccess(user)) === 'hidden') notFound();
   const [posts, stories] = await Promise.all([listPosts({ status: 'published' }), getAllStories()]);
   const headlines = new Map(stories.map((st) => [st.slug, st.headline]));
   posts.sort((a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime());
@@ -21,10 +16,9 @@ export default async function AnalystDeskPage() {
     <>
       <NavDrawer />
       <main className="max-w-3xl mx-auto px-5 pt-8 pb-20">
-        <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>Lens+</div>
         <h1 className="font-display font-extrabold text-4xl mb-2">The Analyst Desk</h1>
         <p className="text-[1rem] leading-relaxed mb-8" style={{ color: 'var(--text-body)' }}>
-          Longer analysis from our analysts, with the reasoning shown. Everyone can read the opening; Lens+ members get the whole piece.
+          Longer analysis from our analysts on the stories we publish, with the reasoning shown. Free to read.
         </p>
         {posts.length === 0 ? (
           <p className="text-sm" style={{ color: 'var(--text-on-ink-dim)' }}>The first piece is on its way.</p>
