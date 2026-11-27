@@ -19,8 +19,8 @@ export default async function AnalystDeskPage() {
       <main className="max-w-3xl mx-auto px-5 pt-8 pb-20">
         <h1 className="mb-3">
           <span className="sr-only">The Analyst Desk</span>
-          <Image src="/analyst-desk-logo.png" alt="" width={1162} height={270} unoptimized className="logo-for-light h-auto w-full max-w-[300px]" />
-          <Image src="/analyst-desk-logo-dark.png" alt="" width={1162} height={270} unoptimized className="logo-for-dark h-auto w-full max-w-[300px]" />
+          <Image src="/analyst-desk-logo.png" alt="" width={1067} height={202} unoptimized className="logo-for-light h-auto w-full max-w-[300px]" />
+          <Image src="/analyst-desk-logo-dark.png" alt="" width={1067} height={202} unoptimized className="logo-for-dark h-auto w-full max-w-[300px]" />
         </h1>
         <p className="text-[1rem] leading-relaxed mb-8" style={{ color: 'var(--text-body)' }}>
           Longer analysis from our analysts on the stories we publish, with the reasoning shown. Free to read.
