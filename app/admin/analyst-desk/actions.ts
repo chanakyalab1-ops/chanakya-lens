@@ -16,6 +16,7 @@ const refresh = (slug?: string) => {
   revalidatePath('/admin/analyst-desk');
   revalidatePath('/writer');
   revalidatePath('/analyst-desk');
+  revalidatePath('/');
   if (slug) revalidatePath(`/analyst-desk/${slug}`);
 };
 

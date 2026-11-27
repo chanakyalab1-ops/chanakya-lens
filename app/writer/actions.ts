@@ -63,6 +63,7 @@ export async function savePost(input: { id?: string; storySlug: string; title: s
     if (goingLive && !who.owner) await sendAlert('analyst-desk', `"${fields.title}" was published by ${who.email}. Open /admin/analyst-desk to read it, or ask for changes.`);
     revalidatePath('/writer');
     revalidatePath('/analyst-desk');
+    revalidatePath('/');
     revalidatePath(`/analyst-desk/${existing.slug}`);
     if (fields.story_slug) revalidatePath(`/story/${fields.story_slug}`);
     revalidatePath('/admin/analyst-desk');
@@ -82,6 +83,7 @@ export async function savePost(input: { id?: string; storySlug: string; title: s
       if (input.publish && !who.owner) await sendAlert('analyst-desk', `"${fields.title}" was published by ${who.email}. Open /admin/analyst-desk to read it, or ask for changes.`);
       revalidatePath('/writer');
       revalidatePath('/analyst-desk');
+      revalidatePath('/');
       if (fields.story_slug && input.publish) revalidatePath(`/story/${fields.story_slug}`);
       revalidatePath('/admin/analyst-desk');
       return { ok: true, id: (data as { id: string }).id };

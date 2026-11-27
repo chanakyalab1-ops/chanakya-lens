@@ -12,6 +12,7 @@ import { pickTodaysSignal, recentWindow } from "@/lib/signal";
 import { trendingTopics } from "@/lib/trending";
 import { SYSTEMS, weeklyCounts } from "@/lib/lens";
 import { getMarketRows } from "@/lib/marketData";
+import { listPosts } from "@/lib/analystDesk";
 // The layout's relative canonical ("./") resolves to /index on the root route,
 // which is a duplicate URL. Name the homepage explicitly. A page-level
 // `alternates` replaces the layout's wholesale, so the RSS link is repeated.
@@ -27,7 +28,8 @@ export const metadata: Metadata = {
 export const revalidate = 43200;
 
 export default async function FeedPage() {
-  const [stories, marketRows] = await Promise.all([getAllStories(), getMarketRows()]);
+  const [stories, marketRows, posts] = await Promise.all([getAllStories(), getMarketRows(), listPosts({ status: "published" })]);
+  const analysis = [...posts].sort((a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime()).slice(0, 3).map((p) => ({ slug: p.slug, title: p.title, authorName: p.authorName }));
   const signal = pickTodaysSignal(stories);
   const recent = recentWindow(stories);
   const trending = trendingTopics(stories);
@@ -45,7 +47,7 @@ export default async function FeedPage() {
       <LiveMarketTicker initialRows={filterFreshRows(marketRows)} />
 
       <Suspense fallback={null}>
-        <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} todayCount={recent.stories.length} windowLabel={recent.label} trending={trending} lensWeek={lensWeek} toolsOpen={process.env.MEMBERSHIP_PUBLIC === "true"} />
+        <Feed stories={stories} signalSlugs={signal.map((s) => s.slug)} todayCount={recent.stories.length} windowLabel={recent.label} trending={trending} lensWeek={lensWeek} analysis={analysis} toolsOpen={process.env.MEMBERSHIP_PUBLIC === "true"} />
       </Suspense>
     </>
   );
