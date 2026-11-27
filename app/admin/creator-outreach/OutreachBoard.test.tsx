@@ -24,4 +24,10 @@ describe("OutreachBoard", () => {
     expect(html).toContain("Replied or done (1)");
     expect(html).not.toContain("mail.google.com");
   });
+  it("will not open a draft that is not personalised yet", () => {
+    const html = renderToString(<OutreachBoard rows={[row({ video_title: "", specific: "" })]} />);
+    expect(html).toContain("Add the video you watched");
+    expect(html).not.toContain("mail.google.com");
+    expect(html).toContain("Add many at once");
+  });
 });

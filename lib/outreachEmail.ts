@@ -88,3 +88,42 @@ export function needsFollowup(row: { status: string; sent_at: string | null; fol
 export function validEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s.trim());
 }
+
+export type BulkRow = { name: string; email: string; channelUrl: string; version: OutreachVersion };
+
+// Parses pasted lines like "Tanya Vats | tanya@x.com | @tanyaavats_ | geo". Separators: | , or tab.
+// Lines without a valid email are returned as errors so nothing is silently dropped.
+export function parseBulk(text: string): { rows: BulkRow[]; errors: string[] } {
+  const rows: BulkRow[] = [];
+  const errors: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    const parts = line.split(/[|\t,]/).map((p) => p.trim()).filter(Boolean);
+    const email = parts.find((p) => validEmail(p));
+    if (!email) {
+      errors.push(`No valid email: ${line.slice(0, 60)}`);
+      continue;
+    }
+    const rest = parts.filter((p) => p !== email);
+    const name = rest.find((p) => !/^https?:\/\//i.test(p) && !p.startsWith("@") && !/^(geo|econ)$/i.test(p)) ?? "";
+    if (!name) {
+      errors.push(`No name: ${line.slice(0, 60)}`);
+      continue;
+    }
+    const handleOrUrl = rest.find((p) => /^https?:\/\//i.test(p) || p.startsWith("@")) ?? "";
+    const channelUrl = handleOrUrl.startsWith("@") ? `https://instagram.com/${handleOrUrl.slice(1)}` : handleOrUrl;
+    const v = rest.find((p) => /^(geo|econ)$/i.test(p));
+    const key = email.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    rows.push({ name, email: key, channelUrl, version: v && v.toLowerCase() === "econ" ? "econ" : "geo" });
+  }
+  return { rows, errors };
+}
+
+// An email may only be opened as a draft once it mentions something real about the creator.
+export function isPersonalised(r: { video_title: string; specific: string }): boolean {
+  return r.video_title.trim().length > 2 && r.specific.trim().length > 2;
+}
