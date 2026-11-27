@@ -7,7 +7,7 @@ import { DispatchBody } from '@/components/DispatchBody';
 import { parseBlocks } from '@/lib/miniMarkdown';
 import { MIN_WORDS_TO_PUBLISH, STATUS_LABEL, readMinutes, wordCount, type PostStatus } from '@/lib/analystDesk';
 
-type Initial = { id: string; storySlug: string; title: string; summary: string; body: string; heroUrl: string; tags: string; status: PostStatus; editorNote: string; slug: string };
+type Initial = { id: string; storySlug: string; title: string; body: string; status: PostStatus; editorNote: string; slug: string };
 
 const field = 'w-full rounded-sm border px-3 py-2 bg-transparent text-sm';
 const bd = { borderColor: 'var(--border)' };
@@ -16,10 +16,7 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
   const router = useRouter();
   const [storySlug, setStorySlug] = useState(initial?.storySlug ?? presetStory);
   const [title, setTitle] = useState(initial?.title ?? '');
-  const [summary, setSummary] = useState(initial?.summary ?? '');
   const [body, setBody] = useState(initial?.body ?? '');
-  const [heroUrl, setHeroUrl] = useState(initial?.heroUrl ?? '');
-  const [tags, setTags] = useState(initial?.tags ?? '');
   const [preview, setPreview] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
@@ -30,7 +27,7 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
     if (publish && !window.confirm('Publish this now? It goes live straight away under the story. You can still edit it later.')) return;
     setMsg(null);
     start(async () => {
-      const r = await savePost({ id: initial?.id, storySlug, title, summary, body, heroUrl, tags, publish });
+      const r = await savePost({ id: initial?.id, storySlug, title, body, publish });
       if (!r.ok) return setMsg({ ok: false, text: r.error ?? 'Could not save.' });
       setMsg({ ok: true, text: publish ? 'Published.' : 'Saved.' });
       if (publish && !initial) router.push('/writer');
@@ -56,6 +53,12 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
         </div>
       )}
 
+      {storySlug && !locked ? (
+        <div className="text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
+          On our story: <b style={{ color: 'var(--text-on-ink)' }}>{stories.find((x) => x.slug === storySlug)?.headline ?? storySlug}</b>{' '}
+          {!initial && <button type="button" onClick={() => setStorySlug('')} className="underline ml-1">change</button>}
+        </div>
+      ) : (
       <label className="block text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
         The story this write-up is about
         <select value={storySlug} onChange={(e) => setStorySlug(e.target.value)} disabled={locked} className={`${field} mt-1`} style={bd}>
@@ -65,13 +68,8 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
           ))}
         </select>
       </label>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} disabled={locked} maxLength={150} placeholder="Title" className={`${field} text-lg font-semibold`} style={bd} />
-      <textarea value={summary} onChange={(e) => setSummary(e.target.value)} disabled={locked} rows={2} maxLength={400} placeholder="One or two sentences shown on the list and under the title" className={field} style={bd} />
-      <div className="grid sm:grid-cols-2 gap-3">
-        <input value={tags} onChange={(e) => setTags(e.target.value)} disabled={locked} placeholder="Tags, comma separated (up to 6), e.g. Iran, Oil" className={field} style={bd} />
-        <input value={heroUrl} onChange={(e) => setHeroUrl(e.target.value)} disabled={locked} placeholder="Header image link (https://…), optional" className={field} style={bd} />
-      </div>
-
+      )}
+      <input value={title} onChange={(e) => setTitle(e.target.value)} disabled={locked} maxLength={150} placeholder="Heading" className={`${field} text-lg font-semibold`} style={bd} />
       <div className="flex items-center justify-between">
         <div className="text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
           {words.toLocaleString('en-GB')} words · {readMinutes(body)} min read{!isOwner && initial?.status !== 'published' && words < MIN_WORDS_TO_PUBLISH ? ` · ${MIN_WORDS_TO_PUBLISH - words} more to publish` : ''}
@@ -85,14 +83,13 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
       {preview ? (
         <div className="rounded-sm border p-5 min-h-[20rem]" style={bd}>
           <h2 className="font-display font-extrabold text-3xl mb-2">{title || 'Untitled'}</h2>
-          <p className="mb-5" style={{ color: 'var(--text-body)' }}>{summary}</p>
           <DispatchBody blocks={blocks} />
         </div>
       ) : (
         <>
-          <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={locked} rows={22} placeholder="Write here" className={`${field} font-mono leading-relaxed`} style={bd} />
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={locked} rows={22} placeholder="Write your analysis here" className={`${field} font-mono leading-relaxed`} style={bd} />
           <p className="text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
-            Formatting: <code>## Heading</code>, <code>### Subheading</code>, a blank line between paragraphs, <code>- list item</code>, <code>&gt; quote</code>, <code>**bold**</code>, <code>*italic*</code>, <code>[link text](https://…)</code>, <code>![caption](https://image)</code>.
+            Optional: <code>## Subheading</code> for a section, <code>**bold**</code>, a blank line between paragraphs.
           </p>
         </>
       )}
