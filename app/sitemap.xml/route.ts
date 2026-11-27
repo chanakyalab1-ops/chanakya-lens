@@ -1,11 +1,12 @@
 ﻿import { getAllStories, getSitemapEntries } from '@/lib/stories';
+import { listPosts } from '@/lib/analystDesk';
 import { ALL_ENTITIES, isThinCountry, storiesFor } from '@/lib/lens';
 
 // 12 hours; refreshed on publish (lib/siteRefresh.ts).
 export const revalidate = 43200;
 
 export async function GET() {
-  const [stories, entries] = await Promise.all([getAllStories(), getSitemapEntries()]);
+  const [stories, entries, analysis] = await Promise.all([getAllStories(), getSitemapEntries(), listPosts({ status: 'published' })]);
 
   const urls = entries.map((s) => `
     <url>
@@ -22,12 +23,25 @@ export async function GET() {
       <priority>${e.kind === 'country' ? '0.5' : '0.6'}</priority>
     </url>`).join('');
 
+  const analysisUrls = analysis.map((p) => `
+    <url>
+      <loc>https://chanakyalens.com/analyst-desk/${p.slug}</loc>
+      <lastmod>${new Date(p.publishedAt ?? p.updatedAt).toISOString()}</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+    </url>`).join('');
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://chanakyalens.com</loc>
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://chanakyalens.com/analyst-desk</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://chanakyalens.com/off-lens</loc>
@@ -88,7 +102,7 @@ export async function GET() {
     <loc>https://chanakyalens.com/digest</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
-  </url>${lensUrls}${urls}
+  </url>${lensUrls}${urls}${analysisUrls}
 </urlset>`;
 
   return new Response(xml, {

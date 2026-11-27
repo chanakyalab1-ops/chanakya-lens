@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canWriterEdit, cleanTags, readMinutes, slugifyPost, submitProblems, wordCount, writerStats } from "./analystDesk";
+import { canWriterEdit, cleanTags, readMinutes, slugifyPost, publishProblems, wordCount, writerStats } from "./analystDesk";
 
 const words = (n: number) => Array.from({ length: n }, () => "word").join(" ");
 
@@ -17,15 +17,16 @@ describe("analyst desk helpers", () => {
     expect(slugifyPost("Why Hormuz Matters!")).toBe("why-hormuz-matters");
     expect(slugifyPost("???")).toBe("write-up");
   });
-  it("lets a writer edit only drafts and requested changes", () => {
+  it("lets a writer edit her pieces, including live ones, but not a legacy one with the editor", () => {
     expect(canWriterEdit("draft")).toBe(true);
     expect(canWriterEdit("changes")).toBe(true);
+    expect(canWriterEdit("published")).toBe(true);
     expect(canWriterEdit("submitted")).toBe(false);
-    expect(canWriterEdit("published")).toBe(false);
   });
-  it("lists what blocks a submission", () => {
-    expect(submitProblems({ title: "", summary: "", body: "short" })).toHaveLength(3);
-    expect(submitProblems({ title: "T", summary: "S", body: words(150) })).toEqual([]);
+  it("lists what blocks publishing", () => {
+    expect(publishProblems({ title: "", summary: "", body: "short", storySlug: "" })).toHaveLength(4);
+    expect(publishProblems({ title: "T", summary: "S", body: words(150), storySlug: "a-story" })).toEqual([]);
+    expect(publishProblems({ title: "T", summary: "S", body: words(150), storySlug: "" })).toEqual(["Choose the story this write-up is about."]);
   });
   it("summarises a writer's pieces", () => {
     const s = writerStats([{ status: "draft", body: words(10) }, { status: "submitted", body: words(20) }, { status: "changes", body: "" }, { status: "published", body: words(5) }, { status: "published", body: words(5) }]);

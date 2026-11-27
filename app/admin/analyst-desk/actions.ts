@@ -41,9 +41,11 @@ export async function setAnalystActive(email: string, active: boolean): Promise<
 
 export async function publishPost(id: string): Promise<Result> {
   if (!(await owner())) return { ok: false, error: 'Not allowed.' };
-  const { data, error } = await supabaseServer().from('analyst_posts').update({ status: 'published', published_at: new Date().toISOString(), editor_note: '' }).eq('id', id).select('slug').single();
+  const { data, error } = await supabaseServer().from('analyst_posts').update({ status: 'published', published_at: new Date().toISOString(), editor_note: '' }).eq('id', id).select('slug, story_slug').single();
   if (error) return { ok: false, error: 'Could not publish.' };
-  refresh((data as { slug: string } | null)?.slug);
+  const row = data as { slug: string; story_slug?: string } | null;
+  refresh(row?.slug);
+  if (row?.story_slug) revalidatePath(`/story/${row.story_slug}`);
   return { ok: true };
 }
 
@@ -51,16 +53,21 @@ export async function requestChanges(id: string, note: string): Promise<Result> 
   if (!(await owner())) return { ok: false, error: 'Not allowed.' };
   const text = note.trim().slice(0, 1000);
   if (!text) return { ok: false, error: 'Tell her what to change.' };
-  const { data, error } = await supabaseServer().from('analyst_posts').update({ status: 'changes', editor_note: text }).eq('id', id).select('slug').single();
+  // Asking for changes takes a live piece down until the writer fixes it and publishes again.
+  const { data, error } = await supabaseServer().from('analyst_posts').update({ status: 'changes', editor_note: text, published_at: null }).eq('id', id).select('slug, story_slug').single();
   if (error) return { ok: false, error: 'Could not save.' };
-  refresh((data as { slug: string } | null)?.slug);
+  const row = data as { slug: string; story_slug?: string } | null;
+  refresh(row?.slug);
+  if (row?.story_slug) revalidatePath(`/story/${row.story_slug}`);
   return { ok: true };
 }
 
 export async function unpublishPost(id: string): Promise<Result> {
   if (!(await owner())) return { ok: false, error: 'Not allowed.' };
-  const { data, error } = await supabaseServer().from('analyst_posts').update({ status: 'draft', published_at: null }).eq('id', id).select('slug').single();
+  const { data, error } = await supabaseServer().from('analyst_posts').update({ status: 'draft', published_at: null }).eq('id', id).select('slug, story_slug').single();
   if (error) return { ok: false, error: 'Could not save.' };
-  refresh((data as { slug: string } | null)?.slug);
+  const row = data as { slug: string; story_slug?: string } | null;
+  refresh(row?.slug);
+  if (row?.story_slug) revalidatePath(`/story/${row.story_slug}`);
   return { ok: true };
 }

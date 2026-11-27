@@ -5,7 +5,8 @@ import { getSessionUser } from '@/lib/supabase-user';
 import { isOwnerEmail } from '@/lib/memberAccess';
 import { supabaseServer } from '@/lib/supabase-server';
 import { sendAlert } from '@/lib/alerts';
-import { canWriterEdit, cleanTags, getAnalyst, getPostById, slugifyPost, submitProblems, type PostStatus } from '@/lib/analystDesk';
+import { getAllStories } from '@/lib/stories';
+import { canWriterEdit, cleanTags, getAnalyst, getPostById, slugifyPost, publishProblems, type PostStatus } from '@/lib/analystDesk';
 
 type Result = { ok: boolean; error?: string; id?: string };
 
@@ -20,11 +21,14 @@ async function actor() {
   return { email: user.email.toLowerCase(), owner };
 }
 
-export async function savePost(input: { id?: string; title: string; summary: string; body: string; heroUrl: string; tags: string; submit: boolean }): Promise<Result> {
+export async function savePost(input: { id?: string; storySlug: string; title: string; summary: string; body: string; heroUrl: string; tags: string; publish: boolean }): Promise<Result> {
   const who = await actor();
   if (!who) return { ok: false, error: 'Not allowed.' };
 
+  const storySlug = clip(input.storySlug, 200);
+  if (storySlug && !(await getAllStories()).some((s) => s.slug === storySlug)) return { ok: false, error: 'That story could not be found.' };
   const fields = {
+    story_slug: storySlug,
     title: clip(input.title, 150),
     summary: clip(input.summary, 400),
     body: typeof input.body === 'string' ? input.body.trim().slice(0, 60000) : '',
@@ -32,8 +36,8 @@ export async function savePost(input: { id?: string; title: string; summary: str
     tags: cleanTags(typeof input.tags === 'string' ? input.tags : ''),
   };
   if (fields.hero_url && !/^https:\/\/\S+$/i.test(fields.hero_url)) return { ok: false, error: 'The image link must start with https://' };
-  if (input.submit) {
-    const problems = submitProblems(fields);
+  if (input.publish) {
+    const problems = publishProblems({ title: fields.title, summary: fields.summary, body: fields.body, storySlug });
     if (problems.length) return { ok: false, error: problems.join(' ') };
   }
 
@@ -45,18 +49,24 @@ export async function savePost(input: { id?: string; title: string; summary: str
     if (!existing) return { ok: false, error: 'Not found.' };
     if (!who.owner) {
       if (existing.authorEmail !== who.email) return { ok: false, error: 'Not allowed.' };
-      if (!canWriterEdit(existing.status)) return { ok: false, error: 'This piece is with the editor, so it cannot be edited now.' };
+      if (!canWriterEdit(existing.status)) return { ok: false, error: 'This piece cannot be edited right now.' };
     }
+    // Publishing goes live straight away. Saving a draft never does, and saving a live piece updates it in place.
     let status: PostStatus = existing.status;
     const extra: Record<string, unknown> = {};
-    if (input.submit && !who.owner) {
-      status = 'submitted';
-      extra.submitted_at = now;
+    const goingLive = input.publish && existing.status !== 'published';
+    if (goingLive) {
+      status = 'published';
+      extra.published_at = now;
+      extra.editor_note = '';
     }
     const { error } = await db.from('analyst_posts').update({ ...fields, status, ...extra, updated_at: now }).eq('id', input.id);
-    if (error) return { ok: false, error: 'Could not save.' };
-    if (input.submit && !who.owner) await sendAlert('analyst-desk', `"${fields.title}" was sent for review. Open /admin/analyst-desk.`);
+    if (error) return { ok: false, error: 'Could not save. Has the latest supabase/analyst-desk.sql been run?' };
+    if (goingLive && !who.owner) await sendAlert('analyst-desk', `"${fields.title}" was published by ${who.email}. Open /admin/analyst-desk to read it, or ask for changes.`);
     revalidatePath('/writer');
+    revalidatePath('/analyst-desk');
+    revalidatePath(`/analyst-desk/${existing.slug}`);
+    if (fields.story_slug) revalidatePath(`/story/${fields.story_slug}`);
     revalidatePath('/admin/analyst-desk');
     return { ok: true, id: input.id };
   }
@@ -67,12 +77,14 @@ export async function savePost(input: { id?: string; title: string; summary: str
     const slug = n === 0 ? base : `${base}-${Math.random().toString(36).slice(2, 6)}`;
     const { data, error } = await db
       .from('analyst_posts')
-      .insert({ ...fields, slug, author_email: who.email, status: input.submit && !who.owner ? 'submitted' : 'draft', submitted_at: input.submit && !who.owner ? now : null })
+      .insert({ ...fields, slug, author_email: who.email, status: input.publish ? 'published' : 'draft', published_at: input.publish ? now : null })
       .select('id')
       .single();
     if (!error && data) {
-      if (input.submit && !who.owner) await sendAlert('analyst-desk', `"${fields.title}" was sent for review. Open /admin/analyst-desk.`);
+      if (input.publish && !who.owner) await sendAlert('analyst-desk', `"${fields.title}" was published by ${who.email}. Open /admin/analyst-desk to read it, or ask for changes.`);
       revalidatePath('/writer');
+      revalidatePath('/analyst-desk');
+      if (fields.story_slug && input.publish) revalidatePath(`/story/${fields.story_slug}`);
       revalidatePath('/admin/analyst-desk');
       return { ok: true, id: (data as { id: string }).id };
     }

@@ -10,7 +10,7 @@ const bd = { borderColor: 'var(--border)' };
 const dim = { color: 'var(--text-on-ink-dim)' };
 const btn = 'px-3 py-1.5 text-xs font-semibold rounded-sm border hover:opacity-80 disabled:opacity-50';
 
-export function AnalystAdmin({ analysts, posts }: { analysts: Analyst[]; posts: Post[] }) {
+export function AnalystAdmin({ analysts, posts, headlines = {} }: { analysts: Analyst[]; posts: Post[]; headlines?: Record<string, string> }) {
   const waiting = posts.filter((p) => p.status === 'submitted');
   const changes = posts.filter((p) => p.status === 'changes');
   const drafts = posts.filter((p) => p.status === 'draft');
@@ -18,10 +18,10 @@ export function AnalystAdmin({ analysts, posts }: { analysts: Analyst[]; posts: 
   return (
     <div className="space-y-8">
       <Writers analysts={analysts} />
-      <Group title={`Waiting for you (${waiting.length})`} posts={waiting} empty="Nothing to review." accent />
-      <Group title={`Sent back for changes (${changes.length})`} posts={changes} />
-      <Group title={`Published (${published.length})`} posts={published} />
-      <Group title={`Drafts (${drafts.length})`} posts={drafts} />
+      <Group title={`Live (${published.length})`} posts={published} headlines={headlines} empty="Nothing published yet. Pieces go live as soon as a writer publishes them." />
+      <Group title={`Sent back for changes (${changes.length})`} posts={changes} headlines={headlines} />
+      {waiting.length > 0 && <Group title={`Waiting for you (${waiting.length})`} posts={waiting} headlines={headlines} accent />}
+      <Group title={`Drafts (${drafts.length})`} posts={drafts} headlines={headlines} />
     </div>
   );
 }
@@ -67,16 +67,16 @@ function Writers({ analysts }: { analysts: Analyst[] }) {
   );
 }
 
-function Group({ title, posts, empty, accent }: { title: string; posts: Post[]; empty?: string; accent?: boolean }) {
+function Group({ title, posts, headlines, empty, accent }: { title: string; posts: Post[]; headlines: Record<string, string>; empty?: string; accent?: boolean }) {
   return (
     <section>
       <h2 className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: accent ? 'var(--developing)' : 'var(--brand-soft)' }}>{title}</h2>
-      {posts.length === 0 ? (empty ? <p className="text-sm" style={dim}>{empty}</p> : null) : <ul className="space-y-2">{posts.map((p) => <Item key={p.id} p={p} />)}</ul>}
+      {posts.length === 0 ? (empty ? <p className="text-sm" style={dim}>{empty}</p> : null) : <ul className="space-y-2">{posts.map((p) => <Item key={p.id} p={p} story={p.storySlug ? headlines[p.storySlug] ?? p.storySlug : ''} />)}</ul>}
     </section>
   );
 }
 
-function Item({ p }: { p: Post }) {
+function Item({ p, story }: { p: Post; story: string }) {
   const [note, setNote] = useState('');
   const [asking, setAsking] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -87,20 +87,21 @@ function Item({ p }: { p: Post }) {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <div className="font-semibold truncate">{p.title || 'Untitled'}</div>
+          {story && <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--brand-soft)' }}>On: {story}</div>}
           <div className="text-xs mt-0.5" style={dim}>{p.authorName} · {wordCount(p.body).toLocaleString('en-GB')} words · {STATUS_LABEL[p.status]}</div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link href={`/analyst-desk/${p.slug}`} target="_blank" className={btn} style={bd}>Preview</Link>
           <Link href={`/writer/${p.id}`} className={btn} style={bd}>Edit</Link>
           {p.status !== 'published' && <button disabled={pending} onClick={() => window.confirm('Publish this piece?') && run(() => publishPost(p.id))} className={btn} style={{ ...bd, color: 'var(--possible)' }}>Publish</button>}
-          {p.status === 'submitted' && <button disabled={pending} onClick={() => setAsking(!asking)} className={btn} style={bd}>Request changes</button>}
+          {(p.status === 'published' || p.status === 'submitted') && <button disabled={pending} onClick={() => setAsking(!asking)} className={btn} style={bd}>Request changes</button>}
           {p.status === 'published' && <button disabled={pending} onClick={() => run(() => unpublishPost(p.id))} className={btn} style={bd}>Unpublish</button>}
         </div>
       </div>
       {asking && (
         <div className="mt-3 space-y-2">
           <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} maxLength={1000} placeholder="What should she change?" className={field} style={bd} />
-          <button disabled={pending || !note.trim()} onClick={() => run(() => requestChanges(p.id, note))} className={btn} style={bd}>Send back</button>
+          <button disabled={pending || !note.trim()} onClick={() => window.confirm(p.status === 'published' ? 'This takes the piece off the site until she fixes it and publishes again. Send back?' : 'Send back?') && run(() => requestChanges(p.id, note))} className={btn} style={bd}>Send back</button>
         </div>
       )}
       {msg && <div className="text-xs mt-2" style={{ color: 'var(--developing)' }}>{msg}</div>}

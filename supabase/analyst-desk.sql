@@ -26,3 +26,7 @@ create index if not exists analyst_posts_author_idx on analyst_posts (author_ema
 create index if not exists analyst_posts_status_idx on analyst_posts (status, published_at desc);
 alter table analysts enable row level security;
 alter table analyst_posts enable row level security;
+
+-- Each write-up is about one published story.
+alter table analyst_posts add column if not exists story_slug text not null default '';
+create index if not exists analyst_posts_story_idx on analyst_posts (story_slug, status);
