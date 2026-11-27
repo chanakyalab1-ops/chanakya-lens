@@ -15,7 +15,7 @@ export default function Image() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "linear-gradient(135deg, #0A112A 0%, #131F47 60%, #0A112A 100%)",
+          background: "linear-gradient(135deg, #141416 0%, #1D1D20 60%, #141416 100%)",
           padding: "64px 72px",
           position: "relative",
         }}
@@ -32,7 +32,7 @@ export default function Image() {
             Local math.
           </div>
         </div>
-        <div style={{ display: "flex", fontSize: 28, color: "#8E9DC0", letterSpacing: 2 }}>
+        <div style={{ display: "flex", fontSize: 28, color: "#9A9AA2", letterSpacing: 2 }}>
           chanakyalens.com  ·  Geopolitics, traced to you
         </div>
       </div>

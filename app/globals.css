@@ -2,28 +2,28 @@
 
 :root {
   /* fixed regardless of theme: text/icon color placed on top of accent fills */
-  --ink: #0A112A;
+  --ink: #141416;
   --paper: #EEF2F6;
 
-  --bg: #0A112A;
-  --ink-soft: #131F47;
-  --ink-card: #101B40;
-  --surface: #0F1E38;
-  --surface-strong: #152847;
+  --bg: #141416;
+  --ink-soft: #1A1A1D;
+  --ink-card: #1D1D20;
+  --surface: #18181B;
+  --surface-strong: #1A2427;
   --surface-border: rgba(255, 255, 255, 0.08);
-  --overlay: rgba(10, 17, 42, 0.95);
+  --overlay: rgba(20, 20, 22, 0.95);
   --text-on-ink: #EEF2F6;
-  --text-on-ink-dim: #8E9DC0;
-  --text-body: #AEBBDD;
+  --text-on-ink-dim: #9A9AA2;
+  --text-body: #BDBDC4;
   --brand: #5FA8B5;
-  --brand-soft: #7EC0CC;
+  --brand-soft: #6FC3D0;
   --direct: #D68A4E;
   --likely: #C9A94E;
   --possible: #5FA88A;
   --developing: #D9694A;
-  --on-brand: #0A112A;
-  --settled: #7E8AAA;
-  --border: #22326B;
+  --on-brand: #141416;
+  --settled: #8A8A92;
+  --border: #323236;
   --radius: 2px;
   color-scheme: dark;
 }

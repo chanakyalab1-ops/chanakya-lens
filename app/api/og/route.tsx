@@ -23,7 +23,7 @@ export async function GET(req: Request) {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          background: 'linear-gradient(135deg, #0B1220 0%, #132340 60%, #0B1220 100%)',
+          background: 'linear-gradient(135deg, #141416 0%, #1D1D20 60%, #141416 100%)',
           padding: '56px 64px',
           position: 'relative',
         }}
