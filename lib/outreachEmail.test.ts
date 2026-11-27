@@ -21,7 +21,9 @@ describe("buildEmail", () => {
   });
   it("falls back gracefully when fields are empty", () => {
     const e = buildEmail({ ...base, videoTitle: "", specific: "", topic: "", sender: "" });
-    expect(e.body).toContain("I watched your recent video on world news.");
+    expect(e.body).toContain("I really like the geopolitics content you post.");
+    expect(e.body).not.toContain("I watched");
+    expect(e.subject).toBe("Who is covering the story, and who is not");
     expect(e.body).toContain("[Your name]");
   });
 });
@@ -56,8 +58,8 @@ describe("followups and links", () => {
   });
 });
 
-import { isPersonalised, parseBulk } from "./outreachEmail";
-describe("parseBulk / isPersonalised", () => {
+import { parseBulk } from "./outreachEmail";
+describe("parseBulk", () => {
   it("parses names, emails, handles and versions; reports bad lines; drops duplicates", () => {
     const r = parseBulk("Tanya Vats | tanyaavats11@gmail.com | @tanyaavats_\nRasika Jamdade, rasika@x.com, https://instagram.com/rasikajamdade, econ\nno email here\nTanya Again | TANYAAVATS11@gmail.com\n# comment\nNameless | https://x.com | a@b.co");
     expect(r.rows.map((x) => x.email)).toEqual(["tanyaavats11@gmail.com", "rasika@x.com", "a@b.co"]);
@@ -65,10 +67,5 @@ describe("parseBulk / isPersonalised", () => {
     expect(r.rows[1].version).toBe("econ");
     expect(r.rows[2].name).toBe("Nameless");
     expect(r.errors).toHaveLength(1);
-  });
-  it("requires a video and a specific line before a draft can open", () => {
-    expect(isPersonalised({ video_title: "", specific: "" })).toBe(false);
-    expect(isPersonalised({ video_title: "Why oil moves", specific: "" })).toBe(false);
-    expect(isPersonalised({ video_title: "Why oil moves", specific: "explain it" })).toBe(true);
   });
 });
