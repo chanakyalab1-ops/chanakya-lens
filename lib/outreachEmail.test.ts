@@ -105,3 +105,22 @@ describe("DM route", () => {
     expect(buildDmFollowup({ name: "Chervine R", sender: "Sam" })).toContain("Hi Chervine, a quick nudge");
   });
 });
+
+describe("parseBulk copes with wrapped and loose lines", () => {
+  it("joins a line that wrapped after a separator and handles a missing pipe", () => {
+    const r = parseBulk("Chervine Razmazma |\n\n@thegeopoliticalreport | geo\nGeopol Itics @geopol_itics | geo\nGeopolitics Explained | https://geopolitics-explained.com |\ngeo");
+    expect(r.errors).toEqual([]);
+    expect(r.rows.map((x) => [x.name, x.channelUrl, x.version])).toEqual([
+      ["Chervine Razmazma", "https://instagram.com/thegeopoliticalreport", "geo"],
+      ["Geopol Itics", "https://instagram.com/geopol_itics", "geo"],
+      ["Geopolitics Explained", "https://geopolitics-explained.com", "geo"],
+    ]);
+  });
+  it("still reads the email lines", () => {
+    const r = parseBulk("Sigma Politics | sigmapolitics@gmail.com | @sigma.politics | geo");
+    expect(r.rows).toEqual([{ name: "Sigma Politics", email: "sigmapolitics@gmail.com", channelUrl: "https://instagram.com/sigma.politics", version: "geo" }]);
+  });
+  it("does not mistake an email for a handle", () => {
+    expect(parseBulk("A B | a@b.co").rows[0]).toEqual({ name: "A B", email: "a@b.co", channelUrl: "", version: "geo" });
+  });
+});

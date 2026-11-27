@@ -122,33 +122,48 @@ export function routeOf(r: { email: string | null; channel_url: string }): Outre
   return isInstagram(r.channel_url) ? "dm" : "form";
 }
 
-// Parses pasted lines like "Tanya Vats | tanya@x.com | @tanyaavats_ | geo". Separators: | , or tab.
-// A line needs an email, or an @handle or link to reach them by DM or contact page.
+// Parses pasted lines like "Tanya Vats | tanya@x.com | @tanyaavats_ | geo". Separators: | , or tab; a missing separator
+// is fine too. A line needs an email, or an @handle or link to reach them by DM or contact page. A line that ends with a
+// separator is joined to the next one, so text that wrapped in a chat still works.
 export function parseBulk(text: string): { rows: BulkRow[]; errors: string[] } {
   const rows: BulkRow[] = [];
   const errors: string[] = [];
   const seen = new Set<string>();
-  for (const raw of text.split("\n")) {
+  const joined: string[] = [];
+  for (const raw of text.replace(/\r\n/g, "\n").split("\n")) {
     const line = raw.trim();
-    if (!line || line.startsWith("#")) continue;
-    const parts = line.split(/[|\t,]/).map((p) => p.trim()).filter(Boolean);
-    const email = parts.find((p) => validEmail(p)) ?? "";
-    const rest = parts.filter((p) => p !== email);
-    const name = rest.find((p) => !/^https?:\/\//i.test(p) && !p.startsWith("@") && !/^(geo|econ)$/i.test(p)) ?? "";
+    if (!line) continue;
+    const last = joined.length - 1;
+    if (last >= 0 && (/[|,]$/.test(joined[last]) || /^[|,]/.test(line))) joined[last] = `${joined[last]} ${line}`;
+    else joined.push(line);
+  }
+  for (const line of joined) {
+    if (line.startsWith("#")) continue;
+    let rest = line;
+    const take = (re: RegExp): string => {
+      const m = rest.match(re);
+      if (!m) return "";
+      rest = rest.replace(m[0], " | ");
+      return m[0].trim();
+    };
+    const email = take(/[^\s|,@]+@[^\s|,@]+\.[^\s|,@]{2,}/);
+    const url = take(/https?:\/\/[^\s|,]+/);
+    const handle = take(/(?:^|[\s|,])@[A-Za-z0-9._]+/).replace(/^[\s|,]+/, "");
+    const v = take(/(?:^|[\s|,])(?:geo|econ)(?=$|[\s|,])/i).replace(/^[\s|,]+/, "");
+    const name = rest.split(/[|\t,]/).map((p) => p.trim()).find(Boolean) ?? "";
     if (!name) {
       errors.push(`No name: ${line.slice(0, 60)}`);
       continue;
     }
-    const channelUrl = normalizeChannel(rest.find((p) => /^https?:\/\//i.test(p) || p.startsWith("@")) ?? "");
+    const channelUrl = url || normalizeChannel(handle);
     if (!email && !channelUrl) {
       errors.push(`Add an email, @handle or link: ${line.slice(0, 60)}`);
       continue;
     }
-    const v = rest.find((p) => /^(geo|econ)$/i.test(p));
     const key = (email || channelUrl).toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    rows.push({ name, email: email.toLowerCase(), channelUrl, version: v && v.toLowerCase() === "econ" ? "econ" : "geo" });
+    rows.push({ name, email: email.toLowerCase(), channelUrl, version: v.toLowerCase() === "econ" ? "econ" : "geo" });
   }
   return { rows, errors };
 }
