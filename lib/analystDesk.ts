@@ -22,7 +22,7 @@ export type Post = {
 };
 
 export const STATUS_LABEL: Record<PostStatus, string> = { draft: "Draft", submitted: "With the editor", changes: "Changes requested", published: "Live" };
-export const MIN_WORDS_TO_PUBLISH = 150;
+export const MIN_WORDS_TO_PUBLISH = 50;
 
 // A writer can edit her own piece at any time except a legacy "with the editor" one. She publishes it herself;
 // the editor can ask for changes afterwards, which takes it down until she fixes and republishes it.
@@ -58,14 +58,31 @@ export function writerStats(posts: Pick<Post, "status" | "body">[]): WriterStats
   return s;
 }
 
-// What blocks a piece from being sent to the editor. Empty when it is ready.
-export function publishProblems(p: { title: string; summary: string; body: string; storySlug: string }): string[] {
+// What blocks publishing. Empty when it is ready. Only a heading, a story and some text are needed.
+export function publishProblems(p: { title: string; body: string; storySlug: string }): string[] {
   const out: string[] = [];
   if (!p.storySlug.trim()) out.push("Choose the story this write-up is about.");
-  if (!p.title.trim()) out.push("Add a title.");
-  if (!p.summary.trim()) out.push("Add a one or two sentence summary.");
+  if (!p.title.trim()) out.push("Add a heading.");
   if (wordCount(p.body) < MIN_WORDS_TO_PUBLISH) out.push(`Write at least ${MIN_WORDS_TO_PUBLISH} words (you have ${wordCount(p.body)}).`);
   return out;
+}
+
+// The short line shown on lists and under the story, taken from the start of the text.
+export function deriveSummary(body: string, max = 220): string {
+  const first = body
+    .replace(/\r\n/g, "\n")
+    .split(/\n{2,}/)
+    .map((c) => c.trim())
+    .find((c) => c && !/^(#{1,3} |> |[-*] |!\[|\[\[)/.test(c));
+  if (!first) return "";
+  const plain = first
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[*_]+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (plain.length <= max) return plain;
+  const cut = plain.slice(0, max);
+  return `${cut.slice(0, cut.lastIndexOf(" ") > 40 ? cut.lastIndexOf(" ") : max).trim()}…`;
 }
 
 type Row = {

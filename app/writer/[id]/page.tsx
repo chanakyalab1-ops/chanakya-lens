@@ -33,7 +33,7 @@ export default async function WriterEditPage({ params, searchParams }: { params:
         <Link href={owner && post && post.authorEmail !== user.email.toLowerCase() ? '/admin/analyst-desk' : '/writer'} className="font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80" style={{ color: 'var(--text-on-ink-dim)' }}>← Back</Link>
         <h1 className="font-display font-extrabold text-3xl mt-4 mb-5">{post ? 'Edit write-up' : 'New write-up'}</h1>
         <PostEditor
-          initial={post ? { id: post.id, storySlug: post.storySlug, title: post.title, summary: post.summary, body: post.body, heroUrl: post.heroUrl, tags: post.tags.join(', '), status: post.status, editorNote: post.editorNote, slug: post.slug } : null}
+          initial={post ? { id: post.id, storySlug: post.storySlug, title: post.title, body: post.body, status: post.status, editorNote: post.editorNote, slug: post.slug } : null}
           locked={locked}
           isOwner={owner}
           stories={stories}

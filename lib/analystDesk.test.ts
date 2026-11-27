@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canWriterEdit, cleanTags, readMinutes, slugifyPost, publishProblems, wordCount, writerStats } from "./analystDesk";
+import { canWriterEdit, cleanTags, deriveSummary, readMinutes, slugifyPost, publishProblems, wordCount, writerStats } from "./analystDesk";
 
 const words = (n: number) => Array.from({ length: n }, () => "word").join(" ");
 
@@ -23,10 +23,17 @@ describe("analyst desk helpers", () => {
     expect(canWriterEdit("published")).toBe(true);
     expect(canWriterEdit("submitted")).toBe(false);
   });
-  it("lists what blocks publishing", () => {
-    expect(publishProblems({ title: "", summary: "", body: "short", storySlug: "" })).toHaveLength(4);
-    expect(publishProblems({ title: "T", summary: "S", body: words(150), storySlug: "a-story" })).toEqual([]);
-    expect(publishProblems({ title: "T", summary: "S", body: words(150), storySlug: "" })).toEqual(["Choose the story this write-up is about."]);
+  it("needs only a heading, a story and some text to publish", () => {
+    expect(publishProblems({ title: "", body: "short", storySlug: "" })).toHaveLength(3);
+    expect(publishProblems({ title: "T", body: words(50), storySlug: "a-story" })).toEqual([]);
+    expect(publishProblems({ title: "T", body: words(50), storySlug: "" })).toEqual(["Choose the story this write-up is about."]);
+  });
+  it("derives the summary from the first plain paragraph", () => {
+    expect(deriveSummary("## Heading\n\nThe **first** paragraph with a [link](https://x.com).\n\nSecond.")).toBe("The first paragraph with a link.");
+    expect(deriveSummary("")).toBe("");
+    const long = deriveSummary(words(200));
+    expect(long.length).toBeLessThanOrEqual(222);
+    expect(long.endsWith("…")).toBe(true);
   });
   it("summarises a writer's pieces", () => {
     const s = writerStats([{ status: "draft", body: words(10) }, { status: "submitted", body: words(20) }, { status: "changes", body: "" }, { status: "published", body: words(5) }, { status: "published", body: words(5) }]);

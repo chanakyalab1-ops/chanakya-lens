@@ -6,7 +6,7 @@ import { isOwnerEmail } from '@/lib/memberAccess';
 import { supabaseServer } from '@/lib/supabase-server';
 import { sendAlert } from '@/lib/alerts';
 import { getAllStories } from '@/lib/stories';
-import { canWriterEdit, cleanTags, getAnalyst, getPostById, slugifyPost, publishProblems, type PostStatus } from '@/lib/analystDesk';
+import { canWriterEdit, deriveSummary, getAnalyst, getPostById, slugifyPost, publishProblems, type PostStatus } from '@/lib/analystDesk';
 
 type Result = { ok: boolean; error?: string; id?: string };
 
@@ -21,23 +21,21 @@ async function actor() {
   return { email: user.email.toLowerCase(), owner };
 }
 
-export async function savePost(input: { id?: string; storySlug: string; title: string; summary: string; body: string; heroUrl: string; tags: string; publish: boolean }): Promise<Result> {
+export async function savePost(input: { id?: string; storySlug: string; title: string; body: string; publish: boolean }): Promise<Result> {
   const who = await actor();
   if (!who) return { ok: false, error: 'Not allowed.' };
 
   const storySlug = clip(input.storySlug, 200);
   if (storySlug && !(await getAllStories()).some((s) => s.slug === storySlug)) return { ok: false, error: 'That story could not be found.' };
+  const body = typeof input.body === 'string' ? input.body.trim().slice(0, 60000) : '';
   const fields = {
     story_slug: storySlug,
     title: clip(input.title, 150),
-    summary: clip(input.summary, 400),
-    body: typeof input.body === 'string' ? input.body.trim().slice(0, 60000) : '',
-    hero_url: clip(input.heroUrl, 500),
-    tags: cleanTags(typeof input.tags === 'string' ? input.tags : ''),
+    body,
+    summary: deriveSummary(body),
   };
-  if (fields.hero_url && !/^https:\/\/\S+$/i.test(fields.hero_url)) return { ok: false, error: 'The image link must start with https://' };
   if (input.publish) {
-    const problems = publishProblems({ title: fields.title, summary: fields.summary, body: fields.body, storySlug });
+    const problems = publishProblems({ title: fields.title, body: fields.body, storySlug });
     if (problems.length) return { ok: false, error: problems.join(' ') };
   }
 
