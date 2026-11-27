@@ -18,10 +18,35 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
   const [title, setTitle] = useState(initial?.title ?? '');
   const [body, setBody] = useState(initial?.body ?? '');
   const [preview, setPreview] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
   const words = wordCount(body);
   const blocks = useMemo(() => parseBlocks(body), [body]);
+
+  // Fills the heading and text from a Word or PDF file. Nothing is saved or published until she taps a button below.
+  async function importFile(file: File | undefined) {
+    if (!file) return;
+    if (body.trim() && !window.confirm('Replace what you have written with this file?')) return;
+    setImporting(true);
+    setImportMsg(null);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/writer/import', { method: 'POST', body: fd });
+      const d = (await res.json()) as { ok: boolean; error?: string; title?: string; body?: string; kind?: string };
+      if (!d.ok) return setImportMsg({ ok: false, text: d.error ?? 'Could not read that file.' });
+      if (d.title) setTitle(d.title);
+      setBody(d.body ?? '');
+      setPreview(true);
+      setImportMsg({ ok: true, text: `Filled in from your ${d.kind === 'pdf' ? 'PDF' : 'Word file'}. Check the preview, fix anything you want, then tap Publish.${d.kind === 'pdf' ? ' PDFs can lose some formatting, so read it through.' : ''}` });
+    } catch {
+      setImportMsg({ ok: false, text: 'Could not upload that file. Check your connection and try again.' });
+    } finally {
+      setImporting(false);
+    }
+  }
 
   function save(publish: boolean) {
     if (publish && !window.confirm('Publish this now? It goes live straight away under the story. You can still edit it later.')) return;
@@ -53,6 +78,25 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
         </div>
       )}
 
+      {!locked && (
+        <div className="rounded-sm border border-dashed p-4" style={bd}>
+          <div className="text-sm font-semibold mb-1">Already written it in Word or as a PDF?</div>
+          <p className="text-xs mb-3" style={{ color: 'var(--text-on-ink-dim)' }}>Upload it and the heading and text fill in below. Word (.docx) works best. Up to 4 MB.</p>
+          <input
+            type="file"
+            accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            disabled={importing}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              void importFile(f);
+            }}
+            className="text-xs"
+          />
+          {importing && <span className="text-xs ml-2" style={{ color: 'var(--text-on-ink-dim)' }}>Reading your file…</span>}
+          {importMsg && <p className="text-xs mt-2" style={{ color: importMsg.ok ? 'var(--possible)' : 'var(--developing)' }}>{importMsg.text}</p>}
+        </div>
+      )}
       <label className="block text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
         Is this about one of our stories? (optional)
         <select value={storySlug} onChange={(e) => setStorySlug(e.target.value)} disabled={locked} className={`${field} mt-1`} style={bd}>

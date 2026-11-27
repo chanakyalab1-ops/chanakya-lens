@@ -44,4 +44,11 @@ describe("PostEditor", () => {
     expect(html).toContain("read-only");
     expect(html).not.toContain("Save draft");
   });
+  it("offers a Word or PDF upload, but not when the piece is read-only", () => {
+    const open = renderToString(<PostEditor stories={stories} initial={null} locked={false} isOwner={false} />);
+    expect(open).toContain("Already written it in Word or as a PDF?");
+    expect(open).toContain(".docx");
+    const locked = renderToString(<PostEditor stories={stories} initial={{ ...post, status: "submitted" }} locked isOwner={false} />);
+    expect(locked).not.toContain("Already written it in Word");
+  });
 });
