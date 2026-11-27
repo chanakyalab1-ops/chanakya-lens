@@ -99,8 +99,10 @@ function AnalystTeaser({ items }: { items?: AnalysisItem[] }) {
   if (!items || items.length === 0) return null;
   return (
     <div className="mt-6 flex flex-col rounded-sm border p-5" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
-      <Link href="/analyst-desk" className="font-display font-bold uppercase tracking-wide text-lg hover:opacity-90" style={{ color: "var(--brand-soft)" }}>
-        The Analyst Desk
+      <Link href="/analyst-desk" className="hover:opacity-90">
+        <span className="sr-only">The Analyst Desk</span>
+        <Image src="/analyst-desk-logo.png" alt="The Analyst Desk" width={1162} height={270} unoptimized className="logo-for-light h-auto w-full max-w-[220px]" />
+        <Image src="/analyst-desk-logo-dark.png" alt="The Analyst Desk" width={1162} height={270} unoptimized className="logo-for-dark h-auto w-full max-w-[220px]" />
       </Link>
       <p className="text-[0.84rem] leading-relaxed mt-1 mb-3" style={{ color: "var(--text-body)" }}>
         Longer analysis from our analysts, with the reasoning shown.

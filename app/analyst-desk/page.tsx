@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import NavDrawer from '@/components/NavDrawer';
 import { listPosts, readMinutes } from '@/lib/analystDesk';
@@ -16,7 +17,11 @@ export default async function AnalystDeskPage() {
     <>
       <NavDrawer />
       <main className="max-w-3xl mx-auto px-5 pt-8 pb-20">
-        <h1 className="font-display font-extrabold text-4xl mb-2">The Analyst Desk</h1>
+        <h1 className="mb-3">
+          <span className="sr-only">The Analyst Desk</span>
+          <Image src="/analyst-desk-logo.png" alt="" width={1162} height={270} unoptimized className="logo-for-light h-auto w-full max-w-[300px]" />
+          <Image src="/analyst-desk-logo-dark.png" alt="" width={1162} height={270} unoptimized className="logo-for-dark h-auto w-full max-w-[300px]" />
+        </h1>
         <p className="text-[1rem] leading-relaxed mb-8" style={{ color: 'var(--text-body)' }}>
           Longer analysis from our analysts on the stories we publish, with the reasoning shown. Free to read.
         </p>
