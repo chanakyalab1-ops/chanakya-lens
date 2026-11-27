@@ -9,6 +9,7 @@ import { dispatchAccess } from '@/lib/monthly';
 import { getAnalyst, getPostBySlug, readMinutes } from '@/lib/analystDesk';
 import { parseBlocks, previewBlocks } from '@/lib/miniMarkdown';
 import { getLensEntity } from '@/lib/lens';
+import { getAllStories } from '@/lib/stories';
 import { slugifyPost } from '@/lib/analystDesk';
 
 export const dynamic = 'force-dynamic';
@@ -28,6 +29,7 @@ export default async function AnalystPostPage({ params }: { params: Promise<{ sl
   const post = await getPostBySlug(slug, { includeUnpublished: isOwnerEmail(user?.email) });
   if (!post) notFound();
   const author = await getAnalyst(post.authorEmail);
+  const story = post.storySlug ? (await getAllStories()).find((st) => st.slug === post.storySlug) : undefined;
   const blocks = parseBlocks(post.body);
   const shown = access === 'allowed' ? blocks : previewBlocks(blocks);
 
@@ -44,6 +46,12 @@ export default async function AnalystPostPage({ params }: { params: Promise<{ sl
         </div>
         <h1 className="font-display font-extrabold text-4xl leading-tight mb-3">{post.title}</h1>
         <p className="text-[1.05rem] leading-relaxed mb-5" style={{ color: 'var(--text-body)' }}>{post.summary}</p>
+        {story && (
+          <Link href={`/story/${story.slug}`} className="block rounded-sm border p-3 mb-5 hover:opacity-90" style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}>
+            <div className="font-mono text-[0.625rem] uppercase tracking-widest mb-1" style={{ color: 'var(--text-on-ink-dim)' }}>Analysis of our story</div>
+            <div className="font-display font-bold text-[1.05rem] leading-tight">{story.headline}</div>
+          </Link>
+        )}
         {post.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {post.tags.map((t) => {

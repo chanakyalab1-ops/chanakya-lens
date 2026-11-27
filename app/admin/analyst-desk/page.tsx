@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { listAnalysts, listPosts } from '@/lib/analystDesk';
+import { getAllStories } from '@/lib/stories';
 import { AnalystAdmin } from './AnalystAdmin';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AnalystDeskAdminPage() {
-  const [analysts, posts] = await Promise.all([listAnalysts(), listPosts()]);
+  const [analysts, posts, stories] = await Promise.all([listAnalysts(), listPosts(), getAllStories()]);
+  const headlines = Object.fromEntries(stories.map((st) => [st.slug, st.headline]));
   return (
     <div className="max-w-4xl mx-auto px-4 pt-6 pb-24">
       <div className="flex items-center justify-between gap-3 mb-4">
@@ -13,9 +15,9 @@ export default async function AnalystDeskAdminPage() {
         <Link href="/admin" className="font-mono text-[0.68rem] uppercase tracking-wide" style={{ color: 'var(--text-on-ink-dim)' }}>← Admin</Link>
       </div>
       <p className="text-[0.85rem] mb-6" style={{ color: 'var(--text-body)' }}>
-        Add your writers, review what they send, and publish. Writers use chanakyalens.com/writer, which is their own dashboard. Published pieces stay hidden from readers until membership is public, like Lens Monthly.
+        Add your writers, review their analysis of our stories, and publish. Each write-up is attached to one story and appears on that story&apos;s page once membership is public. Writers use chanakyalens.com/writer, which is their own dashboard. Published pieces stay hidden from readers until membership is public, like Lens Monthly.
       </p>
-      <AnalystAdmin analysts={analysts} posts={posts} />
+      <AnalystAdmin analysts={analysts} posts={posts} headlines={headlines} />
     </div>
   );
 }

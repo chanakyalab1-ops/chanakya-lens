@@ -5,6 +5,7 @@ import { getSessionUser } from '@/lib/supabase-user';
 import { isOwnerEmail } from '@/lib/memberAccess';
 import { supabaseServer } from '@/lib/supabase-server';
 import { sendAlert } from '@/lib/alerts';
+import { getAllStories } from '@/lib/stories';
 import { canWriterEdit, cleanTags, getAnalyst, getPostById, slugifyPost, submitProblems, type PostStatus } from '@/lib/analystDesk';
 
 type Result = { ok: boolean; error?: string; id?: string };
@@ -20,11 +21,14 @@ async function actor() {
   return { email: user.email.toLowerCase(), owner };
 }
 
-export async function savePost(input: { id?: string; title: string; summary: string; body: string; heroUrl: string; tags: string; submit: boolean }): Promise<Result> {
+export async function savePost(input: { id?: string; storySlug: string; title: string; summary: string; body: string; heroUrl: string; tags: string; submit: boolean }): Promise<Result> {
   const who = await actor();
   if (!who) return { ok: false, error: 'Not allowed.' };
 
+  const storySlug = clip(input.storySlug, 200);
+  if (storySlug && !(await getAllStories()).some((s) => s.slug === storySlug)) return { ok: false, error: 'That story could not be found.' };
   const fields = {
+    story_slug: storySlug,
     title: clip(input.title, 150),
     summary: clip(input.summary, 400),
     body: typeof input.body === 'string' ? input.body.trim().slice(0, 60000) : '',
@@ -33,7 +37,7 @@ export async function savePost(input: { id?: string; title: string; summary: str
   };
   if (fields.hero_url && !/^https:\/\/\S+$/i.test(fields.hero_url)) return { ok: false, error: 'The image link must start with https://' };
   if (input.submit) {
-    const problems = submitProblems(fields);
+    const problems = submitProblems({ title: fields.title, summary: fields.summary, body: fields.body, storySlug });
     if (problems.length) return { ok: false, error: problems.join(' ') };
   }
 
@@ -54,7 +58,7 @@ export async function savePost(input: { id?: string; title: string; summary: str
       extra.submitted_at = now;
     }
     const { error } = await db.from('analyst_posts').update({ ...fields, status, ...extra, updated_at: now }).eq('id', input.id);
-    if (error) return { ok: false, error: 'Could not save.' };
+    if (error) return { ok: false, error: 'Could not save. Has the latest supabase/analyst-desk.sql been run?' };
     if (input.submit && !who.owner) await sendAlert('analyst-desk', `"${fields.title}" was sent for review. Open /admin/analyst-desk.`);
     revalidatePath('/writer');
     revalidatePath('/admin/analyst-desk');

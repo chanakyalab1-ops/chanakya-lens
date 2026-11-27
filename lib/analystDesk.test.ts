@@ -24,8 +24,9 @@ describe("analyst desk helpers", () => {
     expect(canWriterEdit("published")).toBe(false);
   });
   it("lists what blocks a submission", () => {
-    expect(submitProblems({ title: "", summary: "", body: "short" })).toHaveLength(3);
-    expect(submitProblems({ title: "T", summary: "S", body: words(150) })).toEqual([]);
+    expect(submitProblems({ title: "", summary: "", body: "short", storySlug: "" })).toHaveLength(4);
+    expect(submitProblems({ title: "T", summary: "S", body: words(150), storySlug: "a-story" })).toEqual([]);
+    expect(submitProblems({ title: "T", summary: "S", body: words(150), storySlug: "" })).toEqual(["Choose the story this write-up is about."]);
   });
   it("summarises a writer's pieces", () => {
     const s = writerStats([{ status: "draft", body: words(10) }, { status: "submitted", body: words(20) }, { status: "changes", body: "" }, { status: "published", body: words(5) }, { status: "published", body: words(5) }]);

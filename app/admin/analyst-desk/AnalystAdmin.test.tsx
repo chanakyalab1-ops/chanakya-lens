@@ -5,7 +5,7 @@ vi.mock("./actions", () => ({ addAnalyst: vi.fn(), publishPost: vi.fn(), request
 import { AnalystAdmin } from "./AnalystAdmin";
 import type { Post } from "@/lib/analystDesk";
 
-const post = (o: Partial<Post>): Post => ({ id: "1", slug: "s", authorEmail: "a@b.com", authorName: "Asha", title: "A piece", summary: "", body: "word word", heroUrl: "", tags: [], status: "submitted", editorNote: "", submittedAt: null, publishedAt: null, createdAt: "2026-11-01T00:00:00Z", updatedAt: "2026-11-01T00:00:00Z", ...o });
+const post = (o: Partial<Post>): Post => ({ id: "1", slug: "s", authorEmail: "a@b.com", authorName: "Asha", storySlug: "a-story", title: "A piece", summary: "", body: "word word", heroUrl: "", tags: [], status: "submitted", editorNote: "", submittedAt: null, publishedAt: null, createdAt: "2026-11-01T00:00:00Z", updatedAt: "2026-11-01T00:00:00Z", ...o });
 
 describe("AnalystAdmin", () => {
   it("shows pieces waiting for review with publish and request-changes buttons", () => {

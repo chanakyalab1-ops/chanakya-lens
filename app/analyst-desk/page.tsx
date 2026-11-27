@@ -5,6 +5,7 @@ import NavDrawer from '@/components/NavDrawer';
 import { getSessionUser } from '@/lib/supabase-user';
 import { dispatchAccess } from '@/lib/monthly';
 import { listPosts, readMinutes } from '@/lib/analystDesk';
+import { getAllStories } from '@/lib/stories';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'The Analyst Desk | Chanakya Lens', description: 'In-depth analysis from our analysts, with the reasoning shown. Everyone can read the opening; Lens+ members get the whole piece.' };
@@ -12,7 +13,8 @@ export const metadata: Metadata = { title: 'The Analyst Desk | Chanakya Lens', d
 export default async function AnalystDeskPage() {
   const user = await getSessionUser();
   if ((await dispatchAccess(user)) === 'hidden') notFound();
-  const posts = await listPosts({ status: 'published' });
+  const [posts, stories] = await Promise.all([listPosts({ status: 'published' }), getAllStories()]);
+  const headlines = new Map(stories.map((st) => [st.slug, st.headline]));
   posts.sort((a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime());
 
   return (
@@ -35,6 +37,7 @@ export default async function AnalystDeskPage() {
                 </div>
                 <h2 className="font-display font-bold text-2xl leading-tight mb-1.5">{p.title}</h2>
                 <p className="text-[0.92rem]" style={{ color: 'var(--text-body)' }}>{p.summary}</p>
+                {p.storySlug && headlines.get(p.storySlug) && <div className="text-xs mt-2" style={{ color: 'var(--text-on-ink-dim)' }}>On our story: {headlines.get(p.storySlug)}</div>}
               </Link>
             ))}
           </div>

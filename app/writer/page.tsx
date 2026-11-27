@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import NavDrawer from '@/components/NavDrawer';
 import { getSessionUser } from '@/lib/supabase-user';
 import { isOwnerEmail } from '@/lib/memberAccess';
+import { getAllStories } from '@/lib/stories';
 import { STATUS_LABEL, getAnalyst, listPosts, readMinutes, wordCount, writerStats } from '@/lib/analystDesk';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +19,8 @@ export default async function WriterDashboard() {
   const owner = isOwnerEmail(user.email);
   if (!owner && !(analyst && analyst.active)) notFound();
 
-  const posts = await listPosts({ authorEmail: user.email });
+  const [posts, allStories] = await Promise.all([listPosts({ authorEmail: user.email }), getAllStories()]);
+  const headlines = new Map(allStories.map((st) => [st.slug, st.headline]));
   const stats = writerStats(posts);
   const changes = posts.filter((p) => p.status === 'changes');
   const name = analyst?.name?.split(' ')[0] ?? 'there';
@@ -37,7 +39,7 @@ export default async function WriterDashboard() {
           <div>
             <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-1" style={{ color: 'var(--brand-soft)' }}>The Analyst Desk</div>
             <h1 className="font-display font-extrabold text-4xl">Hi {name}</h1>
-            <p className="text-[0.95rem] mt-1" style={{ color: 'var(--text-body)' }}>Your writing, in one place. Save drafts, send a piece to the editor when it is ready, and see what comes back.</p>
+            <p className="text-[0.95rem] mt-1" style={{ color: 'var(--text-body)' }}>Your analysis of our stories, in one place. Pick a story, write, save drafts, send a piece to the editor when it is ready, and see what comes back.</p>
           </div>
           <Link href="/writer/new" className="px-5 py-3 text-sm font-semibold rounded-sm text-white" style={{ background: '#0E7080' }}>New write-up</Link>
         </div>
@@ -75,6 +77,7 @@ export default async function WriterDashboard() {
                   <Link href={`/writer/${p.id}`} className="flex items-center justify-between gap-3 rounded-sm border p-4 hover:opacity-90" style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}>
                     <div className="min-w-0">
                       <div className="font-semibold truncate">{p.title || 'Untitled'}</div>
+                      {p.storySlug && <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--brand-soft)' }}>On: {headlines.get(p.storySlug) ?? p.storySlug}</div>}
                       <div className="text-xs mt-1" style={{ color: 'var(--text-on-ink-dim)' }}>
                         {wordCount(p.body).toLocaleString('en-GB')} words · {readMinutes(p.body)} min read · updated {fmt(p.updatedAt)}
                       </div>

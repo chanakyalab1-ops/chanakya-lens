@@ -13,6 +13,7 @@ import { EmailStoryButton } from "@/components/EmailStoryButton";
 import { WatchButton } from "@/components/WatchButton";
 import { getStoryUpdates } from "@/lib/storyUpdates";
 import { getWatchingNext } from "@/lib/watchingNext";
+import { getPostsForStory } from "@/lib/analystDesk";
 import { ReadMarker } from "@/components/ReadMarker";
 import { ConnectionsSection } from "@/components/ConnectionsSection";
 import { connectionsFor } from "@/lib/connections";
@@ -74,7 +75,8 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
 
   const hubs = hubsForStory(story, allStories);
   const connections = connectionsFor(story, allStories);
-  const [updates, watchingNext] = await Promise.all([getStoryUpdates(slug), getWatchingNext(slug)]);
+  // Analyst write-ups appear on stories only once membership is public.
+  const [updates, watchingNext, analysis] = await Promise.all([getStoryUpdates(slug), getWatchingNext(slug), process.env.MEMBERSHIP_PUBLIC === "true" ? getPostsForStory(slug) : Promise.resolve([])]);
 
   const schemaData = {
     "@context": "https://schema.org",
@@ -421,6 +423,23 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
             <p className="text-[0.6875rem] mt-3" style={{ color: "var(--text-on-ink-dim)" }}>
               Things that could change this story. These are signals to look for, not predictions.
             </p>
+          </section>
+        )}
+
+        {analysis.length > 0 && (
+          <section className="mt-10 md:max-w-[42rem]">
+            <h2 className="font-display font-bold uppercase tracking-wide text-lg mb-3" style={{ color: "var(--brand-soft)" }}>
+              Analyst write-up
+            </h2>
+            <div className="space-y-3">
+              {analysis.map((a) => (
+                <Link key={a.id} href={`/analyst-desk/${a.slug}`} className="block p-4 rounded-sm border hover:opacity-90" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
+                  <div className="font-mono text-[0.6875rem] uppercase tracking-wide mb-1.5" style={{ color: "var(--brand-soft)" }}>The Analyst Desk · Lens+</div>
+                  <div className="font-display font-bold text-[1.1rem] leading-tight mb-1">{a.title}</div>
+                  <div className="text-[0.88rem]" style={{ color: "var(--text-body)" }}>{a.summary}</div>
+                </Link>
+              ))}
+            </div>
           </section>
         )}
 

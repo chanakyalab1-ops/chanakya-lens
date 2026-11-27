@@ -7,13 +7,14 @@ import { DispatchBody } from '@/components/DispatchBody';
 import { parseBlocks } from '@/lib/miniMarkdown';
 import { MIN_WORDS_TO_SUBMIT, STATUS_LABEL, readMinutes, wordCount, type PostStatus } from '@/lib/analystDesk';
 
-type Initial = { id: string; title: string; summary: string; body: string; heroUrl: string; tags: string; status: PostStatus; editorNote: string; slug: string };
+type Initial = { id: string; storySlug: string; title: string; summary: string; body: string; heroUrl: string; tags: string; status: PostStatus; editorNote: string; slug: string };
 
 const field = 'w-full rounded-sm border px-3 py-2 bg-transparent text-sm';
 const bd = { borderColor: 'var(--border)' };
 
-export function PostEditor({ initial, locked, isOwner }: { initial: Initial | null; locked: boolean; isOwner: boolean }) {
+export function PostEditor({ initial, locked, isOwner, stories, presetStory = '' }: { initial: Initial | null; locked: boolean; isOwner: boolean; stories: { slug: string; headline: string }[]; presetStory?: string }) {
   const router = useRouter();
+  const [storySlug, setStorySlug] = useState(initial?.storySlug ?? presetStory);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [summary, setSummary] = useState(initial?.summary ?? '');
   const [body, setBody] = useState(initial?.body ?? '');
@@ -29,7 +30,7 @@ export function PostEditor({ initial, locked, isOwner }: { initial: Initial | nu
     if (submit && !window.confirm('Send this to the editor? You will not be able to edit it until it comes back.')) return;
     setMsg(null);
     start(async () => {
-      const r = await savePost({ id: initial?.id, title, summary, body, heroUrl, tags, submit });
+      const r = await savePost({ id: initial?.id, storySlug, title, summary, body, heroUrl, tags, submit });
       if (!r.ok) return setMsg({ ok: false, text: r.error ?? 'Could not save.' });
       setMsg({ ok: true, text: submit ? 'Sent to the editor.' : 'Saved.' });
       if (submit) router.push('/writer');
@@ -55,6 +56,15 @@ export function PostEditor({ initial, locked, isOwner }: { initial: Initial | nu
         </div>
       )}
 
+      <label className="block text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
+        The story this write-up is about
+        <select value={storySlug} onChange={(e) => setStorySlug(e.target.value)} disabled={locked} className={`${field} mt-1`} style={bd}>
+          <option value="">Choose a story…</option>
+          {stories.map((s) => (
+            <option key={s.slug} value={s.slug}>{s.headline.length > 110 ? `${s.headline.slice(0, 109)}…` : s.headline}</option>
+          ))}
+        </select>
+      </label>
       <input value={title} onChange={(e) => setTitle(e.target.value)} disabled={locked} maxLength={150} placeholder="Title" className={`${field} text-lg font-semibold`} style={bd} />
       <textarea value={summary} onChange={(e) => setSummary(e.target.value)} disabled={locked} rows={2} maxLength={400} placeholder="One or two sentences shown on the list and under the title" className={field} style={bd} />
       <div className="grid sm:grid-cols-2 gap-3">

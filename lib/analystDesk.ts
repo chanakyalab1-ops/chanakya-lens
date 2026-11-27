@@ -7,6 +7,7 @@ export type Post = {
   slug: string;
   authorEmail: string;
   authorName: string;
+  storySlug: string;
   title: string;
   summary: string;
   body: string;
@@ -57,8 +58,9 @@ export function writerStats(posts: Pick<Post, "status" | "body">[]): WriterStats
 }
 
 // What blocks a piece from being sent to the editor. Empty when it is ready.
-export function submitProblems(p: { title: string; summary: string; body: string }): string[] {
+export function submitProblems(p: { title: string; summary: string; body: string; storySlug: string }): string[] {
   const out: string[] = [];
+  if (!p.storySlug.trim()) out.push("Choose the story this write-up is about.");
   if (!p.title.trim()) out.push("Add a title.");
   if (!p.summary.trim()) out.push("Add a one or two sentence summary.");
   if (wordCount(p.body) < MIN_WORDS_TO_SUBMIT) out.push(`Write at least ${MIN_WORDS_TO_SUBMIT} words (you have ${wordCount(p.body)}).`);
@@ -69,6 +71,7 @@ type Row = {
   id: string;
   slug: string;
   author_email: string;
+  story_slug?: string | null;
   title: string;
   summary: string;
   body: string;
@@ -81,7 +84,9 @@ type Row = {
   created_at: string;
   updated_at: string;
 };
-const COLS = "id, slug, author_email, title, summary, body, hero_url, tags, status, editor_note, submitted_at, published_at, created_at, updated_at";
+// Before story_slug is added to the table, fall back to the older column list.
+const OLD_COLS = "id, slug, author_email, title, summary, body, hero_url, tags, status, editor_note, submitted_at, published_at, created_at, updated_at";
+const COLS = "id, slug, author_email, story_slug, title, summary, body, hero_url, tags, status, editor_note, submitted_at, published_at, created_at, updated_at";
 
 function toPost(r: Row, names: Map<string, string>): Post {
   return {
@@ -89,6 +94,7 @@ function toPost(r: Row, names: Map<string, string>): Post {
     slug: r.slug,
     authorEmail: r.author_email,
     authorName: names.get(r.author_email) ?? "Analyst",
+    storySlug: r.story_slug ?? "",
     title: r.title,
     summary: r.summary,
     body: r.body,
@@ -129,10 +135,14 @@ async function nameMap(): Promise<Map<string, string>> {
 // All posts, optionally narrowed. Empty when the tables do not exist yet.
 export async function listPosts(opts: { authorEmail?: string; status?: PostStatus } = {}): Promise<Post[]> {
   try {
-    let q = supabaseServer().from("analyst_posts").select(COLS).order("updated_at", { ascending: false }).limit(200);
-    if (opts.authorEmail) q = q.eq("author_email", opts.authorEmail.toLowerCase());
-    if (opts.status) q = q.eq("status", opts.status);
-    const { data, error } = await q;
+    const run = (cols: string) => {
+      let q = supabaseServer().from("analyst_posts").select(cols).order("updated_at", { ascending: false }).limit(200);
+      if (opts.authorEmail) q = q.eq("author_email", opts.authorEmail.toLowerCase());
+      if (opts.status) q = q.eq("status", opts.status);
+      return q;
+    };
+    let { data, error } = await run(COLS);
+    if (error) ({ data, error } = await run(OLD_COLS));
     if (error || !data) return [];
     const names = await nameMap();
     return (data as unknown as Row[]).map((r) => toPost(r, names));
@@ -143,9 +153,13 @@ export async function listPosts(opts: { authorEmail?: string; status?: PostStatu
 
 export async function getPostBySlug(slug: string, opts: { includeUnpublished?: boolean } = {}): Promise<Post | null> {
   try {
-    let q = supabaseServer().from("analyst_posts").select(COLS).eq("slug", slug);
-    if (!opts.includeUnpublished) q = q.eq("status", "published");
-    const { data, error } = await q.maybeSingle();
+    const run = (cols: string) => {
+      let q = supabaseServer().from("analyst_posts").select(cols).eq("slug", slug);
+      if (!opts.includeUnpublished) q = q.eq("status", "published");
+      return q.maybeSingle();
+    };
+    let { data, error } = await run(COLS);
+    if (error) ({ data, error } = await run(OLD_COLS));
     return error || !data ? null : toPost(data as unknown as Row, await nameMap());
   } catch {
     return null;
@@ -154,9 +168,22 @@ export async function getPostBySlug(slug: string, opts: { includeUnpublished?: b
 
 export async function getPostById(id: string): Promise<Post | null> {
   try {
-    const { data, error } = await supabaseServer().from("analyst_posts").select(COLS).eq("id", id).maybeSingle();
+    const run = (cols: string) => supabaseServer().from("analyst_posts").select(cols).eq("id", id).maybeSingle();
+    let { data, error } = await run(COLS);
+    if (error) ({ data, error } = await run(OLD_COLS));
     return error || !data ? null : toPost(data as unknown as Row, await nameMap());
   } catch {
     return null;
+  }
+}
+
+// Published write-ups about one story, newest first. Empty if the column or table is missing.
+export async function getPostsForStory(storySlug: string): Promise<Post[]> {
+  try {
+    const { data, error } = await supabaseServer().from("analyst_posts").select(COLS).eq("story_slug", storySlug).eq("status", "published").order("published_at", { ascending: false }).limit(3);
+    if (error || !data) return [];
+    return (data as unknown as Row[]).map((r) => toPost(r, new Map()));
+  } catch {
+    return [];
   }
 }
