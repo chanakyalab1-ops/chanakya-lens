@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { addCreator, addCreatorsBulk, markSent, removeDraft, setOutreachStatus, updateCreatorDetails } from './actions';
-import { buildEmail, buildFollowup, gmailComposeUrl, isPersonalised, needsFollowup, parseBulk, type OutreachVersion } from '@/lib/outreachEmail';
+import { buildEmail, buildFollowup, gmailComposeUrl, mailtoUrl, needsFollowup, parseBulk, type OutreachVersion } from '@/lib/outreachEmail';
 
 export type OutreachRow = {
   id: string;
@@ -118,7 +118,7 @@ function BulkAdd() {
   return (
     <details className="rounded-sm border p-4" style={{ ...bd, background: 'var(--ink-card)' }}>
       <summary className="cursor-pointer font-mono text-[0.6875rem] uppercase tracking-widest" style={dim}>Add many at once</summary>
-      <p className="text-xs mt-3 mb-2" style={dim}>One creator per line: name | email | @handle | geo or econ (the last two are optional). They are added as drafts. Before you can open the email in Gmail you add the video you watched and one thing you liked.</p>
+      <p className="text-xs mt-3 mb-2" style={dim}>One creator per line: name | email | @handle | geo or econ (the last two are optional). They are added as drafts with a plain opener (&ldquo;I really like the geopolitics content you post&rdquo;). If you watch a video, add it to a draft and the email becomes specific.</p>
       <textarea value={text} onChange={(e) => setText(e.target.value)} rows={6} className={`${field} font-mono`} style={bd} placeholder={'Tanya Vats | name@gmail.com | @tanyaavats_ | geo'} />
       <div className="flex items-center gap-3 mt-2 flex-wrap">
         <button
@@ -228,18 +228,15 @@ function Row({ r, sender, now }: { r: OutreachRow; sender: string; now: number }
       <div className="flex flex-wrap items-center gap-2 mt-3">
         {!blocked && (r.status === 'draft' || dueFollow) && (
           <>
-            {r.status === 'draft' && !isPersonalised(r) ? (
-              <span className="text-xs" style={{ color: 'var(--developing)' }}>Add the video you watched and one thing you liked, then save, to open the email.</span>
-            ) : (
-              <>
-                <a href={gmailComposeUrl(r.email, mail.subject, mail.body)} target="_blank" rel="noreferrer" className={btn} style={{ ...bd, ...link }}>
-                  Open in Gmail
-                </a>
-                <button disabled={pending} onClick={() => run(() => markSent(r.id, dueFollow ? 'followup' : 'first'))} className={btn} style={bd}>
-                  I sent it
-                </button>
-              </>
-            )}
+            <a href={gmailComposeUrl(r.email, mail.subject, mail.body)} target="_blank" rel="noreferrer" className={btn} style={{ ...bd, ...link }}>
+              Open in Gmail
+            </a>
+            <a href={mailtoUrl(r.email, mail.subject, mail.body)} className={btn} style={{ ...bd, ...link }}>
+              Open in phone mail app
+            </a>
+            <button disabled={pending} onClick={() => run(() => markSent(r.id, dueFollow ? 'followup' : 'first'))} className={btn} style={bd}>
+              I sent it
+            </button>
           </>
         )}
         {!blocked && r.status !== 'no' && ['sent', 'draft'].includes(r.status) && (

@@ -18,11 +18,16 @@ export type OutreachInput = {
 export const firstName = (full: string): string => full.trim().split(/\s+/)[0] || "there";
 
 export function buildEmail(i: OutreachInput): { subject: string; body: string } {
-  const topic = i.topic.trim() || "world news";
+  const topic = i.topic.trim();
   const sender = i.sender.trim() || "[Your name]";
-  const subject = i.version === "econ" ? `Oil, tariffs and the rupee, for your audience on ${topic}` : `A tool for your audience on ${topic}`;
-  const watched = i.videoTitle.trim() ? `I watched your "${i.videoTitle.trim()}" on ${topic}` : `I watched your recent video on ${topic}`;
-  const liked = i.specific.trim() ? ` and liked how you ${i.specific.trim().replace(/[.\s]+$/, "")}` : "";
+  const subject = topic
+    ? i.version === "econ" ? `Oil, tariffs and the rupee, for your audience on ${topic}` : `A tool for your audience on ${topic}`
+    : i.version === "econ" ? "Who is covering the story, and what it means for India" : "Who is covering the story, and who is not";
+  // With a real video and detail the opener is specific. Without them it is a plain, honest line and never invents a video.
+  const watched = i.videoTitle.trim()
+    ? `I watched your "${i.videoTitle.trim()}"${topic ? ` on ${topic}` : ""}`
+    : `I really like the ${i.version === "econ" ? "geopolitics and economy" : "geopolitics"} content you post${topic ? ` on ${topic}` : ""}`;
+  const liked = i.specific.trim() && i.videoTitle.trim() ? ` and liked how you ${i.specific.trim().replace(/[.\s]+$/, "")}` : "";
   const what =
     i.version === "econ"
       ? "For each world story we show what happened, what it means for India and for ordinary readers (fuel, food, exports, jobs), and who is covering it and who is not. It is a ten-second visual you could put straight into a video."
@@ -70,6 +75,11 @@ export function buildFollowup(i: Pick<OutreachInput, "name" | "sender">, origina
 export function gmailComposeUrl(to: string, subject: string, body: string): string {
   const q = new URLSearchParams({ view: "cm", fs: "1", to, su: subject, body });
   return `https://mail.google.com/mail/?${q.toString()}`;
+}
+
+// Opens the phone's default mail app (Gmail on most Android phones) with the email filled in.
+export function mailtoUrl(to: string, subject: string, body: string): string {
+  return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 export function followupDueAt(sentAt: string | null, days = FOLLOWUP_DAYS): Date | null {
@@ -123,7 +133,3 @@ export function parseBulk(text: string): { rows: BulkRow[]; errors: string[] } {
   return { rows, errors };
 }
 
-// An email may only be opened as a draft once it mentions something real about the creator.
-export function isPersonalised(r: { video_title: string; specific: string }): boolean {
-  return r.video_title.trim().length > 2 && r.specific.trim().length > 2;
-}

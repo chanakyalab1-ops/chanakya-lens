@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildEmail, buildFollowup, firstName, followupDueAt, gmailComposeUrl, needsFollowup, validEmail } from "./outreachEmail";
+import { buildEmail, buildFollowup, firstName, followupDueAt, gmailComposeUrl, mailtoUrl, needsFollowup, validEmail } from "./outreachEmail";
 
 const base = { name: "Priya Sharma", videoTitle: "Why oil moves", topic: "oil prices", specific: "explain the shipping angle.", version: "geo" as const, sender: "Sam" };
 
@@ -21,7 +21,9 @@ describe("buildEmail", () => {
   });
   it("falls back gracefully when fields are empty", () => {
     const e = buildEmail({ ...base, videoTitle: "", specific: "", topic: "", sender: "" });
-    expect(e.body).toContain("I watched your recent video on world news.");
+    expect(e.body).toContain("I really like the geopolitics content you post.");
+    expect(e.body).not.toContain("I watched");
+    expect(e.subject).toBe("Who is covering the story, and who is not");
     expect(e.body).toContain("[Your name]");
   });
 });
@@ -37,6 +39,10 @@ describe("followups and links", () => {
     expect(u).toContain("https://mail.google.com/mail/?view=cm");
     expect(u).toContain("to=a%40b.com");
     expect(decodeURIComponent(u.replace(/\+/g, " "))).toContain("Hi & bye");
+  });
+  it("builds a mailto link that keeps spaces and line breaks", () => {
+    const u = mailtoUrl("a@b.com", "Hi there", "line1\nline2");
+    expect(u).toBe("mailto:a@b.com?subject=Hi%20there&body=line1%0Aline2");
   });
   it("flags a follow-up only after 5 days, once, and not after a reply", () => {
     const sent = "2026-11-01T00:00:00Z";
@@ -56,8 +62,8 @@ describe("followups and links", () => {
   });
 });
 
-import { isPersonalised, parseBulk } from "./outreachEmail";
-describe("parseBulk / isPersonalised", () => {
+import { parseBulk } from "./outreachEmail";
+describe("parseBulk", () => {
   it("parses names, emails, handles and versions; reports bad lines; drops duplicates", () => {
     const r = parseBulk("Tanya Vats | tanyaavats11@gmail.com | @tanyaavats_\nRasika Jamdade, rasika@x.com, https://instagram.com/rasikajamdade, econ\nno email here\nTanya Again | TANYAAVATS11@gmail.com\n# comment\nNameless | https://x.com | a@b.co");
     expect(r.rows.map((x) => x.email)).toEqual(["tanyaavats11@gmail.com", "rasika@x.com", "a@b.co"]);
@@ -65,10 +71,5 @@ describe("parseBulk / isPersonalised", () => {
     expect(r.rows[1].version).toBe("econ");
     expect(r.rows[2].name).toBe("Nameless");
     expect(r.errors).toHaveLength(1);
-  });
-  it("requires a video and a specific line before a draft can open", () => {
-    expect(isPersonalised({ video_title: "", specific: "" })).toBe(false);
-    expect(isPersonalised({ video_title: "Why oil moves", specific: "" })).toBe(false);
-    expect(isPersonalised({ video_title: "Why oil moves", specific: "explain it" })).toBe(true);
   });
 });
