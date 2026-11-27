@@ -15,7 +15,7 @@ export async function GET(
 
   return new ImageResponse(
     (
-      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, #0B1220 0%, #132340 60%, #0B1220 100%)', padding: '100px 80px', position: 'relative' }}>
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(160deg, #141416 0%, #1D1D20 60%, #141416 100%)', padding: '100px 80px', position: 'relative' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, background: 'linear-gradient(90deg, #C97B4A, #6FA98A)' }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ fontSize: 32, letterSpacing: 8, color: '#C97B4A', fontWeight: 800, textTransform: 'uppercase' }}>CHANAKYA LENS</div>

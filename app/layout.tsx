@@ -56,7 +56,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
-    { media: "(prefers-color-scheme: dark)", color: "#0A112A" },
+    { media: "(prefers-color-scheme: dark)", color: "#141416" },
   ],
 };
 const JSON_LD = JSON.stringify([
