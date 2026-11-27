@@ -79,6 +79,7 @@ export default async function AdminPage() {
         <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-3" style={{ color: "var(--text-on-ink-dim)" }}>More tools</div>
         <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2.5 text-[0.88rem]">
           <Link href="/admin/monthly" className="underline" style={{ color: "var(--brand-soft)" }}>Lens Monthly (monthly report)</Link>
+          <Link href="/admin/creator-outreach" className="underline" style={{ color: "var(--brand-soft)" }}>Creator outreach (emails to creators)</Link>
           <Link href="/admin/gifts" className="underline" style={{ color: "var(--brand-soft)" }}>Gift codes (resend, see redeemed)</Link>
           <a href="/api/admin/groups" className="underline" style={{ color: "var(--brand-soft)" }}>Group plan requests, download CSV</a>
           <a href="/api/admin/creators" className="underline" style={{ color: "var(--brand-soft)" }}>Creator applications, download CSV</a>

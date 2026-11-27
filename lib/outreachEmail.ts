@@ -1,0 +1,90 @@
+// Builds the cold email to a creator and the Gmail link that opens it as a draft.
+// Pure functions, so the wording is easy to test. Nothing here sends anything.
+
+export type OutreachVersion = "geo" | "econ";
+export type OutreachStatus = "draft" | "sent" | "replied" | "yes" | "no";
+
+export const FOLLOWUP_DAYS = 5;
+
+export type OutreachInput = {
+  name: string;
+  videoTitle: string;
+  topic: string;
+  specific: string;
+  version: OutreachVersion;
+  sender: string;
+};
+
+export const firstName = (full: string): string => full.trim().split(/\s+/)[0] || "there";
+
+export function buildEmail(i: OutreachInput): { subject: string; body: string } {
+  const topic = i.topic.trim() || "world news";
+  const sender = i.sender.trim() || "[Your name]";
+  const subject = i.version === "econ" ? `Oil, tariffs and the rupee, for your audience on ${topic}` : `A tool for your audience on ${topic}`;
+  const watched = i.videoTitle.trim() ? `I watched your "${i.videoTitle.trim()}" on ${topic}` : `I watched your recent video on ${topic}`;
+  const liked = i.specific.trim() ? ` and liked how you ${i.specific.trim().replace(/[.\s]+$/, "")}` : "";
+  const what =
+    i.version === "econ"
+      ? "For each world story we show what happened, what it means for India and for ordinary readers (fuel, food, exports, jobs), and who is covering it and who is not. It is a ten-second visual you could put straight into a video."
+      : "For each world story we show what happened, who it affects, and who is covering it and who is not. It is a ten-second visual you could put straight into a video.";
+  const body = [
+    `Hi ${firstName(i.name)},`,
+    "",
+    `${watched}${liked}.`,
+    "",
+    `I run Chanakya Lens (chanakyalens.com). ${what}`,
+    "",
+    "I would like to invite you to partner with us. Lens+, our member tier, is opening soon. As a partner you get:",
+    "- free Lens+ for as long as we work together",
+    "- a personal link, so every signup is counted for you",
+    "- 20% of first-year revenue from members you bring in (payouts start when paid membership opens)",
+    "- a feature on our creators page",
+    "",
+    "There is no fee and no script. Say only what you honestly think, and disclose the partnership as your platform requires.",
+    "",
+    'If you would like to try it first, reply "yes" and I will set up a free account. Details are at chanakyalens.com/creators.',
+    "",
+    'If it is not for you, reply "no thanks" and I will not write again.',
+    "",
+    sender,
+    "Founder, Chanakya Lens",
+    "chanakyalens.com",
+  ].join("\n");
+  return { subject, body };
+}
+
+export function buildFollowup(i: Pick<OutreachInput, "name" | "sender">, originalSubject: string): { subject: string; body: string } {
+  const body = [
+    `Hi ${firstName(i.name)},`,
+    "",
+    'A quick nudge in case this got buried. I am happy to set up a free Lens+ account so you can look around, with nothing expected in return. Just reply "yes".',
+    "",
+    "If now is not the time, I will not write again.",
+    "",
+    i.sender.trim() || "[Your name]",
+  ].join("\n");
+  return { subject: `Re: ${originalSubject}`, body };
+}
+
+// Opens a prefilled draft in Gmail's compose window. The person still presses Send.
+export function gmailComposeUrl(to: string, subject: string, body: string): string {
+  const q = new URLSearchParams({ view: "cm", fs: "1", to, su: subject, body });
+  return `https://mail.google.com/mail/?${q.toString()}`;
+}
+
+export function followupDueAt(sentAt: string | null, days = FOLLOWUP_DAYS): Date | null {
+  if (!sentAt) return null;
+  const t = new Date(sentAt).getTime();
+  return Number.isFinite(t) ? new Date(t + days * 86400000) : null;
+}
+
+// A follow-up is due once, five days after the first email, if nobody has replied yet.
+export function needsFollowup(row: { status: string; sent_at: string | null; followup_sent_at: string | null }, now: number = Date.now()): boolean {
+  if (row.status !== "sent" || row.followup_sent_at) return false;
+  const due = followupDueAt(row.sent_at);
+  return !!due && due.getTime() <= now;
+}
+
+export function validEmail(s: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s.trim());
+}
