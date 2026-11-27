@@ -1,0 +1,115 @@
+'use client';
+
+import { useMemo, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { savePost, deleteMyDraft } from './actions';
+import { DispatchBody } from '@/components/DispatchBody';
+import { parseBlocks } from '@/lib/miniMarkdown';
+import { MIN_WORDS_TO_SUBMIT, STATUS_LABEL, readMinutes, wordCount, type PostStatus } from '@/lib/analystDesk';
+
+type Initial = { id: string; title: string; summary: string; body: string; heroUrl: string; tags: string; status: PostStatus; editorNote: string; slug: string };
+
+const field = 'w-full rounded-sm border px-3 py-2 bg-transparent text-sm';
+const bd = { borderColor: 'var(--border)' };
+
+export function PostEditor({ initial, locked, isOwner }: { initial: Initial | null; locked: boolean; isOwner: boolean }) {
+  const router = useRouter();
+  const [title, setTitle] = useState(initial?.title ?? '');
+  const [summary, setSummary] = useState(initial?.summary ?? '');
+  const [body, setBody] = useState(initial?.body ?? '');
+  const [heroUrl, setHeroUrl] = useState(initial?.heroUrl ?? '');
+  const [tags, setTags] = useState(initial?.tags ?? '');
+  const [preview, setPreview] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [pending, start] = useTransition();
+  const words = wordCount(body);
+  const blocks = useMemo(() => parseBlocks(body), [body]);
+
+  function save(submit: boolean) {
+    if (submit && !window.confirm('Send this to the editor? You will not be able to edit it until it comes back.')) return;
+    setMsg(null);
+    start(async () => {
+      const r = await savePost({ id: initial?.id, title, summary, body, heroUrl, tags, submit });
+      if (!r.ok) return setMsg({ ok: false, text: r.error ?? 'Could not save.' });
+      setMsg({ ok: true, text: submit ? 'Sent to the editor.' : 'Saved.' });
+      if (submit) router.push('/writer');
+      else if (!initial && r.id) router.replace(`/writer/${r.id}`);
+      else router.refresh();
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      {initial && (
+        <div className="font-mono text-[0.6875rem] uppercase tracking-widest" style={{ color: 'var(--text-on-ink-dim)' }}>Status: {STATUS_LABEL[initial.status]}</div>
+      )}
+      {initial?.status === 'changes' && initial.editorNote && (
+        <div className="rounded-sm border-l-4 border p-4" style={{ borderColor: 'var(--border)', borderLeftColor: 'var(--developing)', background: 'var(--ink-card)' }}>
+          <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-1" style={{ color: 'var(--developing)' }}>From the editor</div>
+          <p className="text-[0.92rem]" style={{ color: 'var(--text-body)' }}>{initial.editorNote}</p>
+        </div>
+      )}
+      {locked && (
+        <div className="rounded-sm border p-4 text-sm" style={{ borderColor: '#0E7080', background: 'var(--ink-card)' }}>
+          This piece is with the editor, so it is read-only for now. You will see it here again if changes are requested.
+        </div>
+      )}
+
+      <input value={title} onChange={(e) => setTitle(e.target.value)} disabled={locked} maxLength={150} placeholder="Title" className={`${field} text-lg font-semibold`} style={bd} />
+      <textarea value={summary} onChange={(e) => setSummary(e.target.value)} disabled={locked} rows={2} maxLength={400} placeholder="One or two sentences shown on the list and under the title" className={field} style={bd} />
+      <div className="grid sm:grid-cols-2 gap-3">
+        <input value={tags} onChange={(e) => setTags(e.target.value)} disabled={locked} placeholder="Tags, comma separated (up to 6), e.g. Iran, Oil" className={field} style={bd} />
+        <input value={heroUrl} onChange={(e) => setHeroUrl(e.target.value)} disabled={locked} placeholder="Header image link (https://…), optional" className={field} style={bd} />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
+          {words.toLocaleString('en-GB')} words · {readMinutes(body)} min read{!isOwner && words < MIN_WORDS_TO_SUBMIT ? ` · ${MIN_WORDS_TO_SUBMIT - words} more to send` : ''}
+        </div>
+        <div className="flex gap-1 text-xs">
+          <button type="button" onClick={() => setPreview(false)} className="px-3 py-1 rounded-sm border" style={{ ...bd, background: !preview ? 'var(--ink-card)' : 'transparent' }}>Write</button>
+          <button type="button" onClick={() => setPreview(true)} className="px-3 py-1 rounded-sm border" style={{ ...bd, background: preview ? 'var(--ink-card)' : 'transparent' }}>Preview</button>
+        </div>
+      </div>
+
+      {preview ? (
+        <div className="rounded-sm border p-5 min-h-[20rem]" style={bd}>
+          <h2 className="font-display font-extrabold text-3xl mb-2">{title || 'Untitled'}</h2>
+          <p className="mb-5" style={{ color: 'var(--text-body)' }}>{summary}</p>
+          <DispatchBody blocks={blocks} />
+        </div>
+      ) : (
+        <>
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} disabled={locked} rows={22} placeholder="Write here" className={`${field} font-mono leading-relaxed`} style={bd} />
+          <p className="text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
+            Formatting: <code>## Heading</code>, <code>### Subheading</code>, a blank line between paragraphs, <code>- list item</code>, <code>&gt; quote</code>, <code>**bold**</code>, <code>*italic*</code>, <code>[link text](https://…)</code>, <code>![caption](https://image)</code>.
+          </p>
+        </>
+      )}
+
+      {!locked && (
+        <div className="flex items-center gap-3 flex-wrap pt-2">
+          <button disabled={pending} onClick={() => save(false)} className="px-5 py-2.5 text-sm font-semibold rounded-sm border disabled:opacity-50" style={bd}>
+            {pending ? 'Saving…' : 'Save draft'}
+          </button>
+          {!isOwner && (
+            <button disabled={pending} onClick={() => save(true)} className="px-5 py-2.5 text-sm font-semibold rounded-sm text-white disabled:opacity-50" style={{ background: '#0E7080' }}>
+              Send to the editor
+            </button>
+          )}
+          {initial?.status === 'draft' && (
+            <button
+              disabled={pending}
+              onClick={() => window.confirm('Delete this draft?') && start(async () => { const r = await deleteMyDraft(initial.id); if (r.ok) router.push('/writer'); else setMsg({ ok: false, text: r.error ?? 'Could not delete.' }); })}
+              className="text-xs underline"
+              style={{ color: 'var(--text-on-ink-dim)' }}
+            >
+              Delete draft
+            </button>
+          )}
+          {msg && <span className="text-sm" style={{ color: msg.ok ? 'var(--possible)' : 'var(--developing)' }}>{msg.text}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
