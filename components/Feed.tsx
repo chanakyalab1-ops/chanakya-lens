@@ -92,6 +92,33 @@ function OffLensTeaser({ stories }: { stories: Story[] }) {
     </div>
   );
 }
+export type AnalysisItem = { slug: string; title: string; authorName: string };
+
+// Latest pieces from The Analyst Desk, shown under Off-Lens. Nothing is rendered until there is a piece.
+function AnalystTeaser({ items }: { items?: AnalysisItem[] }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="mt-6 flex flex-col rounded-sm border p-5" style={{ borderColor: "var(--border)", background: "var(--ink-card)" }}>
+      <Link href="/analyst-desk" className="font-display font-bold uppercase tracking-wide text-lg hover:opacity-90" style={{ color: "var(--brand-soft)" }}>
+        The Analyst Desk
+      </Link>
+      <p className="text-[0.84rem] leading-relaxed mt-1 mb-3" style={{ color: "var(--text-body)" }}>
+        Longer analysis from our analysts, with the reasoning shown.
+      </p>
+      <div className="flex flex-col gap-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+        {items.map((a) => (
+          <Link key={a.slug} prefetch={false} href={`/analyst-desk/${a.slug}`} className="hover:opacity-80">
+            <div className="text-[0.82rem] leading-snug" style={{ color: "var(--text-on-ink)" }}>{a.title}</div>
+            <div className="font-mono text-[0.625rem] uppercase tracking-wide mt-0.5" style={{ color: "var(--text-on-ink-dim)" }}>{a.authorName}</div>
+          </Link>
+        ))}
+      </div>
+      <Link href="/analyst-desk" className="mt-4 font-mono text-[0.6875rem] uppercase tracking-wide hover:opacity-80" style={{ color: "var(--text-on-ink-dim)" }}>
+        Read more →
+      </Link>
+    </div>
+  );
+}
 function OffLensBadge() {
   return (
     <Pill dot color="var(--brand-soft)" borderColor="rgba(95,168,181,0.5)" background="rgba(95,168,181,0.08)">
@@ -552,7 +579,7 @@ function useUrlQuery(): string {
   return query;
 }
 
-export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending, lensWeek, toolsOpen }: { toolsOpen?: boolean; stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[]; lensWeek?: Record<string, number> }) {
+export default function Feed({ stories, signalSlugs, todayCount, windowLabel, trending, lensWeek, toolsOpen, analysis }: { analysis?: AnalysisItem[]; toolsOpen?: boolean; stories: Story[]; signalSlugs?: string[]; todayCount?: number; windowLabel?: string; trending?: TrendingTopic[]; lensWeek?: Record<string, number> }) {
   const categories = useMemo(
     () => ["All", ...Array.from(new Set(stories.map((s) => s.category)))],
     [stories]
@@ -831,10 +858,12 @@ export default function Feed({ stories, signalSlugs, todayCount, windowLabel, tr
 
           <div className="mt-6 lg:hidden">
             <OffLensTeaser stories={stories} />
+            <AnalystTeaser items={analysis} />
           </div>
         </div>
         <aside className="hidden lg:block mt-3">
           <OffLensTeaser stories={stories} />
+          <AnalystTeaser items={analysis} />
         </aside>
       </main>
     </>
