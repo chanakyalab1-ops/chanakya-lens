@@ -23,10 +23,9 @@ describe("analyst desk helpers", () => {
     expect(canWriterEdit("published")).toBe(true);
     expect(canWriterEdit("submitted")).toBe(false);
   });
-  it("needs only a heading, a story and some text to publish", () => {
-    expect(publishProblems({ title: "", body: "short", storySlug: "" })).toHaveLength(3);
-    expect(publishProblems({ title: "T", body: words(50), storySlug: "a-story" })).toEqual([]);
-    expect(publishProblems({ title: "T", body: words(50), storySlug: "" })).toEqual(["Choose the story this write-up is about."]);
+  it("needs only a heading and some text to publish; the story is optional", () => {
+    expect(publishProblems({ title: "", body: "short" })).toHaveLength(2);
+    expect(publishProblems({ title: "T", body: words(50) })).toEqual([]);
   });
   it("derives the summary from the first plain paragraph", () => {
     expect(deriveSummary("## Heading\n\nThe **first** paragraph with a [link](https://x.com).\n\nSecond.")).toBe("The first paragraph with a link.");

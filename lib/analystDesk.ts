@@ -58,10 +58,9 @@ export function writerStats(posts: Pick<Post, "status" | "body">[]): WriterStats
   return s;
 }
 
-// What blocks publishing. Empty when it is ready. Only a heading, a story and some text are needed.
-export function publishProblems(p: { title: string; body: string; storySlug: string }): string[] {
+// What blocks publishing. Empty when it is ready. Only a heading and some text are needed; the story link is optional.
+export function publishProblems(p: { title: string; body: string }): string[] {
   const out: string[] = [];
-  if (!p.storySlug.trim()) out.push("Choose the story this write-up is about.");
   if (!p.title.trim()) out.push("Add a heading.");
   if (wordCount(p.body) < MIN_WORDS_TO_PUBLISH) out.push(`Write at least ${MIN_WORDS_TO_PUBLISH} words (you have ${wordCount(p.body)}).`);
   return out;

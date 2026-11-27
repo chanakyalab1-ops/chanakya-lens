@@ -53,22 +53,15 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
         </div>
       )}
 
-      {storySlug && !locked ? (
-        <div className="text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
-          On our story: <b style={{ color: 'var(--text-on-ink)' }}>{stories.find((x) => x.slug === storySlug)?.headline ?? storySlug}</b>{' '}
-          {!initial && <button type="button" onClick={() => setStorySlug('')} className="underline ml-1">change</button>}
-        </div>
-      ) : (
       <label className="block text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
-        The story this write-up is about
+        Is this about one of our stories? (optional)
         <select value={storySlug} onChange={(e) => setStorySlug(e.target.value)} disabled={locked} className={`${field} mt-1`} style={bd}>
-          <option value="">Choose a story…</option>
+          <option value="">No, it stands on its own</option>
           {stories.map((s) => (
             <option key={s.slug} value={s.slug}>{s.headline.length > 110 ? `${s.headline.slice(0, 109)}…` : s.headline}</option>
           ))}
         </select>
       </label>
-      )}
       <input value={title} onChange={(e) => setTitle(e.target.value)} disabled={locked} maxLength={150} placeholder="Heading" className={`${field} text-lg font-semibold`} style={bd} />
       <div className="flex items-center justify-between">
         <div className="text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
