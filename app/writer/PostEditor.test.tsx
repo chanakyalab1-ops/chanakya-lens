@@ -6,7 +6,7 @@ vi.mock("./actions", () => ({ savePost: vi.fn(), deleteMyDraft: vi.fn() }));
 import { PostEditor } from "./PostEditor";
 
 const stories = [{ slug: "a-story", headline: "A story headline" }];
-const post = { id: "1", storySlug: "a-story", title: "Why Hormuz matters", body: "word ".repeat(40), status: "draft" as const, editorNote: "", slug: "x" };
+const post = { id: "1", authorEmail: "writer@x.com", storySlug: "a-story", title: "Why Hormuz matters", body: "word ".repeat(40), status: "draft" as const, editorNote: "", slug: "x" };
 
 describe("PostEditor", () => {
   it("lets a writer save a draft and publish it herself", () => {
@@ -50,5 +50,14 @@ describe("PostEditor", () => {
     expect(open).toContain(".docx");
     const locked = renderToString(<PostEditor stories={stories} initial={{ ...post, status: "submitted" }} locked isOwner={false} />);
     expect(locked).not.toContain("Already written it in Word");
+  });
+  it("lets the owner choose which writer's name goes on the piece, but not a writer", () => {
+    const authors = [{ email: "c@x.com", name: "Chaithra B" }];
+    const owner = renderToString(<PostEditor stories={stories} initial={null} locked={false} isOwner authors={authors} ownerEmail="o@x.com" />);
+    expect(owner).toContain("Written by");
+    expect(owner).toContain("Chaithra B");
+    expect(owner).toContain("Me (no writer name)");
+    const writer = renderToString(<PostEditor stories={stories} initial={null} locked={false} isOwner={false} />);
+    expect(writer).not.toContain("Written by");
   });
 });

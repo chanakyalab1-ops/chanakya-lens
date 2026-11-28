@@ -7,13 +7,14 @@ import { DispatchBody } from '@/components/DispatchBody';
 import { parseBlocks } from '@/lib/miniMarkdown';
 import { MIN_WORDS_TO_PUBLISH, STATUS_LABEL, readMinutes, wordCount, type PostStatus } from '@/lib/analystDesk';
 
-type Initial = { id: string; storySlug: string; title: string; body: string; status: PostStatus; editorNote: string; slug: string };
+type Initial = { id: string; authorEmail: string; storySlug: string; title: string; body: string; status: PostStatus; editorNote: string; slug: string };
 
 const field = 'w-full rounded-sm border px-3 py-2 bg-transparent text-sm';
 const bd = { borderColor: 'var(--border)' };
 
-export function PostEditor({ initial, locked, isOwner, stories, presetStory = '' }: { initial: Initial | null; locked: boolean; isOwner: boolean; stories: { slug: string; headline: string }[]; presetStory?: string }) {
+export function PostEditor({ initial, locked, isOwner, stories, presetStory = '', authors = [], ownerEmail = '' }: { initial: Initial | null; locked: boolean; isOwner: boolean; stories: { slug: string; headline: string }[]; presetStory?: string; authors?: { email: string; name: string }[]; ownerEmail?: string }) {
   const router = useRouter();
+  const [authorEmail, setAuthorEmail] = useState(initial?.authorEmail ?? ownerEmail);
   const [storySlug, setStorySlug] = useState(initial?.storySlug ?? presetStory);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [body, setBody] = useState(initial?.body ?? '');
@@ -52,7 +53,7 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
     if (publish && !window.confirm('Publish this now? It goes live straight away under the story. You can still edit it later.')) return;
     setMsg(null);
     start(async () => {
-      const r = await savePost({ id: initial?.id, storySlug, title, body, publish });
+      const r = await savePost({ id: initial?.id, storySlug, title, body, publish, authorEmail: isOwner ? authorEmail : undefined });
       if (!r.ok) return setMsg({ ok: false, text: r.error ?? 'Could not save.' });
       setMsg({ ok: true, text: publish ? 'Published.' : 'Saved.' });
       if (publish && !initial) router.push('/writer');
@@ -96,6 +97,17 @@ export function PostEditor({ initial, locked, isOwner, stories, presetStory = ''
           {importing && <span className="text-xs ml-2" style={{ color: 'var(--text-on-ink-dim)' }}>Reading your file…</span>}
           {importMsg && <p className="text-xs mt-2" style={{ color: importMsg.ok ? 'var(--possible)' : 'var(--developing)' }}>{importMsg.text}</p>}
         </div>
+      )}
+      {isOwner && authors.length > 0 && (
+        <label className="block text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
+          Written by (the name shown on the piece)
+          <select value={authorEmail} onChange={(e) => setAuthorEmail(e.target.value)} disabled={locked} className={`${field} mt-1`} style={bd}>
+            {!authors.some((a) => a.email === ownerEmail) && <option value={ownerEmail}>Me (no writer name)</option>}
+            {authors.map((a) => (
+              <option key={a.email} value={a.email}>{a.name}</option>
+            ))}
+          </select>
+        </label>
       )}
       <label className="block text-xs" style={{ color: 'var(--text-on-ink-dim)' }}>
         Is this about one of our stories? (optional)
