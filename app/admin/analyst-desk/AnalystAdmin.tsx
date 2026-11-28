@@ -57,7 +57,7 @@ function Writers({ analysts }: { analysts: Analyst[] }) {
       >
         <input required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Her name" className={field} style={bd} />
         <input required type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="Her sign-in email" className={field} style={bd} />
-        <input value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} maxLength={400} placeholder="Short bio shown under her pieces (optional)" className={`${field} sm:col-span-2`} style={bd} />
+        <input value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} maxLength={400} placeholder="Short bio shown under her pieces. Add her email here too if she wants it shown (optional)" className={`${field} sm:col-span-2`} style={bd} />
         <div className="flex items-center gap-3 sm:col-span-2">
           <button disabled={pending} className="px-4 py-2 text-sm font-semibold text-white rounded-sm disabled:opacity-60" style={{ background: '#0E7080' }}>Add writer</button>
           {msg && <span className="text-xs" style={dim}>{msg}</span>}

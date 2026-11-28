@@ -6,7 +6,7 @@ import { isOwnerEmail } from '@/lib/memberAccess';
 import { supabaseServer } from '@/lib/supabase-server';
 import { sendAlert } from '@/lib/alerts';
 import { getAllStories } from '@/lib/stories';
-import { canWriterEdit, deriveSummary, getAnalyst, getPostById, slugifyPost, publishProblems, type PostStatus } from '@/lib/analystDesk';
+import { canWriterEdit, deriveSummary, getAnalyst, listAnalysts, getPostById, slugifyPost, publishProblems, type PostStatus } from '@/lib/analystDesk';
 
 type Result = { ok: boolean; error?: string; id?: string };
 
@@ -21,7 +21,7 @@ async function actor() {
   return { email: user.email.toLowerCase(), owner };
 }
 
-export async function savePost(input: { id?: string; storySlug: string; title: string; body: string; publish: boolean }): Promise<Result> {
+export async function savePost(input: { id?: string; storySlug: string; title: string; body: string; publish: boolean; authorEmail?: string }): Promise<Result> {
   const who = await actor();
   if (!who) return { ok: false, error: 'Not allowed.' };
 
@@ -37,6 +37,16 @@ export async function savePost(input: { id?: string; storySlug: string; title: s
   if (input.publish) {
     const problems = publishProblems({ title: fields.title, body: fields.body });
     if (problems.length) return { ok: false, error: problems.join(' ') };
+  }
+
+  // Only the owner can publish a piece under a writer's name (for example one she sent as a file).
+  let authorEmail = who.email;
+  if (who.owner && input.authorEmail) {
+    const chosen = input.authorEmail.trim().toLowerCase();
+    if (chosen !== who.email) {
+      if (!(await listAnalysts()).some((a) => a.email === chosen)) return { ok: false, error: 'That writer is not on your list. Add her under Admin, The Analyst Desk first.' };
+      authorEmail = chosen;
+    }
   }
 
   const db = supabaseServer();
@@ -58,6 +68,7 @@ export async function savePost(input: { id?: string; storySlug: string; title: s
       extra.published_at = now;
       extra.editor_note = '';
     }
+    if (who.owner && input.authorEmail) extra.author_email = authorEmail;
     const { error } = await db.from('analyst_posts').update({ ...fields, status, ...extra, updated_at: now }).eq('id', input.id);
     if (error) return { ok: false, error: 'Could not save. Has the latest supabase/analyst-desk.sql been run?' };
     if (goingLive && !who.owner) await sendAlert('analyst-desk', `"${fields.title}" was published by ${who.email}. Open /admin/analyst-desk to read it, or ask for changes.`);
@@ -76,7 +87,7 @@ export async function savePost(input: { id?: string; storySlug: string; title: s
     const slug = n === 0 ? base : `${base}-${Math.random().toString(36).slice(2, 6)}`;
     const { data, error } = await db
       .from('analyst_posts')
-      .insert({ ...fields, slug, author_email: who.email, status: input.publish ? 'published' : 'draft', published_at: input.publish ? now : null })
+      .insert({ ...fields, slug, author_email: authorEmail, status: input.publish ? 'published' : 'draft', published_at: input.publish ? now : null })
       .select('id')
       .single();
     if (!error && data) {
