@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
-import { addAnalyst, publishPost, requestChanges, setAnalystActive, unpublishPost } from './actions';
+import { addAnalyst, publishPost, requestChanges, setAnalystActive, setAnalystShowEmail, unpublishPost } from './actions';
 import { STATUS_LABEL, wordCount, type Analyst, type Post } from '@/lib/analystDesk';
 
 const field = 'w-full rounded-sm border px-3 py-2 bg-transparent text-sm';
@@ -27,7 +27,7 @@ export function AnalystAdmin({ analysts, posts, headlines = {} }: { analysts: An
 }
 
 function Writers({ analysts }: { analysts: Analyst[] }) {
-  const [f, setF] = useState({ email: '', name: '', bio: '' });
+  const [f, setF] = useState({ email: '', name: '', bio: '', showEmail: false });
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
   return (
@@ -38,8 +38,11 @@ function Writers({ analysts }: { analysts: Analyst[] }) {
         <ul className="space-y-1.5">
           {analysts.map((a) => (
             <li key={a.email} className="flex items-center justify-between gap-3 text-sm">
-              <span><b>{a.name}</b> <span className="text-xs" style={dim}>{a.email}{a.active ? '' : ' · paused'}</span></span>
-              <button disabled={pending} onClick={() => start(async () => { await setAnalystActive(a.email, !a.active); })} className="text-xs underline" style={dim}>{a.active ? 'Pause' : 'Reactivate'}</button>
+              <span><b>{a.name}</b> <span className="text-xs" style={dim}>{a.email}{a.active ? '' : ' · paused'}{a.showEmail ? ' · email shown on her pieces' : ''}</span></span>
+              <span className="flex gap-3">
+                <button disabled={pending} onClick={() => start(async () => { await setAnalystShowEmail(a.email, !a.showEmail); })} className="text-xs underline" style={dim}>{a.showEmail ? 'Hide email' : 'Show email'}</button>
+                <button disabled={pending} onClick={() => start(async () => { await setAnalystActive(a.email, !a.active); })} className="text-xs underline" style={dim}>{a.active ? 'Pause' : 'Reactivate'}</button>
+              </span>
             </li>
           ))}
         </ul>
@@ -51,13 +54,16 @@ function Writers({ analysts }: { analysts: Analyst[] }) {
           setMsg(null);
           start(async () => {
             const r = await addAnalyst(f);
-            if (r.ok) { setF({ email: '', name: '', bio: '' }); setMsg('Added.'); } else setMsg(r.error ?? 'Could not add.');
+            if (r.ok) { setF({ email: '', name: '', bio: '', showEmail: false }); setMsg('Added.'); } else setMsg(r.error ?? 'Could not add.');
           });
         }}
       >
         <input required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Her name" className={field} style={bd} />
         <input required type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="Her sign-in email" className={field} style={bd} />
-        <input value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} maxLength={400} placeholder="Short bio shown under her pieces. Add her email here too if she wants it shown (optional)" className={`${field} sm:col-span-2`} style={bd} />
+        <input value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} maxLength={400} placeholder="Short bio shown under her pieces (optional)" className={`${field} sm:col-span-2`} style={bd} />
+        <label className="flex items-center gap-2 text-xs sm:col-span-2" style={dim}>
+          <input type="checkbox" checked={f.showEmail} onChange={(e) => setF({ ...f, showEmail: e.target.checked })} /> Show her email under her pieces (only if she agrees: anyone can read it)
+        </label>
         <div className="flex items-center gap-3 sm:col-span-2">
           <button disabled={pending} className="px-4 py-2 text-sm font-semibold text-white rounded-sm disabled:opacity-60" style={{ background: '#0E7080' }}>Add writer</button>
           {msg && <span className="text-xs" style={dim}>{msg}</span>}
