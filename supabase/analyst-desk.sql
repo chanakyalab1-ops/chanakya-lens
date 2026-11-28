@@ -30,3 +30,6 @@ alter table analyst_posts enable row level security;
 -- Each write-up is about one published story.
 alter table analyst_posts add column if not exists story_slug text not null default '';
 create index if not exists analyst_posts_story_idx on analyst_posts (story_slug, status);
+
+-- Optionally show a writer's email under her pieces (off by default).
+alter table analysts add column if not exists show_email boolean not null default false;

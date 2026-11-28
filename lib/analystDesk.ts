@@ -1,7 +1,7 @@
 import { supabaseServer } from "./supabase-server";
 
 export type PostStatus = "draft" | "submitted" | "changes" | "published";
-export type Analyst = { email: string; name: string; bio: string; active: boolean };
+export type Analyst = { email: string; name: string; bio: string; active: boolean; showEmail: boolean };
 export type Post = {
   id: string;
   slug: string;
@@ -126,10 +126,17 @@ function toPost(r: Row, names: Map<string, string>): Post {
   };
 }
 
+type AnalystRow = { email: string; name: string; bio: string; active: boolean; show_email?: boolean | null };
+const toAnalyst = (r: AnalystRow): Analyst => ({ email: r.email, name: r.name, bio: r.bio, active: r.active, showEmail: !!r.show_email });
+
+// Before the show_email column is added, fall back to the older column list.
 export async function listAnalysts(): Promise<Analyst[]> {
   try {
-    const { data, error } = await supabaseServer().from("analysts").select("email, name, bio, active").order("created_at");
-    return error || !data ? [] : (data as Analyst[]);
+    const db = supabaseServer();
+    const run = (cols: string) => db.from("analysts").select(cols).order("created_at");
+    let { data, error } = await run("email, name, bio, active, show_email");
+    if (error) ({ data, error } = await run("email, name, bio, active"));
+    return error || !data ? [] : (data as unknown as AnalystRow[]).map(toAnalyst);
   } catch {
     return [];
   }
@@ -138,8 +145,11 @@ export async function listAnalysts(): Promise<Analyst[]> {
 export async function getAnalyst(email: string | null | undefined): Promise<Analyst | null> {
   if (!email) return null;
   try {
-    const { data } = await supabaseServer().from("analysts").select("email, name, bio, active").eq("email", email.toLowerCase()).maybeSingle();
-    return data ? (data as Analyst) : null;
+    const db = supabaseServer();
+    const run = (cols: string) => db.from("analysts").select(cols).eq("email", email.toLowerCase()).maybeSingle();
+    let { data, error } = await run("email, name, bio, active, show_email");
+    if (error) ({ data, error } = await run("email, name, bio, active"));
+    return error || !data ? null : toAnalyst(data as unknown as AnalystRow);
   } catch {
     return null;
   }

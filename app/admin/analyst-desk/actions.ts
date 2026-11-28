@@ -20,14 +20,17 @@ const refresh = (slug?: string) => {
   if (slug) revalidatePath(`/analyst-desk/${slug}`);
 };
 
-export async function addAnalyst(input: { email: string; name: string; bio: string }): Promise<Result> {
+export async function addAnalyst(input: { email: string; name: string; bio: string; showEmail?: boolean }): Promise<Result> {
   if (!(await owner())) return { ok: false, error: 'Not allowed.' };
   const email = input.email.trim().toLowerCase().slice(0, 200);
   const name = input.name.trim().slice(0, 100);
   if (!validEmail(email)) return { ok: false, error: 'That email does not look right.' };
   if (!name) return { ok: false, error: 'Add her name.' };
-  const { error } = await supabaseServer().from('analysts').upsert({ email, name, bio: input.bio.trim().slice(0, 400), active: true });
-  if (error) return { ok: false, error: 'Could not save. Has supabase/analyst-desk.sql been run?' };
+  const row = { email, name, bio: input.bio.trim().slice(0, 400), active: true };
+  const db = supabaseServer();
+  let { error } = await db.from('analysts').upsert({ ...row, show_email: !!input.showEmail });
+  if (error && !input.showEmail) ({ error } = await db.from('analysts').upsert(row));
+  if (error) return { ok: false, error: input.showEmail ? 'Could not save. Run the new show_email line in supabase/analyst-desk.sql first.' : 'Could not save. Has supabase/analyst-desk.sql been run?' };
   refresh();
   return { ok: true };
 }
@@ -36,6 +39,14 @@ export async function setAnalystActive(email: string, active: boolean): Promise<
   if (!(await owner())) return { ok: false, error: 'Not allowed.' };
   const { error } = await supabaseServer().from('analysts').update({ active }).eq('email', email);
   if (error) return { ok: false, error: 'Could not save.' };
+  refresh();
+  return { ok: true };
+}
+
+export async function setAnalystShowEmail(email: string, show: boolean): Promise<Result> {
+  if (!(await owner())) return { ok: false, error: 'Not allowed.' };
+  const { error } = await supabaseServer().from('analysts').update({ show_email: show }).eq('email', email);
+  if (error) return { ok: false, error: 'Could not save. Run the new show_email line in supabase/analyst-desk.sql first.' };
   refresh();
   return { ok: true };
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "react-dom/server";
 
-vi.mock("./actions", () => ({ addAnalyst: vi.fn(), publishPost: vi.fn(), requestChanges: vi.fn(), setAnalystActive: vi.fn(), unpublishPost: vi.fn() }));
+vi.mock("./actions", () => ({ addAnalyst: vi.fn(), publishPost: vi.fn(), requestChanges: vi.fn(), setAnalystActive: vi.fn(), setAnalystShowEmail: vi.fn(), unpublishPost: vi.fn() }));
 import { AnalystAdmin } from "./AnalystAdmin";
 import type { Post } from "@/lib/analystDesk";
 
@@ -9,7 +9,7 @@ const post = (o: Partial<Post>): Post => ({ id: "1", slug: "s", authorEmail: "a@
 
 describe("AnalystAdmin", () => {
   it("lists live pieces with Request changes and Unpublish, and no Publish button", () => {
-    const html = renderToString(<AnalystAdmin analysts={[{ email: "a@b.com", name: "Asha", bio: "", active: true }]} posts={[post({ status: "published" })]} />);
+    const html = renderToString(<AnalystAdmin analysts={[{ email: "a@b.com", name: "Asha", bio: "", active: true, showEmail: false }]} posts={[post({ status: "published" })]} />);
     expect(html).toContain("Live (1)");
     expect(html).toContain("Request changes");
     expect(html).toContain("Unpublish");
@@ -21,5 +21,11 @@ describe("AnalystAdmin", () => {
     const html = renderToString(<AnalystAdmin analysts={[]} posts={[post({})]} />);
     expect(html).toContain("Waiting for you (1)");
     expect(html).toContain(">Publish<");
+  });
+  it("shows a tick-box and a toggle for showing a writer's email", () => {
+    const html = renderToString(<AnalystAdmin analysts={[{ email: "a@b.com", name: "Asha", bio: "", active: true, showEmail: true }]} posts={[]} />);
+    expect(html).toContain("Show her email under her pieces");
+    expect(html).toContain("email shown on her pieces");
+    expect(html).toContain("Hide email");
   });
 });

@@ -66,9 +66,14 @@ export default async function AnalystPostPage({ params }: { params: Promise<{ sl
           <img src={post.heroUrl} alt="" className="w-full rounded-sm border mb-8" style={{ borderColor: 'var(--border)' }} />
         )}
         <DispatchBody blocks={blocks} />
-        {author?.bio && (
+        {author && (author.bio || author.showEmail) && (
           <div className="mt-12 pt-6 border-t text-[0.88rem]" style={{ borderColor: 'var(--border)', color: 'var(--text-body)' }}>
             <span className="font-semibold">{author.name}.</span> {author.bio}
+            {author.showEmail && (
+              <div className="mt-2">
+                Contact: <a href={`mailto:${author.email}`} className="underline" style={{ color: 'var(--brand-soft)' }}>{author.email}</a>
+              </div>
+            )}
           </div>
         )}
       </main>
