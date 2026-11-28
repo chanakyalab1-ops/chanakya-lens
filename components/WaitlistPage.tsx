@@ -25,6 +25,26 @@ export function WaitlistPage({ perks, compare }: { perks: Perk[]; compare: Row[]
           </div>
         </section>
 
+        <section className="mb-12" aria-labelledby="pricing-heading">
+          <h2 id="pricing-heading" className="font-display font-bold uppercase tracking-wide text-xl mb-1 text-center" style={{ color: 'var(--brand-soft)' }}>Pricing</h2>
+          <p className="text-[0.85rem] text-center mb-4" style={{ color: 'var(--text-on-ink-dim)' }}>Planned prices for Lens+. Every story stays free to read.</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="rounded-sm border p-5" style={{ borderColor: 'var(--border)', background: 'var(--ink-card)' }}>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: 'var(--text-on-ink-dim)' }}>Monthly</div>
+              <div className="font-display font-extrabold text-4xl">$2.99<span className="text-base font-semibold" style={{ color: 'var(--text-on-ink-dim)' }}> / month</span></div>
+              <p className="text-[0.84rem] mt-2" style={{ color: 'var(--text-body)' }}>Billed every month until you cancel. Cancel any time from your account.</p>
+            </div>
+            <div className="rounded-sm border p-5" style={{ borderColor: '#0E7080', background: 'var(--ink-card)' }}>
+              <div className="font-mono text-[0.6875rem] uppercase tracking-widest mb-2" style={{ color: 'var(--brand-soft)' }}>Yearly</div>
+              <div className="font-display font-extrabold text-4xl">$29.99<span className="text-base font-semibold" style={{ color: 'var(--text-on-ink-dim)' }}> / year</span></div>
+              <p className="text-[0.84rem] mt-2" style={{ color: 'var(--text-body)' }}>About $2.50 a month. Billed once a year until you cancel. Cancel any time from your account.</p>
+            </div>
+          </div>
+          <p className="text-[0.8rem] mt-3 text-center" style={{ color: 'var(--text-on-ink-dim)' }}>
+            Gift a year of Lens+: a one-time payment, with no renewal. Payments are handled by Paddle, our payment partner and merchant of record. See our <a href="/terms" className="underline">terms</a>, <a href="/privacy" className="underline">privacy policy</a> and <a href="/refund" className="underline">refund policy</a>.
+          </p>
+        </section>
+
         <section className="mb-12">
           <h2 className="font-display font-bold uppercase tracking-wide text-xl mb-4 text-center" style={{ color: 'var(--brand-soft)' }}>What you will get</h2>
           <div className="grid sm:grid-cols-2 gap-3">
